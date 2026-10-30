@@ -1,0 +1,1932 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ask Fin</title>
+<meta name="description" content="Ask Fin about your 90-day money plan and watch the plan answer back: the step, the area of your money, or the place it is sending you.">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex">
+
+<!--
+  /ask.html — ask Fin about your own plan, on the web.
+
+  Same sign-in as /plan.html (the fin_session cookie from /api/plan?action=verify).
+  Data comes from /api/ask:
+    GET  /api/ask?action=state   → business (the person: name, one_liner, key), plan, map, tools, suggestions
+    POST /api/ask {question, client_turn}
+                                 → reply (the fixed WhatsApp schema) + focus + grounded,
+                                   or 202 {pending, turn} when the answer is slow.
+                                   client_turn is made here, before the POST, so a
+                                   repeat of the same POST is never answered twice.
+    GET  /api/ask?action=reply&turn=… (or &client_turn=…)
+                                 → 202 while pending; a body with final:true ends the
+                                   turn whatever its status (200, 502, 410); 404 is an
+                                   unknown turn; any other 5xx without final is a blip
+                                   and is retried like a network error, never re-posted.
+                                   The page polls every 2s; the pending turn is kept in
+                                   sessionStorage so a reload resumes it.
+
+  Everything kept in sessionStorage (chat history, the pending turn) is scoped to
+  state.business.key. When a different person signs in on the same tab, both are
+  wiped before anything renders, so one person never sees another's chat.
+
+  The page reacts to `focus`: the step, map area or tool the answer is about is
+  opened and highlighted on the board. It also reacts while the person types — a
+  cheap, local, no-network match of the words against the plan's own step titles,
+  areas and tools, shown as a lighter "preview" highlight.
+
+  Every piece of server text (the person's own words, model output) goes into the
+  page with textContent / createTextNode. Nothing from the API is ever markup.
+
+  /ask.html?demo=1 runs on built-in fixture data with no backend, for review.
+  In demo, a question containing "demo:pending" exercises the slow-answer path,
+  "demo:blip" a 503 mid-poll that recovers, and "demo:gaveup" a 410 final.
+
+  WhatsApp links go through /wa?m=ask, which redirects to WHATSAPP_PUBLIC_NUMBER
+  (see the note at the top of index.html).
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Crect x='9' y='8' width='14' height='3' fill='%23fff'/%3E%3Crect x='9' y='15' width='10' height='3' fill='%23fff'/%3E%3Crect x='9' y='22' width='3' height='3' fill='%23fff'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    /* The plan document's palette (api/_lib/plandoc.ts). */
+    --ink:#ffffff;--ink-2:#f1f5f4;--ink-3:#e6ebea;--ink-4:#dfe3e8;
+    --line:#dfe3e8;--line-2:#c5ccd2;
+    --text:#14181d;--muted:#6b737c;--faint:#8a929a;
+    --green:#0f766e;--green-deep:#0b5a54;--green-light:#0b5a54;
+    --green-wash:rgba(15,118,110,.12);--green-glow:rgba(15,118,110,.38);
+    --red:#b3261e;--red-line:#b3261e;--amber:#b45309;--amber-line:#b45309;
+    --error:#8f1d16;
+    --radius:14px;
+    --sheet-h:0px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--ink);color:var(--text);
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.wordmark,.serif{
+    font-family:"Instrument Serif",Georgia,"Times New Roman",serif;
+    font-weight:400;line-height:1.08;letter-spacing:-.01em;margin:0;
+  }
+  h1{font-size:clamp(1.9rem,5vw,2.6rem)}
+  h2{font-size:1.45rem}
+  h3{font-size:1.25rem}
+  .serif{font-size:1.6rem;line-height:1}
+  p{margin:0 0 .8rem}
+  p:last-child{margin-bottom:0}
+  a{color:var(--green-light);text-underline-offset:3px}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:3px solid var(--green-light);outline-offset:2px}
+
+  .sr{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .skip{position:absolute;left:-9999px;background:var(--green);color:#fff;padding:10px 16px;font-weight:700;z-index:80}
+  .skip:focus{left:0}
+  [hidden]{display:none !important}
+
+  .wrap{width:100%;max-width:1240px;margin:0 auto;padding:0 16px}
+  .narrow{max-width:640px}
+
+  /* ── header ─────────────────────────────────────────────── */
+  .site-head{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;gap:10px;min-height:60px}
+  .wordmark{display:inline-flex;align-items:center;gap:9px;color:var(--text);text-decoration:none}
+  .badge{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#fdf3dc;color:#7a4a00;border:1px solid #e8c97a}
+  .head-in nav{margin-left:auto;display:flex;gap:2px}
+  .head-in nav a{color:var(--muted);text-decoration:none;font-size:.92rem;font-weight:500;padding:8px 10px;border-radius:8px;white-space:nowrap}
+  .head-in nav a:hover{color:var(--text);background:var(--ink-3)}
+
+  /* ── buttons ────────────────────────────────────────────── */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 18px;border-radius:11px;font-size:.98rem;
+    font-weight:700;line-height:1.2;text-decoration:none;border:1px solid transparent;cursor:pointer;
+  }
+  /* White on #0f766e is 5.4:1. */
+  .btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-primary:hover:not(:disabled){background:var(--green-deep)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn-ghost:hover:not(:disabled){background:var(--ink-3)}
+  .btn-sm{padding:8px 12px;font-size:.88rem;border-radius:9px}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-full{width:100%;margin-top:16px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .linkish{background:none;border:0;padding:0;color:var(--green-light);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-weight:600;font-size:.88rem}
+
+  .spinner{
+    display:inline-block;width:16px;height:16px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── sign in (same flow as /plan.html) ──────────────────── */
+  main{padding:32px 0 56px}
+  .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green-light);margin:0 0 10px}
+  .lede{color:var(--muted);margin-top:12px}
+  .card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-top:24px}
+  label{display:block;font-weight:700;font-size:.96rem;margin-bottom:6px}
+  .hint{display:block;font-weight:400;font-size:.87rem;color:var(--muted);margin-bottom:10px}
+  input[type="text"]{
+    width:100%;padding:14px 15px;font-family:inherit;font-size:1.05rem;letter-spacing:.02em;
+    color:var(--text);background:var(--ink);border:1px solid var(--line-2);border-radius:11px;
+  }
+  input::placeholder,textarea::placeholder{color:#7d8a83}
+  #code{letter-spacing:.35em;font-size:1.25rem;font-weight:700}
+  .msg{margin-top:16px;padding:12px 14px;border-radius:11px;font-size:.94rem;border:1px solid transparent}
+  .msg:empty{display:none}
+  .msg.ok{background:#14372a;border-color:#235f43;color:#dff3e7}
+  .msg.bad{background:#3a1d17;border-color:#6b342a;color:var(--error)}
+  .small{font-size:.87rem;color:var(--muted);margin-top:18px}
+  .loading{color:var(--muted);padding:40px 0;text-align:center}
+
+  /* ── the app: board + chat ──────────────────────────────── */
+  .app{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+  @media (min-width:960px){
+    .app{grid-template-columns:minmax(0,1fr) 400px}
+  }
+  .board{min-width:0}
+
+  .biz{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 16px}
+  .biz-text{flex:1 1 280px;min-width:0}
+  .biz-meta{color:var(--muted);font-size:.93rem;margin-top:6px}
+
+  .panel{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:18px}
+  .panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .panel-sub{color:var(--muted);font-size:.88rem;margin:0}
+
+  .progress-line{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .big{font-family:"Instrument Serif",Georgia,serif;font-size:2.4rem;font-weight:400;line-height:1}
+  .bar{height:10px;border-radius:999px;background:var(--ink-4);overflow:hidden;margin:12px 0 10px}
+  .bar>i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .6s ease}
+  .goal{margin:10px 0 0;padding:12px 14px;border-radius:11px;background:var(--ink-3);border:1px solid var(--line);font-size:.95rem}
+  .goal b{display:block;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green-light);margin-bottom:2px}
+  .next{margin-top:12px;font-size:.93rem}
+  .next .lbl{font-weight:700;color:var(--green-light);margin-right:6px}
+  .next .linkish{margin-left:8px;white-space:nowrap}
+
+  /* workstreams + step cards */
+  .ws{margin-top:18px}
+  .ws:first-of-type{margin-top:4px}
+  .ws-title{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .ws-title .count{letter-spacing:0;text-transform:none;font-weight:600;color:var(--faint)}
+  .steps{display:grid;gap:8px}
+
+  .step{
+    background:var(--ink-3);border:1px solid var(--line);border-radius:12px;
+    transition:opacity .35s ease, box-shadow .25s ease, border-color .25s ease, background-color .25s ease;
+    scroll-margin-top:16px;scroll-margin-bottom:calc(var(--sheet-h) + 16px);
+  }
+  .step-head{
+    display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
+    background:none;border:0;padding:13px 14px;cursor:pointer;border-radius:12px;
+  }
+  .step-head:hover{background:rgba(255,255,255,.03)}
+  .mark{
+    flex:none;width:24px;height:24px;border-radius:50%;margin-top:1px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;
+    border:2px solid var(--line-2);color:var(--muted);
+  }
+  .step.done .mark{background:var(--green);border-color:var(--green);color:#fff}
+  .step.skipped .mark{border-style:dashed}
+  .step.is-next .mark{border-color:var(--green-light);color:var(--green-light)}
+  .step-main{flex:1;min-width:0}
+  .step-title{display:block;font-weight:700;font-size:.98rem;line-height:1.35;overflow-wrap:anywhere}
+  .step.done .step-title{color:var(--muted)}
+  .step.skipped .step-title{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+  .step-tags{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:4px;font-size:.8rem;color:var(--muted)}
+  .status{font-weight:700}
+  .step.done .status{color:var(--green-light)}
+  .step.is-next .status{color:var(--green-light)}
+  .chev{flex:none;width:20px;height:20px;margin-top:3px;color:var(--muted);transition:transform .2s ease}
+  .step-head[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .step-body{padding:0 14px 14px 50px;font-size:.94rem}
+  .step-body .push{font-size:1rem;margin-bottom:12px}
+  .step-body h4{margin:12px 0 2px;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green-light)}
+  .step-body p{color:#dde3dc}
+  .step-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+  /* the post-answer focus: unmistakable */
+  .is-focus{
+    border-color:var(--green-light) !important;
+    box-shadow:0 0 0 3px var(--green-glow), 0 10px 30px rgba(0,0,0,.35);
+    background-color:#20342a !important;
+    animation:pulse 1.1s ease-out 2;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(143,214,174,.65), 0 10px 30px rgba(0,0,0,.35)}
+    70%{box-shadow:0 0 0 12px rgba(143,214,174,0), 0 10px 30px rgba(0,0,0,.35)}
+    100%{box-shadow:0 0 0 3px var(--green-glow), 0 10px 30px rgba(0,0,0,.35)}
+  }
+  .focus-flag{
+    display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--green);color:#fff;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:2px;
+  }
+  /* the as-you-type preview: lighter, dashed, no motion */
+  .is-preview{
+    border-color:rgba(143,214,174,.7) !important;border-style:dashed !important;
+    background-color:#1d2d25 !important;
+  }
+  .board.dimming .step:not(.is-focus){opacity:.45}
+  .board.dimming .tile:not(.is-focus){opacity:.55}
+
+  /* the money map */
+  .map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @media (min-width:640px){.map{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .map.is-focus,.map.is-preview{border-radius:12px;padding:6px;margin:-6px}
+  .map.is-focus{animation:none;box-shadow:0 0 0 3px var(--green-glow)}
+  .tile{
+    position:relative;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;
+    text-align:left;background:var(--ink-3);border:1px solid var(--line);
+    border-top:4px solid var(--line-2);border-radius:10px;padding:10px 11px;cursor:pointer;min-width:0;
+    transition:opacity .35s ease, box-shadow .25s ease, border-color .25s ease, background-color .25s ease;
+    scroll-margin-top:16px;scroll-margin-bottom:calc(var(--sheet-h) + 16px);
+  }
+  .tile.red{border-top-color:var(--red-line)}
+  .tile.amber{border-top-color:var(--amber-line)}
+  .tile.green{border-top-color:var(--green)}
+  .tile b{display:block;font-size:.9rem;line-height:1.25;overflow-wrap:anywhere}
+  .tile .st{display:flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;margin-top:3px}
+  .tile.red .st{color:var(--red)}.tile.amber .st{color:var(--amber)}.tile.green .st{color:var(--green-light)}
+  .tile .note{margin:6px 0 0;color:var(--muted);font-size:.82rem;line-height:1.45;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tile.open .note,.tile.is-focus .note{-webkit-line-clamp:unset;display:block}
+  .tile.soft{box-shadow:0 0 0 2px rgba(143,214,174,.45)}
+  .shape{font-size:.72rem;line-height:1}
+
+  /* tools */
+  .tool-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;max-width:100%;
+    background:var(--ink-3);border:1px solid var(--line-2);color:var(--text);
+    border-radius:999px;padding:7px 13px;font-size:.88rem;font-weight:600;cursor:pointer;text-align:left;
+    transition:background-color .2s ease,border-color .2s ease;
+  }
+  .chip:hover:not(:disabled){background:var(--ink-4);border-color:var(--green-light)}
+  .chip:disabled{opacity:.5;cursor:not-allowed}
+  .chip .ico{color:var(--green-light);flex:none}
+  .chip span{overflow-wrap:anywhere}
+  .tool-cards{display:grid;gap:10px;margin-top:12px}
+  .tool-card{
+    background:var(--ink-3);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:12px;padding:14px 16px;
+    animation:slidein .35s ease-out;scroll-margin-top:16px;scroll-margin-bottom:calc(var(--sheet-h) + 16px);
+  }
+  @keyframes slidein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .tool-card-head{display:flex;align-items:flex-start;gap:10px}
+  .tool-card-head h3{flex:1;min-width:0;overflow-wrap:anywhere}
+  .x{flex:none;background:none;border:1px solid var(--line-2);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1}
+  .x:hover{color:var(--text);background:var(--ink-4)}
+  .cost{color:var(--muted);font-size:.88rem;margin:4px 0 10px}
+  .walk{margin:10px 0 0;padding-left:1.4em;font-size:.93rem}
+  .walk li{margin:4px 0;padding-left:2px}
+  .walk li::marker{color:var(--green-light);font-weight:700}
+  .empty{color:var(--muted);font-size:.92rem;margin:4px 0}
+
+  /* ── chat ───────────────────────────────────────────────── */
+  .chat{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);
+    display:flex;flex-direction:column;min-width:0;
+  }
+  @media (min-width:960px){
+    .site-head{position:sticky;top:0;z-index:30;background:var(--ink)}
+    .chat{position:sticky;top:76px;height:calc(100vh - 92px);max-height:860px}
+    main.in-app{padding-top:16px;padding-bottom:16px}
+    .sheet-toggle{display:none !important}
+  }
+  .chat-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .chat-head h2{flex:1;font-size:1.02rem}
+  .dot-live{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(31,157,85,.25);flex:none}
+  .sheet-toggle{background:none;border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.84rem;font-weight:700;color:var(--muted)}
+
+  .log{position:relative;flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain;min-height:0}
+  .intro{color:var(--muted);font-size:.92rem}
+  .intro p{margin-bottom:10px}
+  .sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+
+  .bub{max-width:92%;padding:10px 13px;border-radius:14px;font-size:.95rem;overflow-wrap:anywhere;animation:slidein .25s ease-out}
+  .bub .txt{white-space:pre-wrap}
+  .me{align-self:flex-end;background:var(--green-deep);color:#fff;border-bottom-right-radius:4px}
+  .me.failed{opacity:.75}
+  .bot{align-self:flex-start;background:var(--ink-3);border:1px solid var(--line);border-bottom-left-radius:4px;width:92%}
+  .err{align-self:flex-start;background:#3a1d17;border:1px solid #6b342a;color:var(--error);border-bottom-left-radius:4px}
+  .err .btn{margin-top:8px}
+  .ungrounded{
+    display:flex;gap:7px;align-items:flex-start;margin-top:9px;padding:7px 9px;border-radius:8px;
+    background:#2c2a1a;border:1px dashed #6b5d24;color:#f3d77e;font-size:.8rem;line-height:1.4;
+  }
+  .artifact{margin-top:10px;border:1px solid var(--line-2);border-radius:10px;background:var(--ink);overflow:hidden}
+  .artifact-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px 6px 11px;border-bottom:1px solid var(--line);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-light)}
+  .artifact pre{margin:0;padding:10px 11px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;font-size:.9rem;color:var(--text);max-height:280px;overflow-y:auto}
+  .bot-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .qr{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .qr .chip{background:transparent;border-color:rgba(143,214,174,.55);color:var(--green-light)}
+
+  .typing{align-self:flex-start;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.86rem;padding:10px 13px;border-radius:14px;background:var(--ink-3);border:1px solid var(--line)}
+  .dots{display:inline-flex;gap:4px}
+  .dots i{width:7px;height:7px;border-radius:50%;background:var(--green-light);opacity:.35;animation:blink 1.2s infinite}
+  .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+  .composer{border-top:1px solid var(--line);padding:10px 12px 12px}
+  .about{display:flex;align-items:center;gap:6px;min-height:0;font-size:.8rem;color:var(--muted);margin:0 2px 8px;overflow:hidden}
+  .about:empty{display:none}
+  .about .lbl{flex:none}
+  .about button{min-width:0;background:var(--green-wash);border:1px dashed rgba(143,214,174,.7);color:var(--green-light);border-radius:999px;padding:2px 9px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row{display:flex;align-items:flex-end;gap:8px}
+  textarea{
+    flex:1;min-width:0;resize:none;font-family:inherit;font-size:1rem;line-height:1.45;
+    padding:11px 13px;border-radius:12px;color:var(--text);background:var(--ink);border:1px solid var(--line-2);
+    max-height:160px;min-height:46px;
+  }
+  .send{flex:none;width:46px;height:46px;border-radius:12px;border:0;background:var(--green);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .send:hover:not(:disabled){background:#25b463}
+  .send:disabled{opacity:.55;cursor:not-allowed}
+  .compose-foot{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:.76rem;color:var(--faint)}
+  .count.over{color:var(--error);font-weight:700}
+
+  /* ── mobile: chat becomes a bottom sheet ────────────────── */
+  @media (max-width:959.98px){
+    .chat{
+      position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:16px 16px 0 0;border-bottom:0;
+      box-shadow:0 -12px 30px rgba(0,0,0,.45);
+      padding-bottom:env(safe-area-inset-bottom);
+      max-height:calc(100dvh - 60px);
+    }
+    .chat-head{cursor:pointer;padding:10px 14px}
+    .chat-head::before{content:"";position:absolute;left:50%;top:5px;width:38px;height:4px;margin-left:-19px;border-radius:4px;background:var(--line-2)}
+    .chat:not(.open) .log{display:none}
+    .chat.open .log{height:38dvh;flex:none}
+    .board{padding-bottom:calc(var(--sheet-h) + 16px)}
+    main.in-app{padding-bottom:0}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none !important;transition:none !important}
+    .spinner{animation:spin 2.4s linear infinite !important}
+  }
+</style>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap head-in">
+    <a class="wordmark" href="/">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#0f766e"/><rect x="9" y="8" width="14" height="3" fill="#fff"/><rect x="9" y="15" width="10" height="3" fill="#fff"/><rect x="9" y="22" width="3" height="3" fill="#fff"/></svg>
+      <span class="serif">Fin</span>
+    </a>
+    <span class="badge" id="demoBadge" hidden title="This page is showing made-up example data, not a real person.">Demo</span>
+    <nav aria-label="Main"><a href="/plan.html">My plan</a><a href="/">Home</a></nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <noscript>
+    <style>.needs-js{display:none !important}</style>
+    <div class="wrap narrow">
+      <p class="eyebrow">Ask Fin</p>
+      <h1>This page needs JavaScript</h1>
+      <div class="card">
+        <p>Turn JavaScript on and reload to ask questions about your plan here.</p>
+        <p>Or just ask on WhatsApp — it's the same Fin, and the same plan.</p>
+        <p style="margin-top:16px">
+          <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=ask">Ask Fin on WhatsApp</a>
+        </p>
+      </div>
+    </div>
+  </noscript>
+
+  <p class="loading needs-js" id="booting" role="status">Opening your plan…</p>
+
+  <!-- ── sign in ─────────────────────────────────────────── -->
+  <div class="wrap narrow needs-js" id="signIn" hidden>
+    <p class="eyebrow">Ask Fin</p>
+    <h1 id="signInTitle" tabindex="-1">Ask about your plan</h1>
+    <p class="lede">Ask anything about your 90-day money plan, and the plan shows you the answer — the step, the part of your money, the place it sends you. Sign in with the number you use to talk to Fin.</p>
+
+    <div class="card" id="stepNumber">
+      <form id="numberForm" novalidate>
+        <label for="wa_id">Your WhatsApp number</label>
+        <span class="hint" id="waHint">Country code first, no plus and no spaces. A South African number starts with 27.</span>
+        <input id="wa_id" name="wa_id" type="text" inputmode="numeric" autocomplete="tel"
+               placeholder="27809930000" maxlength="18" aria-describedby="waHint" required>
+        <button class="btn btn-primary btn-full" type="submit" id="sendCodeBtn">Send me a code</button>
+      </form>
+    </div>
+
+    <div class="card" id="stepCode" hidden>
+      <form id="codeForm" novalidate>
+        <label for="code">The 6-digit code</label>
+        <span class="hint" id="codeHint">Fin sent it to <span id="waEcho">your number</span> on WhatsApp. It works for ten minutes.</span>
+        <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+               pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-describedby="codeHint" required>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="submit" id="verifyBtn">Sign in</button>
+          <button class="btn btn-ghost" type="button" id="resendBtn">Send a new code</button>
+          <button class="btn btn-ghost" type="button" id="changeNumberBtn">Change number</button>
+        </div>
+      </form>
+    </div>
+
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+    <p class="small">
+      Only someone holding that phone can sign in, because the code arrives on WhatsApp.
+      Want to see how it works first? <a href="/ask.html?demo=1">Try it with an example household</a>.
+    </p>
+  </div>
+
+  <!-- ── the app ─────────────────────────────────────────── -->
+  <div class="wrap needs-js" id="appView" hidden>
+    <div class="app">
+
+      <section class="board" id="board" aria-label="Your plan">
+        <div class="biz">
+          <div class="biz-text">
+            <p class="eyebrow" id="bizEyebrow">Your 90-day plan</p>
+            <h1 id="bizName" tabindex="-1">Your money</h1>
+            <p class="biz-meta" id="bizMeta"></p>
+          </div>
+        </div>
+
+        <div class="panel" id="progressPanel" aria-labelledby="progressTitle">
+          <div class="panel-head">
+            <h2 id="progressTitle">Where you are</h2>
+            <p class="panel-sub" id="progressSub"></p>
+          </div>
+          <div class="progress-line"><span class="big" id="progressPct">0%</span><span class="panel-sub" id="progressWords"></span></div>
+          <div class="bar" id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progressTitle"><i style="width:2%"></i></div>
+          <div class="goal" id="goal" hidden><b>The 90-day goal</b><span id="goalText"></span></div>
+          <div class="next" id="nextRow" hidden><span class="lbl">Up next:</span><span id="nextTitle"></span><button type="button" class="linkish" id="nextShow">Show me</button></div>
+        </div>
+
+        <div class="panel" aria-labelledby="stepsTitle">
+          <div class="panel-head">
+            <h2 id="stepsTitle">The steps</h2>
+            <p class="panel-sub">Tap a step to open it.</p>
+          </div>
+          <div id="steps"></div>
+        </div>
+
+        <div class="panel" aria-labelledby="mapTitle">
+          <div class="panel-head">
+            <h2 id="mapTitle">Your Money Map, area by area</h2>
+            <p class="panel-sub">Tap an area to read Fin's note.</p>
+          </div>
+          <div class="map" id="map"></div>
+        </div>
+
+        <div class="panel" aria-labelledby="toolsTitle" id="toolsPanel">
+          <div class="panel-head">
+            <h2 id="toolsTitle">Places your plan sends you</h2>
+            <p class="panel-sub">Each one comes with a walkthrough.</p>
+          </div>
+          <div class="tool-chips" id="toolChips"></div>
+          <div class="tool-cards" id="toolCards"></div>
+        </div>
+      </section>
+
+      <aside class="chat" id="chat" aria-label="Ask Fin">
+        <div class="chat-head" id="chatHead">
+          <span class="dot-live" aria-hidden="true"></span>
+          <h2 id="chatTitle">Ask Fin</h2>
+          <button type="button" class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-controls="log">Open</button>
+        </div>
+
+        <div class="log" id="log" role="log" aria-live="polite" aria-relevant="additions" aria-labelledby="chatTitle">
+          <div class="intro" id="intro">
+            <p>Ask anything about your plan — a step you're stuck on, a letter you got, a message someone forwarded you, how you're doing. Fin answers from your plan and from checked facts, and shows you the part of the plan it means.</p>
+            <div class="sugg" id="sugg"></div>
+          </div>
+        </div>
+
+        <form class="composer" id="askForm" novalidate>
+          <div class="about" id="about" aria-hidden="true"></div>
+          <div class="row">
+            <label for="q" class="sr">Your question</label>
+            <textarea id="q" rows="1" maxlength="1200" placeholder="Ask about your plan…" aria-describedby="composeHelp"></textarea>
+            <button class="send" id="sendBtn" type="submit" aria-label="Send">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z" fill="currentColor"/></svg>
+            </button>
+          </div>
+          <div class="compose-foot"><span id="composeHelp">Enter to send · Shift+Enter for a new line</span><span class="count" id="count"></span></div>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+  <p class="sr" id="boardStatus" role="status" aria-live="polite"></p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── set-up ───────────────────────────────────────────────
+  var DEMO = /(?:^|[?&])demo=1(?:&|$)/.test(location.search);
+  var PLAN_API = "/api/plan";
+  var ASK_API = "/api/ask";
+  var MAX_Q = 600;
+  var MODE = DEMO ? "demo" : "live";
+  // Both are scoped to the signed-in person (see scopeStorage()): the key
+  // under OWNER_KEY says whose they are, and each record carries it too.
+  var HISTORY_KEY = "fin.ask.history.v2." + MODE;
+  // A slow answer keeps computing server-side; the page polls for it (see send()).
+  var PENDING_KEY = "fin.ask.pending.v2." + MODE;
+  var OWNER_KEY = "fin.ask.owner.v2." + MODE;
+  var bizKey = null;                      // state.business.key once state has loaded
+  var POLL_MS = 2000;                     // between polls for a pending turn
+  var POLL_NET_RETRIES = 3;               // network failures in a row before "Try again"
+  var PENDING_RESUME_MS = 5 * 60 * 1000;  // a stored pending turn older than this is not resumed
+  var PENDING_GIVE_UP_MS = 6 * 60 * 1000; // the server gives up at ~300s; never poll forever
+  var UNREACHABLE = "Fin isn't answering right now. Check your connection and try again — or ask on WhatsApp.";
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var mobileMQ = window.matchMedia("(max-width: 959.98px)");
+
+  var el = function (id) { return document.getElementById(id); };
+  function node(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function str(v) { return typeof v === "string" ? v : (v === null || v === undefined ? "" : String(v)); }
+
+  // Only ever link to http(s) or a same-site path. Anything else from the API
+  // (javascript:, data:, protocol-relative) is dropped, not rendered.
+  function safeUrl(u) {
+    u = str(u).trim();
+    if (/^https?:\/\//i.test(u)) return u;
+    if (/^\/(?!\/)/.test(u)) return u;
+    return null;
+  }
+
+  // The eight areas of the Money Map, as api/_lib/types.ts DOMAIN_LABELS names them.
+  var DOMAIN_LABELS = {
+    income: "Money in", spending: "Money out", debt: "What you owe", cushion: "Emergency money",
+    credit_record: "Credit record", protection: "Cover", family_money: "Family money", goals: "The future"
+  };
+  // Everyday words people actually type, per area — only used for the as-you-type preview.
+  var DOMAIN_WORDS = {
+    income: "income salary wage pay payday grant sassa srd uif refund sars tax earn earning piece job hustle comes in",
+    spending: "spend spending budget month groceries rent transport airtime electricity data fees bank charges bills where it goes",
+    debt: "debt owe owed loan loans account arrears mashonisa shark instalment repayment creditor garnishee collector interest clothing furniture",
+    cushion: "save saving savings emergency cushion goalsave pocket put aside rainy day reach",
+    credit_record: "credit record report score bureau transunion experian blacklisted listed dispute prescribed review counselling counsellor",
+    protection: "funeral policy cover insurance burial society medical aid life beneficiary premium waiting period",
+    family_money: "family mother parents children black tax stokvel support send home partner relatives",
+    goals: "goal future house home car school fees retirement tfsa two pot pension long term bigger"
+  };
+  var STATUS_WORD = { red: "Not sorted yet", amber: "In progress", green: "Sorted" };
+  var STATUS_SHAPE = { red: "\u25CF", amber: "\u25B2", green: "\u2713" };
+  var COUNTRY = { ZA: "South Africa" };
+  var STOP = {};
+  ("the and for how what you your my me do does did can could should would will with this that these those about get got have has had from when where which who why are is was were it its to of in on at by an or so if not but just any all some our we i im i'm am be been being there their them they then than too very much many more most make need want know tell help please also into out up one first next step").split(" ").forEach(function (w) { STOP[w] = 1; });
+
+  var state = null;          // the GET state payload
+  var inflight = false;
+  var lastQuestion = "";
+  var history = [];
+  var currentFocus = null;   // { kind, id }
+  var dimTimer = null;
+
+  // ── fetch helpers ────────────────────────────────────────
+  function request(method, url, body) {
+    var ctrl = ("AbortController" in window) ? new AbortController() : null;
+    var t = ctrl ? setTimeout(function () { ctrl.abort(); }, 45000) : null;
+    return fetch(url, {
+      method: method,
+      credentials: "same-origin",
+      headers: body ? { "Content-Type": "application/json", Accept: "application/json" } : { Accept: "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function (res) {
+      if (t) clearTimeout(t);
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        return { status: res.status, ok: res.ok, data: data || {} };
+      });
+    }, function (err) {
+      if (t) clearTimeout(t);
+      throw err;
+    });
+  }
+
+  // ── session storage (per-tab, per-person) ──────────────
+  // v1 keys (and Charlie's) were not scoped to a person; drop them rather than guess whose they were.
+  try {
+    ["fin.ask.history.v1.", "fin.ask.pending.v1.", "fin.ask.history.v2.", "fin.ask.pending.v2.", "fin.ask.owner.v2."].forEach(function (k) { sessionStorage.removeItem(k + MODE); });
+  } catch (e) { /* private mode: fine */ }
+
+  // Called once state names the person. A different person than the one
+  // this tab's storage belongs to (person B on person A's phone) wipes A's chat
+  // and A's pending turn before anything is rendered or polled.
+  function scopeStorage(key) {
+    bizKey = key;
+    try {
+      if (sessionStorage.getItem(OWNER_KEY) !== key) {
+        sessionStorage.removeItem(HISTORY_KEY);
+        sessionStorage.removeItem(PENDING_KEY);
+        sessionStorage.setItem(OWNER_KEY, key);
+      }
+    } catch (e) { /* private mode: fine */ }
+  }
+  function loadHistory() {
+    try {
+      var raw = JSON.parse(sessionStorage.getItem(HISTORY_KEY) || "null");
+      if (!raw || !bizKey || raw.key !== bizKey || !Array.isArray(raw.items)) return [];
+      return raw.items;
+    } catch (e) { return []; }
+  }
+  function saveHistory() {
+    if (!bizKey) return;
+    try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify({ key: bizKey, items: history.slice(-40) })); } catch (e) { /* private mode: fine */ }
+  }
+  // The one turn still being answered, so a reload can pick it back up.
+  // Written BEFORE the POST goes out: { client_turn, turn?, question, at, key }.
+  function savePending(p) {
+    if (!bizKey) return;
+    p.key = bizKey;
+    try { sessionStorage.setItem(PENDING_KEY, JSON.stringify(p)); } catch (e) { /* private mode: fine */ }
+  }
+  function loadPending() {
+    try {
+      var p = JSON.parse(sessionStorage.getItem(PENDING_KEY) || "null");
+      if (!p || !bizKey || p.key !== bizKey) return null;
+      if (!validClientTurn(p.client_turn) || typeof p.question !== "string" || typeof p.at !== "number") return null;
+      if (p.turn !== undefined && (typeof p.turn !== "string" || !p.turn)) return null;
+      return p;
+    } catch (e) { return null; }
+  }
+  function clearPending() {
+    try { sessionStorage.removeItem(PENDING_KEY); } catch (e) { /* private mode: fine */ }
+  }
+
+  // A page-made id for one question, so the server can tell a repeat of the
+  // same POST (a reload, a retry) from a new question. 16 random bytes → 22
+  // base64url characters.
+  function newClientTurn() {
+    var b = new Uint8Array(16);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+    else for (var i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256);
+    var bin = "";
+    for (var j = 0; j < b.length; j++) bin += String.fromCharCode(b[j]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function validClientTurn(v) { return typeof v === "string" && /^[A-Za-z0-9_-]{16,40}$/.test(v); }
+
+  // ── views ────────────────────────────────────────────────
+  var booting = el("booting"), signIn = el("signIn"), appView = el("appView");
+
+  function showSignIn(message) {
+    booting.hidden = true;
+    appView.hidden = true;
+    signIn.hidden = false;
+    el("main").classList.remove("in-app");
+    if (message) say(message, "bad");
+    el("signInTitle").focus();
+  }
+  function showApp(focusHeading) {
+    booting.hidden = true;
+    signIn.hidden = true;
+    appView.hidden = false;
+    el("main").classList.add("in-app");
+    measureSheet();
+    if (focusHeading) el("bizName").focus({ preventScroll: true });
+  }
+
+  // ── sign-in (identical flow to /plan.html) ───────────────
+  var msg = el("msg"), stepNumber = el("stepNumber"), stepCode = el("stepCode");
+  var waInput = el("wa_id"), codeInput = el("code");
+  var sendCodeBtn = el("sendCodeBtn"), verifyBtn = el("verifyBtn"), resendBtn = el("resendBtn");
+  var waId = "", cooldownTimer = null;
+
+  function say(text, kind) {
+    msg.textContent = text || "";
+    msg.className = "msg" + (text ? " " + (kind || "ok") : "");
+  }
+  function problem(r) {
+    if (r.data && r.data.message) return str(r.data.message);
+    if (r.status === 429) return "Too many tries. Wait a minute and try again.";
+    if (r.status >= 500) return "Something broke on our side. Try again in a minute.";
+    return "That didn't work. Try again.";
+  }
+  function busyBtn(btn, on, label) {
+    if (on) {
+      btn.dataset.label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = label;
+    } else {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.label || btn.textContent;
+    }
+  }
+  function planPost(action, body) { return request("POST", PLAN_API + "?action=" + action, body); }
+
+  // An example for each market the local number's shape fits — the same
+  // table as the server's wrongFormatMessage (api/plan.ts).
+  var LOCAL_EXAMPLES = [
+    ["South Africa", /^0[678]\d{8}$/, "080 993 0000 becomes 27809930000"]
+  ];
+  function wrongFormatMessage(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    var fits = LOCAL_EXAMPLES.filter(function (e) { return e[1].test(digits); });
+    var shown = fits.length ? fits : LOCAL_EXAMPLES;
+    return "Start with your country code and leave out the first 0 and the plus. " + shown.map(function (e) { return "In " + e[0] + ", " + e[2] + "."; }).join(" ");
+  }
+
+  el("numberForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var digits = (waInput.value || "").replace(/\D/g, "").replace(/^0+/, "");
+    // Typed the local way (0772…): same rule as plan.html and the server's
+    // typedLocally. Stripping the 0 here used to send "772…", which matched
+    // no record and promised a code that never came.
+    if (/^0(?!0)/.test((waInput.value || "").replace(/[\s().\-]/g, ""))) {
+      say(wrongFormatMessage(waInput.value), "bad");
+      waInput.focus();
+      return;
+    }
+    if (digits.length < 8 || digits.length > 15) {
+      say("That doesn't look like a full number. Start with the country code — 27 — and leave out the plus.", "bad");
+      waInput.focus();
+      return;
+    }
+    waId = digits;
+    say("");
+    busyBtn(sendCodeBtn, true, "Sending…");
+    planPost("request_code", { wa_id: waId }).then(function (r) {
+      busyBtn(sendCodeBtn, false);
+      if (!r.ok) { say(problem(r), "bad"); return; }
+      stepNumber.hidden = true;
+      stepCode.hidden = false;
+      el("waEcho").textContent = "+" + waId;
+      say(str(r.data.message) || "If that number has a plan with Fin, a code is on its way to it on WhatsApp.", "ok");
+      codeInput.value = "";
+      codeInput.focus();
+      startCooldown(60);
+    }, function () { busyBtn(sendCodeBtn, false); say(UNREACHABLE, "bad"); });
+  });
+  el("changeNumberBtn").addEventListener("click", function () {
+    stepCode.hidden = true; stepNumber.hidden = false; say(""); waInput.focus();
+  });
+  function startCooldown(seconds) {
+    clearInterval(cooldownTimer);
+    var left = seconds;
+    var tick = function () {
+      if (left <= 0) { clearInterval(cooldownTimer); resendBtn.disabled = false; resendBtn.textContent = "Send a new code"; return; }
+      resendBtn.disabled = true; resendBtn.textContent = "New code in " + left + "s"; left--;
+    };
+    tick();
+    cooldownTimer = setInterval(tick, 1000);
+  }
+  resendBtn.addEventListener("click", function () {
+    say("");
+    planPost("request_code", { wa_id: waId }).then(function (r) {
+      if (!r.ok) { say(problem(r), "bad"); return; }
+      say(str(r.data.message) || "A new code is on its way.", "ok");
+      startCooldown(60);
+      codeInput.focus();
+    }, function () { say(UNREACHABLE, "bad"); });
+  });
+  el("codeForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var code = (codeInput.value || "").replace(/\D/g, "");
+    if (code.length !== 6) { say("The code is six digits.", "bad"); codeInput.focus(); return; }
+    say("");
+    busyBtn(verifyBtn, true, "Checking…");
+    planPost("verify", { wa_id: waId, code: code }).then(function (r) {
+      busyBtn(verifyBtn, false);
+      if (!r.ok || !r.data.ok) {
+        say(problem(r), "bad");
+        codeInput.select();
+        if (r.status === 429 || /expired|new code/i.test(str(r.data.message))) {
+          clearInterval(cooldownTimer); resendBtn.disabled = false; resendBtn.textContent = "Send a new code";
+        }
+        return;
+      }
+      say("Signed in. Opening your plan…", "ok");
+      loadState(true);
+    }, function () { busyBtn(verifyBtn, false); say(UNREACHABLE, "bad"); });
+  });
+
+  // ── state ────────────────────────────────────────────────
+  function loadState(afterSignIn) {
+    var p = DEMO ? Promise.resolve({ status: 200, ok: true, data: DEMO_STATE() }) : request("GET", ASK_API + "?action=state");
+    p.then(function (r) {
+      if (r.status === 401) { showSignIn(afterSignIn ? "That didn't stick. Sign in again." : ""); return; }
+      if (!r.ok || !r.data || !r.data.ok) {
+        booting.textContent = problem(r);
+        if (!signIn.hidden) say(problem(r), "bad");
+        return;
+      }
+      say("");
+      state = normalise(r.data);
+      // Scope storage to this person before anything from storage is shown.
+      var key = DEMO ? "demo" : str(state.business.key);
+      if (key !== bizKey) forgetOtherOwner();
+      scopeStorage(key);
+      renderBoard();
+      showApp(!!afterSignIn);
+      restoreHistory();
+      resumePending();
+    }, function () {
+      booting.textContent = UNREACHABLE;
+      if (!signIn.hidden) say(UNREACHABLE, "bad");
+    });
+  }
+
+  // Defensive: the board must render even if a field is missing or the wrong shape.
+  function normalise(d) {
+    var plan = d.plan && typeof d.plan === "object" ? d.plan : null;
+    var steps = plan && Array.isArray(plan.steps) ? plan.steps.filter(function (s) { return s && s.id; }) : [];
+    return {
+      business: d.business || {},
+      plan: plan ? { goal: str(plan.goal), progress: plan.progress || {}, steps: steps } : null,
+      map: Array.isArray(d.map) ? d.map.filter(function (m) { return m && m.domain; }) : [],
+      tools: d.tools && typeof d.tools === "object" ? d.tools : {},
+      suggestions: Array.isArray(d.suggestions) ? d.suggestions.filter(function (s) { return typeof s === "string" && s.trim(); }).slice(0, 4) : []
+    };
+  }
+
+  // ── board rendering ──────────────────────────────────────
+  var stepIndex = {};   // id → { el, step, body, head }
+  var tileIndex = {};   // domain → el
+  var chipIndex = {};   // tool_id → chip el
+
+  function renderBoard() {
+    var b = state.business;
+    var name = str(b.name) || "Your money";
+    el("bizName").textContent = name;
+    document.title = name + " — Ask Fin";
+    var meta = [];
+    if (b.one_liner) meta.push(str(b.one_liner));
+    if (b.country) meta.push(COUNTRY[b.country] || str(b.country));
+    el("bizMeta").textContent = meta.join(" · ");
+    el("demoBadge").hidden = !DEMO;
+    el("bizEyebrow").textContent = DEMO ? "Example household — demo data" : "Your 90-day money plan";
+
+    renderProgress();
+    renderSteps();
+    renderMap();
+    renderTools();
+    renderSuggestions();
+  }
+
+  function renderProgress() {
+    var plan = state.plan;
+    if (!plan) {
+      el("progressPct").textContent = "—";
+      el("progressWords").textContent = "No plan yet";
+      el("progressSub").textContent = "";
+      el("progressBar").hidden = true;
+      el("goal").hidden = true; el("nextRow").hidden = true;
+      return;
+    }
+    var pr = plan.progress || {};
+    var total = +pr.total || plan.steps.length;
+    var done = +pr.done || plan.steps.filter(function (s) { return s.status === "done"; }).length;
+    var pct = isFinite(+pr.percent) && pr.percent !== undefined ? Math.round(+pr.percent) : (total ? Math.round(done * 100 / total) : 0);
+    el("progressPct").textContent = pct + "%";
+    el("progressWords").textContent = done + " of " + total + " steps done";
+    el("progressSub").textContent = total && done >= total ? "That's the whole plan." : "";
+    var bar = el("progressBar");
+    bar.hidden = false;
+    bar.setAttribute("aria-valuenow", String(pct));
+    bar.firstElementChild.style.width = Math.max(2, Math.min(100, pct)) + "%";
+    el("goal").hidden = !plan.goal;
+    el("goalText").textContent = plan.goal;
+    var next = plan.steps.filter(function (s) { return s.is_next; })[0];
+    el("nextRow").hidden = !next;
+    if (next) {
+      el("nextTitle").textContent = str(next.title);
+      el("nextShow").onclick = function () { focusStep(next.id, { expand: true, announce: true }); };
+    }
+  }
+
+  function statusWord(s) {
+    if (s.status === "done") return "Done";
+    if (s.status === "skipped") return "Skipped";
+    return s.is_next ? "Up next" : "To do";
+  }
+
+  function renderSteps() {
+    var wrap = el("steps");
+    wrap.textContent = "";
+    stepIndex = {};
+    if (!state.plan || !state.plan.steps.length) {
+      wrap.appendChild(node("p", "empty", "Your plan will show here once you've finished the questions on WhatsApp. You can still ask Fin things in the meantime."));
+      var a = node("a", "btn btn-ghost btn-sm", "Carry on with Fin on WhatsApp");
+      a.href = "/wa?m=ask"; a.target = "_blank"; a.rel = "noopener";
+      wrap.appendChild(a);
+      return;
+    }
+    var groups = [], byName = {};
+    state.plan.steps.forEach(function (s) {
+      var w = str(s.workstream) || "Your steps";
+      if (!byName[w]) { byName[w] = { name: w, steps: [] }; groups.push(byName[w]); }
+      byName[w].steps.push(s);
+    });
+    var n = 0;
+    groups.forEach(function (g) {
+      var sec = node("section", "ws");
+      var gid = "ws-" + (groups.indexOf(g) + 1);
+      var h = node("h3", "ws-title");
+      h.id = gid;
+      h.appendChild(document.createTextNode(g.name));
+      var d = g.steps.filter(function (s) { return s.status === "done"; }).length;
+      h.appendChild(node("span", "count", "· " + d + "/" + g.steps.length));
+      sec.appendChild(h);
+      var list = node("div", "steps");
+      list.setAttribute("role", "list");
+      list.setAttribute("aria-labelledby", gid);
+      g.steps.forEach(function (s) { n++; list.appendChild(stepCard(s, n)); });
+      sec.appendChild(list);
+      wrap.appendChild(sec);
+    });
+  }
+
+  function stepCard(s, n) {
+    var card = node("article", "step " + (s.status === "done" ? "done" : s.status === "skipped" ? "skipped" : "open") + (s.is_next ? " is-next" : ""));
+    card.setAttribute("role", "listitem");
+    card.dataset.stepId = s.id;
+    var bodyId = "step-body-" + n;
+    card.id = "step-" + n;
+
+    var head = node("button", "step-head");
+    head.type = "button";
+    head.setAttribute("aria-expanded", "false");
+    head.setAttribute("aria-controls", bodyId);
+    var mark = node("span", "mark", s.status === "done" ? "\u2713" : s.status === "skipped" ? "\u2013" : String(n));
+    mark.setAttribute("aria-hidden", "true");
+    head.appendChild(mark);
+    var main = node("span", "step-main");
+    var title = node("span", "step-title", str(s.title));
+    main.appendChild(title);
+    var tags = node("span", "step-tags");
+    tags.appendChild(node("span", "status", statusWord(s)));
+    if (s.domain) tags.appendChild(node("span", null, DOMAIN_LABELS[s.domain] || str(s.domain)));
+    if (s.tool_id && state.tools[s.tool_id]) tags.appendChild(node("span", null, "Tool: " + str(state.tools[s.tool_id].name)));
+    main.appendChild(tags);
+    head.appendChild(main);
+    head.appendChild(chevron());
+    card.appendChild(head);
+
+    var body = node("div", "step-body");
+    body.id = bodyId;
+    body.hidden = true;
+    if (s.push) body.appendChild(node("p", "push", str(s.push)));
+    if (s.why_for_you) { body.appendChild(node("h4", null, "Why this is yours")); body.appendChild(node("p", null, str(s.why_for_you))); }
+    if (s.done_when) { body.appendChild(node("h4", null, "It's done when")); body.appendChild(node("p", null, str(s.done_when))); }
+    var actions = node("div", "step-actions");
+    if (s.tool_id && state.tools[s.tool_id]) {
+      var tb = node("button", "btn btn-ghost btn-sm", "Walkthrough: " + str(state.tools[s.tool_id].name));
+      tb.type = "button";
+      tb.addEventListener("click", function () { openTool(s.tool_id, { scroll: true, focusCard: true }); });
+      actions.appendChild(tb);
+    }
+    var ask = node("button", "btn btn-ghost btn-sm", "Ask about this step");
+    ask.type = "button";
+    ask.addEventListener("click", function () { prefill("Help me with this step: " + str(s.title)); });
+    actions.appendChild(ask);
+    body.appendChild(actions);
+    card.appendChild(body);
+
+    head.addEventListener("click", function () { setExpanded(s.id, head.getAttribute("aria-expanded") !== "true"); });
+    stepIndex[s.id] = { el: card, step: s, head: head, body: body, title: title };
+    return card;
+  }
+
+  function chevron() {
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 20 20"); svg.setAttribute("class", "chev"); svg.setAttribute("aria-hidden", "true");
+    var p = document.createElementNS(ns, "path");
+    p.setAttribute("d", "M5 7.5 10 12.5 15 7.5"); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+    p.setAttribute("stroke-width", "2"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(p);
+    return svg;
+  }
+
+  function setExpanded(id, open) {
+    var e = stepIndex[id];
+    if (!e) return;
+    e.head.setAttribute("aria-expanded", String(open));
+    e.body.hidden = !open;
+  }
+
+  function renderMap() {
+    var wrap = el("map");
+    wrap.textContent = "";
+    tileIndex = {};
+    if (!state.map.length) { wrap.appendChild(node("p", "empty", "Your map appears once your plan is built.")); return; }
+    state.map.forEach(function (m) {
+      var st = m.status === "red" || m.status === "amber" || m.status === "green" ? m.status : "amber";
+      var t = node("button", "tile " + st);
+      t.type = "button";
+      t.dataset.domain = m.domain;
+      t.setAttribute("aria-expanded", "false");
+      t.appendChild(node("b", null, str(m.label) || DOMAIN_LABELS[m.domain] || m.domain));
+      var s = node("span", "st");
+      var sh = node("span", "shape", STATUS_SHAPE[st]); sh.setAttribute("aria-hidden", "true");
+      s.appendChild(sh);
+      s.appendChild(document.createTextNode(STATUS_WORD[st]));
+      t.appendChild(s);
+      if (m.note) t.appendChild(node("span", "note", str(m.note)));
+      t.addEventListener("click", function () {
+        var open = !t.classList.contains("open");
+        t.classList.toggle("open", open);
+        t.setAttribute("aria-expanded", String(open));
+      });
+      tileIndex[m.domain] = t;
+      wrap.appendChild(t);
+    });
+  }
+
+  function renderTools() {
+    var chips = el("toolChips");
+    chips.textContent = "";
+    el("toolCards").textContent = "";
+    chipIndex = {};
+    var ids = Object.keys(state.tools);
+    el("toolsPanel").hidden = !ids.length;
+    ids.forEach(function (id) {
+      var t = state.tools[id] || {};
+      var c = toolChip(id, t, function () { openTool(id, { scroll: true, focusCard: true }); });
+      chipIndex[id] = c;
+      chips.appendChild(c);
+    });
+  }
+
+  function toolChip(id, t, onClick) {
+    var c = node("button", "chip");
+    c.type = "button";
+    c.dataset.toolId = id;
+    var ico = node("span", "ico", "\u2692"); ico.setAttribute("aria-hidden", "true");
+    c.appendChild(ico);
+    c.appendChild(node("span", null, str(t.name) || id));
+    c.addEventListener("click", onClick);
+    return c;
+  }
+
+  function openTool(id, opts) {
+    opts = opts || {};
+    var t = state.tools[id];
+    var cards = el("toolCards");
+    if (!t) return null;
+    var existing = cards.querySelector('[data-tool-id="' + cssEsc(id) + '"]');
+    var card = existing;
+    if (!card) {
+      card = node("article", "tool-card");
+      card.dataset.toolId = id;
+      card.tabIndex = -1;
+      var head = node("div", "tool-card-head");
+      var h = node("h3", null, str(t.name) || id);
+      head.appendChild(h);
+      var x = node("button", "x", "\u00D7");
+      x.type = "button";
+      x.setAttribute("aria-label", "Close " + (str(t.name) || "tool"));
+      x.addEventListener("click", function () {
+        card.parentNode && card.parentNode.removeChild(card);
+        if (chipIndex[id]) chipIndex[id].focus();
+      });
+      head.appendChild(x);
+      card.appendChild(head);
+      if (t.cost_line) card.appendChild(node("p", "cost", str(t.cost_line)));
+      var url = safeUrl(t.url);
+      if (url) {
+        var a = node("a", "btn btn-primary btn-sm", "Open " + (str(t.name) || "the tool"));
+        a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+        card.appendChild(a);
+      }
+      var steps = Array.isArray(t.walkthrough) ? t.walkthrough : [];
+      if (steps.length) {
+        card.appendChild(node("h4", "sr", "Walkthrough"));
+        var ol = node("ol", "walk");
+        steps.forEach(function (w) { ol.appendChild(node("li", null, str(w))); });
+        card.appendChild(ol);
+      }
+      cards.insertBefore(card, cards.firstChild);
+    }
+    if (opts.scroll) scrollToEl(card);
+    if (opts.focusCard) card.focus({ preventScroll: true });
+    return card;
+  }
+
+  function cssEsc(s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, "\\$&"); }
+
+  // ── focus: making the board answer ───────────────────────
+  function clearFocus() {
+    Array.prototype.forEach.call(document.querySelectorAll(".is-focus"), function (n) { n.classList.remove("is-focus"); });
+    Array.prototype.forEach.call(document.querySelectorAll(".tile.soft"), function (n) { n.classList.remove("soft"); });
+    Array.prototype.forEach.call(document.querySelectorAll(".focus-flag"), function (n) { n.parentNode.removeChild(n); });
+    el("board").classList.remove("dimming");
+    clearTimeout(dimTimer);
+    currentFocus = null;
+  }
+
+  function flag(target) {
+    var f = node("span", "focus-flag", "Answer");
+    f.setAttribute("aria-hidden", "true");
+    target.appendChild(f);
+  }
+
+  function dimOthers() {
+    var board = el("board");
+    board.classList.add("dimming");
+    clearTimeout(dimTimer);
+    dimTimer = setTimeout(function () { board.classList.remove("dimming"); }, 2400);
+  }
+
+  function restartAnim(n) {
+    n.classList.remove("is-focus");
+    void n.offsetWidth; // reflow so the pulse replays
+    n.classList.add("is-focus");
+  }
+
+  function scrollToEl(n) {
+    if (!n) return;
+    var rect = n.getBoundingClientRect();
+    var sheet = mobileMQ.matches ? el("chat").getBoundingClientRect().height : 0;
+    var viewH = window.innerHeight - sheet;
+    // Put the target near the top of whatever is visible above the sheet.
+    // On desktop the header is sticky, so it covers the top 60px of the window.
+    var head = mobileMQ.matches ? 0 : document.querySelector(".site-head").getBoundingClientRect().height;
+    var top = window.pageYOffset + rect.top - head - 16;
+    if (rect.top >= head + 8 && rect.bottom <= viewH - 8) return; // already fully visible
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  function focusStep(id, opts) {
+    var e = stepIndex[id];
+    if (!e) return false;
+    clearFocus();
+    setExpanded(id, true);
+    restartAnim(e.el);
+    flag(e.title);
+    if (opts && opts.dim !== false) dimOthers();
+    scrollToEl(e.el);
+    currentFocus = { kind: "step", id: id };
+    if (opts && opts.announce) announce("Showing step on your plan: " + str(e.step.title));
+    return true;
+  }
+
+  function focusMap(domain, opts) {
+    clearFocus();
+    var target;
+    if (domain && tileIndex[domain]) {
+      target = tileIndex[domain];
+      target.classList.add("open");
+      target.setAttribute("aria-expanded", "true");
+      restartAnim(target);
+      dimOthers();
+      if (opts && opts.announce) announce("Showing on your plan: " + target.querySelector("b").textContent);
+    } else {
+      target = el("map");
+      restartAnim(target);
+      Array.prototype.forEach.call(target.querySelectorAll(".tile"), function (t) { t.classList.add("open"); t.setAttribute("aria-expanded", "true"); });
+      if (opts && opts.announce) announce("Showing your Money Map, area by area.");
+    }
+    scrollToEl(target);
+    currentFocus = { kind: "map", id: domain || null };
+    return true;
+  }
+
+  function focusTool(id, opts) {
+    if (!state.tools[id]) return false;
+    clearFocus();
+    var card = openTool(id, {});
+    if (!card) return false;
+    restartAnim(card);
+    scrollToEl(card);
+    currentFocus = { kind: "tool", id: id };
+    if (opts && opts.announce) announce("Opened the walkthrough for " + str(state.tools[id].name) + ".");
+    return true;
+  }
+
+  function softDomain(domain) {
+    if (domain && tileIndex[domain]) tileIndex[domain].classList.add("soft");
+  }
+
+  // Apply a reply's focus, with the fallbacks the contract allows.
+  // Returns a function that re-applies it (for the "Show me" button), or null.
+  function applyFocus(focus, reply, announceIt) {
+    focus = focus || {};
+    reply = reply || {};
+    var kind = focus.kind;
+    var did = false;
+    var opts = { announce: announceIt };
+    if (kind === "step" && focus.step_id) did = focusStep(focus.step_id, opts);
+    else if (kind === "map") did = focusMap(focus.domain || null, opts);
+    else if (kind === "tool" && (focus.tool_id || reply.tool_id)) did = focusTool(focus.tool_id || reply.tool_id, opts);
+    if (!did) clearFocus();
+    // Soft extras: the reply's domain lights its tile gently even when the main focus is elsewhere.
+    var d = reply.domain || (kind !== "map" ? focus.domain : null);
+    if (d && !(kind === "map" && focus.domain === d)) softDomain(d);
+    return did;
+  }
+
+  var boardStatus = el("boardStatus");
+  function announce(t) {
+    boardStatus.textContent = "";
+    setTimeout(function () { boardStatus.textContent = t; }, 60);
+  }
+
+  // ── live preview while typing (no network) ───────────────
+  function stem(w) {
+    if (w.length > 5 && /ing$/.test(w)) return w.slice(0, -3);
+    if (w.length > 4 && /ed$/.test(w)) return w.slice(0, -2);
+    if (w.length > 3 && /s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
+    return w;
+  }
+  function tokens(text) {
+    return str(text).toLowerCase().replace(/[’']/g, "").split(/[^a-z0-9\u00C0-\u024F]+/).filter(function (w) {
+      return w.length >= 3 && !STOP[w];
+    }).map(stem);
+  }
+  function hits(q, words) {
+    var n = 0;
+    q.forEach(function (a) {
+      for (var i = 0; i < words.length; i++) {
+        var b = words[i];
+        if (a === b || (a.length >= 4 && b.length >= 4 && (a.indexOf(b) === 0 || b.indexOf(a) === 0))) { n++; return; }
+      }
+    });
+    return n;
+  }
+  var previewIndex = null;
+  var lastPreviewKey = "";
+  function buildPreviewIndex() {
+    var steps = (state.plan ? state.plan.steps : []).map(function (s) {
+      return { id: s.id, title: tokens(s.title), ws: tokens(s.workstream), dom: tokens((DOMAIN_LABELS[s.domain] || "") + " " + (DOMAIN_WORDS[s.domain] || "")), tool: s.tool_id && state.tools[s.tool_id] ? tokens(state.tools[s.tool_id].name) : [] };
+    });
+    var tiles = state.map.map(function (m) {
+      return { domain: m.domain, words: tokens(str(m.label) + " " + (DOMAIN_WORDS[m.domain] || "")) };
+    });
+    var tools = Object.keys(state.tools).map(function (id) {
+      return { id: id, words: tokens(str(state.tools[id].name) + " " + id.replace(/_/g, " ")) };
+    });
+    previewIndex = { steps: steps, tiles: tiles, tools: tools };
+  }
+
+  var MAP_WHOLE = /\b(how am i doing|how('?s| is) (it|my money|the plan) (going|doing)|progress|overall|big picture|where (am i|do i stand)|my map)\b/i;
+
+  function preview(text) {
+    Array.prototype.forEach.call(document.querySelectorAll(".is-preview"), function (n) { n.classList.remove("is-preview"); });
+    var about = el("about");
+    about.textContent = "";
+    if (!state || !text.trim()) { lastPreviewKey = ""; return; }
+    if (!previewIndex) buildPreviewIndex();
+    var q = tokens(text);
+    var best = { step: null, sScore: 0, tile: null, tScore: 0, tool: null, oScore: 0 };
+
+    previewIndex.steps.forEach(function (s) {
+      var sc = hits(q, s.title) * 3 + hits(q, s.tool) * 2 + hits(q, s.ws) + (hits(q, s.dom) ? 1 : 0);
+      if (sc > best.sScore) { best.sScore = sc; best.step = s.id; }
+    });
+    previewIndex.tiles.forEach(function (t) {
+      var sc = hits(q, t.words);
+      if (sc > best.tScore) { best.tScore = sc; best.tile = t.domain; }
+    });
+    previewIndex.tools.forEach(function (t) {
+      var sc = hits(q, t.words);
+      if (sc > best.oScore) { best.oScore = sc; best.tool = t.id; }
+    });
+
+    var label = null, go = null;
+    if (MAP_WHOLE.test(text)) {
+      el("map").classList.add("is-preview");
+      label = "Your Money Map"; go = function () { scrollToEl(el("map")); };
+    }
+    if (best.tile && best.tScore >= 1 && tileIndex[best.tile]) {
+      tileIndex[best.tile].classList.add("is-preview");
+      if (!label) { label = tileIndex[best.tile].querySelector("b").textContent; var tEl = tileIndex[best.tile]; go = function () { scrollToEl(tEl); }; }
+    }
+    if (best.tool && best.oScore >= 1 && chipIndex[best.tool]) {
+      chipIndex[best.tool].classList.add("is-preview");
+      var open = el("toolCards").querySelector('[data-tool-id="' + cssEsc(best.tool) + '"]');
+      if (open) open.classList.add("is-preview");
+      var tid = best.tool;
+      label = str(state.tools[tid].name); go = function () { openTool(tid, { scroll: true }); };
+    }
+    // A step needs a title (or its tool) to match, not just its area — otherwise
+    // every money question would light up every money step.
+    if (best.step && best.sScore >= 3 && stepIndex[best.step]) {
+      var se = stepIndex[best.step];
+      se.el.classList.add("is-preview");
+      label = str(se.step.title); go = function () { setExpanded(se.step.id, true); scrollToEl(se.el); };
+    }
+    var target = document.querySelector(".step.is-preview") || document.querySelector(".tile.is-preview") ||
+      document.querySelector("#map.is-preview") || document.querySelector(".chip.is-preview");
+    var key = label || "";
+    // On desktop the chat stays put while the board moves, so bring a newly
+    // matched thing into view — once per new match, never on every keystroke.
+    // On a phone the sheet covers the board, so the "About" chip does that job.
+    if (target && key !== lastPreviewKey && !mobileMQ.matches) scrollToEl(target);
+    lastPreviewKey = key;
+    if (label) {
+      about.appendChild(node("span", "lbl", "About:"));
+      var b = node("button", null, label);
+      b.type = "button";
+      b.tabIndex = -1;
+      b.addEventListener("mousedown", function (e) { e.preventDefault(); }); // keep focus in the textarea
+      b.addEventListener("click", function () { if (go) go(); });
+      about.appendChild(b);
+    }
+  }
+
+  // ── chat ─────────────────────────────────────────────────
+  var log = el("log"), q = el("q"), sendBtn = el("sendBtn"), form = el("askForm"), count = el("count");
+  var typingEl = null, typingTimer = null, typingText = null, pollTimer = null;
+
+  function renderSuggestions() {
+    var s = el("sugg");
+    s.textContent = "";
+    var list = state.suggestions.length ? state.suggestions : ["What should I do first?", "How am I doing?"];
+    list.forEach(function (t) {
+      var c = node("button", "chip", t);
+      c.type = "button";
+      c.addEventListener("click", function () { ask(t); });
+      s.appendChild(c);
+    });
+  }
+
+  function scrollLog() {
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function meBubble(text, failed) {
+    var b = node("div", "bub me" + (failed ? " failed" : ""));
+    b.appendChild(node("div", "txt", text));
+    log.appendChild(b);
+    return b;
+  }
+
+  function clearOldQuickReplies() {
+    Array.prototype.forEach.call(log.querySelectorAll(".qr"), function (n) { n.parentNode.removeChild(n); });
+  }
+
+  function botBubble(entry, isLatest) {
+    var reply = entry.reply || {};
+    var focus = entry.focus || {};
+    var b = node("div", "bub bot");
+    b.appendChild(node("span", "sr", "Fin: "));
+    b.appendChild(node("div", "txt", str(reply.message) || "…"));
+
+    if (entry.grounded === false) {
+      var g = node("div", "ungrounded");
+      var i = node("span", null, "\u26A0"); i.setAttribute("aria-hidden", "true");
+      g.appendChild(i);
+      g.appendChild(node("span", null, "Fin doesn't have checked information on this yet, so treat it as a starting point and confirm before you rely on it."));
+      b.appendChild(g);
+    }
+
+    if (reply.artifact) {
+      var art = node("div", "artifact");
+      var ah = node("div", "artifact-head");
+      ah.appendChild(node("span", null, "Ready to copy"));
+      var cb = node("button", "btn btn-ghost btn-sm", "Copy");
+      cb.type = "button";
+      var pre = node("pre", null, str(reply.artifact));
+      cb.addEventListener("click", function () { copyText(str(reply.artifact), cb); });
+      ah.appendChild(cb);
+      art.appendChild(ah);
+      art.appendChild(pre);
+      b.appendChild(art);
+    }
+
+    var acts = node("div", "bot-actions");
+    var nt = reply.next_tap;
+    if (nt && nt.label && safeUrl(nt.url)) {
+      var a = node("a", "btn btn-primary btn-sm", str(nt.label));
+      a.href = safeUrl(nt.url);
+      if (/^https?:/i.test(a.href) && a.host !== location.host) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+      acts.appendChild(a);
+    }
+    var toolId = reply.tool_id || (focus.kind === "tool" ? focus.tool_id : null);
+    if (toolId && state.tools[toolId] && focus.kind !== "tool") {
+      acts.appendChild(toolChip(toolId, state.tools[toolId], function () { focusTool(toolId, { announce: true }); collapseOnMobile(); }));
+    }
+    if (focus.kind && focus.kind !== "none" && showable(focus, reply)) {
+      var show = node("button", "btn btn-ghost btn-sm", showLabel(focus));
+      show.type = "button";
+      show.addEventListener("click", function () { collapseOnMobile(); applyFocus(focus, reply, true); });
+      acts.appendChild(show);
+    }
+    if (acts.childNodes.length) b.appendChild(acts);
+
+    if (isLatest && Array.isArray(reply.quick_replies) && reply.quick_replies.length) {
+      var qr = node("div", "qr");
+      reply.quick_replies.slice(0, 6).forEach(function (t) {
+        if (typeof t !== "string" || !t.trim()) return;
+        var c = node("button", "chip", t);
+        c.type = "button";
+        c.addEventListener("click", function () { ask(t); });
+        qr.appendChild(c);
+      });
+      if (qr.childNodes.length) b.appendChild(qr);
+    }
+    log.appendChild(b);
+    return b;
+  }
+
+  function showable(focus, reply) {
+    if (focus.kind === "step") return !!stepIndex[focus.step_id];
+    if (focus.kind === "map") return true;
+    if (focus.kind === "tool") return !!state.tools[focus.tool_id || reply.tool_id];
+    return false;
+  }
+  function showLabel(focus) {
+    if (focus.kind === "step") return "Show the step";
+    if (focus.kind === "map") return focus.domain ? "Show the area" : "Show the map";
+    return "Show the walkthrough";
+  }
+
+  function errBubble(text, retry) {
+    var b = node("div", "bub err");
+    b.setAttribute("role", "alert");
+    b.appendChild(node("div", "txt", text));
+    if (retry) {
+      var r = node("button", "btn btn-ghost btn-sm", "Try again");
+      r.type = "button";
+      r.addEventListener("click", function () {
+        if (inflight) return;
+        b.parentNode && b.parentNode.removeChild(b);
+        retry();
+      });
+      b.appendChild(r);
+    }
+    log.appendChild(b);
+    scrollLog();
+    return b;
+  }
+
+  function showTyping() {
+    hideTyping();
+    typingEl = node("div", "typing");
+    var dots = node("span", "dots"); dots.setAttribute("aria-hidden", "true");
+    dots.appendChild(node("i")); dots.appendChild(node("i")); dots.appendChild(node("i"));
+    typingEl.appendChild(dots);
+    var t = node("span", null, "Fin is thinking…");
+    typingText = t;
+    typingEl.appendChild(t);
+    log.appendChild(typingEl);
+    scrollLog();
+    typingTimer = setTimeout(function () { t.textContent = "Still working — checking your plan and the facts…"; }, 6000);
+  }
+  function hideTyping() {
+    clearTimeout(typingTimer);
+    if (typingEl && typingEl.parentNode) typingEl.parentNode.removeChild(typingEl);
+    typingEl = null;
+    typingText = null;
+  }
+  // While a pending turn is polled: say honestly how long it has been.
+  function pollingText(startedAt) {
+    if (!typingText) return;
+    var ms = Date.now() - startedAt;
+    var t = ms >= 60000 ? "Still here — slow answers do arrive; you can keep reading your plan meanwhile."
+      : ms >= 15000 ? "Still working — this one's taking a while, I'll keep at it."
+      : null;
+    if (t && typingText.textContent !== t) {
+      clearTimeout(typingTimer); // the 6s "checking your plan" line must not overwrite this
+      typingText.textContent = t;
+    }
+  }
+
+  function setInflight(on) {
+    inflight = on;
+    sendBtn.disabled = on;
+    sendBtn.setAttribute("aria-busy", String(on));
+    sendBtn.textContent = "";
+    if (on) {
+      var sp = node("span", "spinner"); sp.setAttribute("aria-hidden", "true");
+      sendBtn.appendChild(sp);
+      sendBtn.setAttribute("aria-label", "Sending");
+    } else {
+      sendBtn.appendChild(sendIcon());
+      sendBtn.setAttribute("aria-label", "Send");
+    }
+    Array.prototype.forEach.call(log.querySelectorAll(".qr .chip, .sugg .chip"), function (c) { c.disabled = on; });
+  }
+  function sendIcon() {
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", "20"); svg.setAttribute("height", "20"); svg.setAttribute("viewBox", "0 0 24 24"); svg.setAttribute("aria-hidden", "true");
+    var p = document.createElementNS(ns, "path");
+    p.setAttribute("d", "M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"); p.setAttribute("fill", "currentColor");
+    svg.appendChild(p);
+    return svg;
+  }
+
+  function ask(text) {
+    text = str(text).trim();
+    if (!text || inflight) return;
+    if (text.length > MAX_Q) {
+      errBubble("That's a bit long for one question — keep it under " + MAX_Q + " characters, or split it in two.", null);
+      return;
+    }
+    el("intro").hidden = true;
+    clearOldQuickReplies();
+    meBubble(text);
+    history.push({ who: "me", text: text });
+    saveHistory();
+    if (q.value.trim() === text) { q.value = ""; grow(); updateCount(); preview(""); }
+    openSheet();
+    send(text);
+  }
+
+  // The turn being answered right now: { client_turn, turn?, question, at }.
+  // Every async callback checks it is still the active one, so an answer for a
+  // turn that was abandoned (a sign-in as someone else) can never render.
+  var activeTurn = null;
+
+  // POST once per question. client_turn is made and stored first, so a reload
+  // while the POST is still out resumes by polling that id instead of asking
+  // again. A retry after a failed POST re-sends the SAME client_turn, which the
+  // server recognises and does not answer twice.
+  function send(text, clientTurn) {
+    lastQuestion = text;
+    setInflight(true);
+    showTyping();
+    var t = { client_turn: validClientTurn(clientTurn) ? clientTurn : newClientTurn(), question: text, at: Date.now() };
+    activeTurn = t;
+    savePending(t);
+    var p = DEMO ? demoPost(text, t.client_turn) : request("POST", ASK_API, { question: text, client_turn: t.client_turn });
+    p.then(function (r) {
+      if (activeTurn !== t) return;
+      // A slow answer keeps computing server-side. Collect it; never re-post.
+      if (r.status === 202 && r.data && r.data.pending) {
+        if (r.data.turn) { t.turn = str(r.data.turn); savePending(t); }
+        pollingText(t.at);
+        poll(t, 0, POLL_MS);
+        return;
+      }
+      if (isBlip(r)) { postFailed(t); return; }
+      endTurn(t);
+      finish(text, r);
+    }, function () {
+      if (activeTurn !== t) return;
+      postFailed(t);
+    });
+  }
+  // The POST may or may not have reached the server. Keep the pending turn (a
+  // reload finds it by client_turn if it did) and retry with the same id.
+  function postFailed(t) {
+    hideTyping();
+    setInflight(false);
+    errBubble(UNREACHABLE, function () { send(t.question, t.client_turn); });
+  }
+  // A 5xx without final: a database blip or a gateway timeout, not an answer.
+  function isBlip(r) {
+    return r.status >= 500 && !(r.data && r.data.final === true);
+  }
+  function endTurn(t) {
+    if (activeTurn === t) activeTurn = null;
+    clearPending();
+  }
+
+  // Polls GET ?action=reply (by turn once the server has given one, else by
+  // client_turn) until the turn is over. A network failure or a 5xx without
+  // final is retried a few times; after that, "Try again" resumes THIS turn —
+  // re-posting would cost a second answer and count twice against the hourly
+  // limit.
+  function poll(t, fails, delay) {
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(function () {
+      if (activeTurn !== t) return;
+      if (Date.now() - t.at > PENDING_GIVE_UP_MS) {
+        endTurn(t);
+        finish(t.question, { status: 410, ok: false, data: { ok: false, final: true, message: "That one took too long and I've stopped waiting for it. Ask again, or ask me on WhatsApp." } });
+        return;
+      }
+      var url = ASK_API + "?action=reply&" + (t.turn ? "turn=" + encodeURIComponent(t.turn) : "client_turn=" + encodeURIComponent(t.client_turn));
+      var p = DEMO ? demoPoll(t) : request("GET", url);
+      p.then(function (r) {
+        if (activeTurn !== t) return;
+        if (r.status === 202) {
+          if (!t.turn && r.data && r.data.turn) { t.turn = str(r.data.turn); savePending(t); }
+          pollingText(t.at);
+          poll(t, 0, POLL_MS);
+          return;
+        }
+        if (r.status === 401) {
+          // Keep the pending turn: after sign-in (as the same person) it resumes.
+          activeTurn = null;
+          finish(t.question, r, { keepPending: true });
+          return;
+        }
+        // A 429 on a poll is the poll being throttled, not the answer: wait and poll again.
+        if (isBlip(r) || (r.status === 429 && !(r.data && r.data.final === true))) { pollFailed(t, fails); return; }
+        endTurn(t);
+        if (r.status === 404) r = { status: 404, ok: false, data: { ok: false, final: true, message: "I lost track of that answer. Ask it again." } };
+        finish(t.question, r);
+      }, function () {
+        if (activeTurn !== t) return;
+        pollFailed(t, fails);
+      });
+    }, delay);
+  }
+  function pollFailed(t, fails) {
+    if (fails < POLL_NET_RETRIES) { poll(t, fails + 1, POLL_MS); return; }
+    hideTyping();
+    setInflight(false);
+    errBubble(UNREACHABLE, function () { resumeTurn(t); });
+  }
+
+  function resumeTurn(t) {
+    lastQuestion = t.question;
+    setInflight(true);
+    showTyping();
+    pollingText(t.at);
+    activeTurn = t;
+    savePending(t);
+    poll(t, 0, 0);
+  }
+
+  // On load (and after sign-in): a turn that was still pending when the page
+  // went away. Only this person's turn is ever found (see loadPending()).
+  function resumePending() {
+    var p = loadPending();
+    if (!p || inflight) return;
+    var age = Date.now() - p.at;
+    if (age > PENDING_RESUME_MS || age < -60000) { clearPending(); return; }
+    el("intro").hidden = true;
+    openSheet();
+    resumeTurn({ client_turn: p.client_turn, turn: p.turn, question: p.question, at: p.at });
+  }
+
+  // A different person than the one in memory: stop everything that belongs
+  // to the previous one and take its chat off the screen.
+  function forgetOtherOwner() {
+    clearTimeout(pollTimer);
+    activeTurn = null;
+    hideTyping();
+    if (inflight) setInflight(false);
+    history = [];
+    Array.prototype.forEach.call(log.querySelectorAll(".bub, .qr"), function (n) { n.parentNode && n.parentNode.removeChild(n); });
+    if (bizKey !== null) { q.value = ""; grow(); updateCount(); }
+  }
+
+  // The one place a finished turn is handled: the POST's own answer and a
+  // polled one both land here, so the two paths can't drift. A "Try again"
+  // here asks a new question: the old turn is over.
+  function finish(text, r, opts) {
+    opts = opts || {};
+    hideTyping();
+    setInflight(false);
+    if (r.status === 401) {
+      if (opts.keepPending) {
+        errBubble("You've been signed out. Sign in again and I'll pick this answer back up.", null);
+      } else {
+        errBubble("You've been signed out. Sign in again and your question will be waiting.", null);
+        q.value = text; grow();
+      }
+      showSignIn("Your session ran out. Sign in again to keep asking.");
+      return;
+    }
+    if (r.status === 429) { errBubble(problem(r) || "You're asking faster than Fin can answer. Give it a minute.", function () { send(text); }); return; }
+    if (r.status === 400 || r.status === 409) { errBubble(problem(r), null); return; }
+    if (!r.ok || !r.data || !r.data.ok || !r.data.reply) { errBubble(problem(r), function () { send(text); }); return; }
+    var entry = { who: "fin", reply: r.data.reply, focus: r.data.focus || { kind: "none" }, grounded: r.data.grounded !== false };
+    history.push(entry);
+    saveHistory();
+    var bub = botBubble(entry, true);
+    // Show the start of the answer, not its tail: long replies would otherwise open mid-sentence.
+    log.scrollTop = Math.max(0, bub.offsetTop - 8);
+    var moved = applyFocus(entry.focus, entry.reply, true);
+    if (!moved && entry.reply.tool_id && state.tools[entry.reply.tool_id] && chipIndex[entry.reply.tool_id]) {
+      chipIndex[entry.reply.tool_id].classList.add("is-focus");
+    }
+  }
+
+  function restoreHistory() {
+    Array.prototype.forEach.call(log.querySelectorAll(".bub"), function (n) { n.parentNode.removeChild(n); });
+    history = loadHistory();
+    if (!history.length) { el("intro").hidden = false; return; }
+    el("intro").hidden = true;
+    var lastBot = -1;
+    history.forEach(function (h, i) { if (h.who === "fin") lastBot = i; });
+    history.forEach(function (h, i) {
+      if (h.who === "me") meBubble(str(h.text));
+      else if (h.who === "fin") botBubble(h, i === lastBot && i === history.length - 1);
+    });
+    scrollLog();
+  }
+
+  function copyText(text, btn) {
+    var done = function () {
+      btn.textContent = "Copied";
+      announce("Copied to your clipboard.");
+      setTimeout(function () { btn.textContent = "Copy"; }, 1800);
+    };
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text) ? done() : fail(); });
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    if (legacyCopy(text)) done(); else fail();
+    function fail() { btn.textContent = "Select and copy"; }
+  }
+  function legacyCopy(text) {
+    var t = document.createElement("textarea");
+    t.value = text; t.setAttribute("readonly", ""); t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(t);
+    return ok;
+  }
+
+  // composer behaviour
+  function grow() {
+    q.style.height = "auto";
+    q.style.height = Math.min(160, q.scrollHeight + 2) + "px";
+  }
+  function updateCount() {
+    var n = q.value.length;
+    count.textContent = n > MAX_Q - 150 ? n + "/" + MAX_Q : "";
+    count.classList.toggle("over", n > MAX_Q);
+  }
+  var previewTimer = null;
+  q.addEventListener("input", function () {
+    grow();
+    updateCount();
+    clearTimeout(previewTimer);
+    if (!q.value.trim()) { preview(""); return; }
+    previewTimer = setTimeout(function () { preview(q.value); }, 150);
+  });
+  q.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      if (!inflight) form.requestSubmit ? form.requestSubmit() : submitNow();
+    }
+  });
+  q.addEventListener("focus", function () { if (mobileMQ.matches && history.length) openSheet(); });
+  form.addEventListener("submit", function (e) { e.preventDefault(); submitNow(); });
+  function submitNow() {
+    var t = q.value.trim();
+    if (!t || inflight) return;
+    ask(t);
+  }
+  function prefill(text) {
+    q.value = text;
+    grow(); updateCount(); preview(text);
+    openSheet();
+    q.focus();
+    try { q.setSelectionRange(q.value.length, q.value.length); } catch (e) { /* ignore */ }
+  }
+
+  // ── mobile bottom sheet ──────────────────────────────────
+  var chat = el("chat"), toggle = el("sheetToggle");
+  function setSheet(open) {
+    chat.classList.toggle("open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.textContent = open ? "Hide" : "Open";
+    if (open) scrollLog();
+    measureSheet();
+  }
+  function openSheet() { if (mobileMQ.matches) setSheet(true); }
+  function collapseOnMobile() { if (mobileMQ.matches) setSheet(false); }
+  toggle.addEventListener("click", function (e) { e.stopPropagation(); setSheet(!chat.classList.contains("open")); });
+  el("chatHead").addEventListener("click", function () { if (mobileMQ.matches) setSheet(!chat.classList.contains("open")); });
+  function measureSheet() {
+    var h = mobileMQ.matches && !appView.hidden ? Math.ceil(chat.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--sheet-h", h + "px");
+  }
+  if ("ResizeObserver" in window) new ResizeObserver(measureSheet).observe(chat);
+  (mobileMQ.addEventListener ? mobileMQ.addEventListener.bind(mobileMQ, "change") : mobileMQ.addListener.bind(mobileMQ))(function () {
+    if (!mobileMQ.matches) chat.classList.remove("open");
+    measureSheet();
+  });
+  window.addEventListener("resize", measureSheet);
+
+  // ── demo fixtures (/ask.html?demo=1) ─────────────────────
+  // Made-up person, made-up notes. The places are real, but every cost line
+  // is marked as demo text: nothing here is a verified figure, and the
+  // numbers are the example household's, not anyone's.
+  function DEMO_STATE() {
+    return {
+      ok: true,
+      business: { name: "Nomsa", one_liner: "Earns a wage at a clinic, two children and her mother to support, three debts including a mashonisa", country: "ZA", currency: "R" },
+      plan: {
+        goal: "Be out of the mashonisa's book by day 90, with R500 put aside that nobody can touch.",
+        progress: { done: 3, total: 9, percent: 33 },
+        steps: [
+          { id: "d1", title: "Write down every rand you owe", workstream: "See the whole picture", domain: "debt", status: "done", push: "One list: who you owe, how much, what it costs you a month, and the day it is due.", why_for_you: "You said you owe three places and are not sure of the total. The list is what every other step is built on.", done_when: "the list has every debt on it with its monthly cost", tool_id: "money_log", is_next: false },
+          { id: "d2", title: "Make the month fit the money", workstream: "See the whole picture", domain: "spending", status: "done", push: "On payday, pay the fixed things first, then split what is left into three pots: food and transport, the family line, and the mashonisa.", why_for_you: "You said the month is longer than the money. Paying the fixed things first means the shortfall shows up on day one, not day twenty.", done_when: "one month has run on the plan", tool_id: "money_log", is_next: false },
+          { id: "d3", title: "Get out of the mashonisa's book", workstream: "Stop the bleeding", domain: "debt", status: "open", push: "This payday the mashonisa gets paid first, and nothing new gets borrowed from anyone. Keep the receipt or the message as proof of every payment.", why_for_you: "You told Fin the mashonisa takes R600 of your R7,800 every month. That is the debt bleeding fastest, so it goes first.", done_when: "the mashonisa is paid off and you have told them you are done", tool_id: "ncr_line", is_next: true },
+          { id: "d4", title: "Set the family line", workstream: "Stop the bleeding", domain: "family_money", status: "open", push: "Decide one fixed amount for your mother each month, say it out loud to her, and send it on payday — not when asked.", why_for_you: "You said family asks for money most months and it breaks the plan. A fixed line everyone knows is easier to keep than a different answer every time.", done_when: "the amount is agreed and has been sent on payday once", tool_id: null, is_next: false },
+          { id: "d5", title: "Kill the smallest debt first", workstream: "Stop the bleeding", domain: "debt", status: "open", push: "Once the mashonisa is gone, put what you were paying them onto the clothing account until it is closed, then onto the bank loan.", why_for_you: "The clothing account is your smallest debt. Closing one whole account early is what keeps people going.", done_when: "the clothing account shows a zero balance", tool_id: null, is_next: false },
+          { id: "d6", title: "Build a cushion you can reach", workstream: "Something that is yours", domain: "cushion", status: "done", push: "Move R50 into a separate pocket on payday, before anything else, and name it so you know what it is for.", why_for_you: "You said a surprise cost means borrowing. Fifty rand on payday is small enough to keep and separate enough not to spend.", done_when: "the pocket exists and has had two paydays of money land in it", tool_id: "goalsave", is_next: false },
+          { id: "d7", title: "Get your free credit report", workstream: "Something that is yours", domain: "credit_record", status: "open", push: "Pull your free report once, read every account on it, and dispute anything that is not yours or is older than three years.", why_for_you: "You said you want to fix your credit record. The report is the only way to know what is actually on it.", done_when: "you have the report and have checked every line", tool_id: "transunion_free", is_next: false },
+          { id: "d8", title: "Make your money hard to steal", workstream: "Something that is yours", domain: "protection", status: "skipped", push: "Turn on app notifications for every payment, and send Fin any message about a loan, a prize or a \"debt removal\" before you answer it.", why_for_you: "Almost all banking-app losses are social engineering. A bank never asks for your PIN or OTP; neither does Fin.", done_when: "notifications are on and you have forwarded one message to check", tool_id: null, is_next: false },
+          { id: "d9", title: "Put a name on the bigger goal", workstream: "After the ninety days", domain: "goals", status: "open", push: "Write one sentence about what the money is for after the debts are gone, with a number and a year on it.", why_for_you: "You mentioned your daughter's school fees. A written goal with a number is what the next plan is built from.", done_when: "the sentence is written down", tool_id: null, is_next: false }
+        ]
+      },
+      map: [
+        { domain: "income", label: "Money in", status: "green", note: "A wage on the 25th, known to the rand. No grant to claim right now." },
+        { domain: "spending", label: "Money out", status: "amber", note: "The month plan exists and ran once. Airtime and data still eat more than planned." },
+        { domain: "debt", label: "What you owe", status: "red", note: "Three debts listed. The mashonisa is still being paid; nothing new borrowed this month." },
+        { domain: "cushion", label: "Emergency money", status: "amber", note: "A named pocket with two paydays in it. Not yet a week's spend." },
+        { domain: "credit_record", label: "Credit record", status: "red", note: "Never seen the report. One account is in arrears." },
+        { domain: "protection", label: "Cover", status: "amber", note: "One funeral policy through work; the beneficiary has not been checked." },
+        { domain: "family_money", label: "Family money", status: "red", note: "Money to family is given whenever asked, and it breaks the month." },
+        { domain: "goals", label: "The future", status: "amber", note: "The 90-day goal is written. Nothing beyond it yet." }
+      ],
+      tools: {
+        money_log: { id: "money_log", name: "A money log in your notes app", url: null, cost_line: "Demo text: free — it is the notes app already on the phone.", walkthrough: ["Open the notes app and make one note called Money.", "Write every debt on its own line: who, how much, what it costs a month, the day it is due.", "Under that, write what comes in and the day it lands.", "Each payday, write what went where. Three lines is enough."] },
+        ncr_line: { id: "ncr_line", name: "National Credit Regulator consumer line", url: "https://www.ncr.org.za", cost_line: "Demo text: the call is free, and so is the first conversation with a registered debt counsellor.", walkthrough: ["Call 0860 627 627 and say you want to find a registered debt counsellor.", "Ask them to confirm the counsellor's registration number before you agree to anything.", "Nobody on that line is selling you a product — if someone asks for a fee to \"release\" money, it is not them."] },
+        goalsave: { id: "goalsave", name: "A separate savings pocket in your bank app", url: null, cost_line: "Demo text: opening a pocket costs nothing — confirm the current terms in the app.", walkthrough: ["Open your bank app and find the savings pocket or goal feature.", "Make one pocket and give it a name you will recognise.", "Set up a transfer of R50 for payday, before anything else goes out.", "Do not link a card to it."] },
+        transunion_free: { id: "transunion_free", name: "TransUnion free credit report", url: "https://www.transunion.co.za", cost_line: "Demo text: one report a year is free by law (NCA s72) — confirm on the site.", walkthrough: ["Go to the site and choose the free annual report.", "You will be asked to confirm who you are; the site does it, not Fin.", "Read every account listed. Note anything you do not recognise or that is older than three years.", "Dispute errors on the site; the bureau has 20 business days to answer."] }
+      },
+      suggestions: ["How do I get out of the mashonisa's book?", "Someone sent me a message about a loan — is it real?", "How am I doing?", "What is prescribed debt?"]
+    };
+  }
+
+  var demoErrorOnce = true;
+  var demoPolls = {};   // turn → polls so far (lost on reload; demoPoll re-derives from the question)
+  function demoPost(text, clientTurn) {
+    var t = text.toLowerCase();
+    if (/demo:error/.test(t) && demoErrorOnce) {
+      demoErrorOnce = false;
+      return new Promise(function (_, rej) { setTimeout(function () { rej(new Error("demo")); }, 500); });
+    }
+    // demo:pending — the slow-answer path: a 202 with a turn, then two
+    // "still pending" polls, then the answer on the third poll.
+    // demo:blip — the same, but the first poll is a 503 without final.
+    // demo:gaveup — one pending poll, then a 410 final from the server.
+    if (/demo:(pending|blip|gaveup)/.test(t)) {
+      var turn = "demo-" + clientTurn;
+      demoPolls[turn] = 0;
+      return new Promise(function (resolve) {
+        setTimeout(function () { resolve({ status: 202, ok: true, data: { ok: true, pending: true, turn: turn, message: "Still working on it…" } }); }, 600);
+      });
+    }
+    return demoResolve(demoAnswer(t), /demo:slow/.test(t) ? 7000 : 700 + Math.floor(Math.random() * 600));
+  }
+  function demoPoll(pt) {
+    var text = str(pt.question).toLowerCase();
+    var turn = pt.turn || ("demo-" + pt.client_turn);
+    var n = demoPolls[turn] = (demoPolls[turn] || 0) + 1;
+    var later = function (res) { return new Promise(function (resolve) { setTimeout(function () { resolve(res); }, 300); }); };
+    if (/demo:blip/.test(text) && n === 1) {
+      return later({ status: 503, ok: false, data: { ok: false, message: "Database blip." } });
+    }
+    if (/demo:gaveup/.test(text) && n >= 2) {
+      delete demoPolls[turn];
+      return later({ status: 410, ok: false, data: { ok: false, final: true, message: "That one took too long and I gave up on it. Ask it again, or ask me on WhatsApp." } });
+    }
+    if (n <= 2) return demoResolve(null, 300);
+    delete demoPolls[turn];
+    return demoResolve(demoAnswer(text), 300);
+  }
+  function demoResolve(res, delay) {
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        resolve(res ? { status: 200, ok: true, data: { ok: true, final: true, reply: res.reply, focus: res.focus, grounded: res.grounded } }
+          : { status: 202, ok: true, data: { ok: true, pending: true } });
+      }, delay);
+    });
+  }
+  function demoAnswer(t) {
+    var res;
+    if (/mashonisa|shark|book/.test(t)) {
+      res = { reply: { message: "This payday the mashonisa gets paid first, before anything else, and nothing new gets borrowed from anyone — that is your rule, and it is the step that is up next.\n\nKeep proof of every payment. A mashonisa is unregistered, so the law does not help them collect, and holding your card or ID is a crime. If anyone threatens you, the free line to call is the NCR's.", artifact: "Payday list\n1. Mashonisa: R600 (proof kept)\n2. Rent and transport\n3. Family line: the agreed amount\n4. R50 to the pocket\nNothing new borrowed.", next_tap: { label: "Open the NCR site", url: "https://www.ncr.org.za" }, quick_replies: ["What if they threaten me?", "Mark this step done"], tool_id: "ncr_line", domain: "debt" }, focus: { kind: "step", step_id: "d3", domain: "debt", tool_id: "ncr_line" }, grounded: true };
+    } else if (/how am i doing|progress|doing|going/.test(t)) {
+      res = { reply: { message: "You've done 3 of 9 steps — a third of the way in.\n\nMoney in is sorted and the month plan has run once. The two areas pulling you back are What you owe and Family money. The quickest win is the family line, because a fixed amount is what stops the month breaking.", artifact: null, next_tap: null, quick_replies: ["What's my next step?", "Help me set the family line"], tool_id: null, domain: null }, focus: { kind: "map", step_id: null, domain: null, tool_id: null }, grounded: true };
+    } else if (/loan|prize|message|forward|real|scam|sms|link/.test(t)) {
+      res = { reply: { message: "Treat it as a scam until it proves otherwise. A real lender is registered with the NCR and never asks for a fee to release money, your PIN, an OTP or app approval; a personal number or a non-official domain is a giveaway.\n\nYou are also not looking for a loan — your rule is that nothing new gets borrowed. Check the name on the NCR register if you want to be sure, then delete it.", artifact: null, next_tap: { label: "Check the NCR register", url: "https://www.ncr.org.za" }, quick_replies: ["How do I report it?"], tool_id: "ncr_line", domain: "protection" }, focus: { kind: "map", step_id: null, domain: "protection", tool_id: null }, grounded: true };
+    } else if (/prescribed|three years|old debt/.test(t)) {
+      res = { reply: { message: "A debt you have not paid or acknowledged for three years is prescribed: it can no longer be collected through the courts. The one thing that undoes that is acknowledging it — a promise to pay, or a small payment. So read your credit report first and do not sign or pay anything on an old account until you know its dates.", artifact: null, next_tap: null, quick_replies: ["How do I get my credit report?"], tool_id: "transunion_free", domain: "credit_record" }, focus: { kind: "step", step_id: "d7", domain: "credit_record", tool_id: "transunion_free" }, grounded: true };
+    } else if (/credit|report|score|bureau|blacklist/.test(t)) {
+      res = { reply: { message: "Pull the free report first — one a year is free by law — and read every account on it before you do anything else. The walkthrough is open on the board. Anything you do not recognise, or older than three years, is a dispute, and the bureau has 20 business days to answer it.", artifact: null, next_tap: { label: "Open TransUnion", url: "https://www.transunion.co.za" }, quick_replies: ["What is prescribed debt?"], tool_id: "transunion_free", domain: "credit_record" }, focus: { kind: "tool", step_id: null, domain: "credit_record", tool_id: "transunion_free" }, grounded: true };
+    } else if (/family|mother|black tax|send home/.test(t)) {
+      res = { reply: { message: "Pick one amount you can keep every month, say it to your mother once, and send it on payday before she asks. The amount matters less than the fact that it is fixed and known: a different answer every month is what breaks the plan.\n\nHere is a way to say it.", artifact: "Ma, from this month I am sending R400 on the 25th, every month, the same. I can't do more than that right now because I am paying off what I owe. When that is done we talk again.", next_tap: null, quick_replies: ["What if she asks for more?"], tool_id: null, domain: "family_money" }, focus: { kind: "step", step_id: "d4", domain: "family_money", tool_id: null }, grounded: true };
+    } else if (/two.?pot|pension|retire|withdraw/.test(t)) {
+      res = { reply: { message: "I don't have checked information on your fund's two-pot rules yet, so I won't guess at amounts or tax. Your fund administrator or payroll can confirm what you could take and what it would cost you.\n\nFor now: a withdrawal is taxed and cannot be undone, so it is not a free move. Put it next to your rule before you decide.", artifact: null, next_tap: null, quick_replies: ["What's my next step?"], tool_id: null, domain: "goals" }, focus: { kind: "none", step_id: null, domain: null, tool_id: null }, grounded: false };
+    } else if (/save|saving|pocket|cushion|emergency/.test(t)) {
+      res = { reply: { message: "You've already got the pocket going — that step is done. The part worth doing today is making sure the R50 moves on payday before anything else, not at the end of the month when there is nothing left.", artifact: null, next_tap: null, quick_replies: ["How much should be in it?"], tool_id: "goalsave", domain: "cushion" }, focus: { kind: "tool", step_id: null, domain: "cushion", tool_id: "goalsave" }, grounded: true };
+    } else {
+      res = { reply: { message: "Good question. The honest answer is: stick with the next step first — getting out of the mashonisa's book. Everything else in the plan gets easier once that R600 a month is yours again.", artifact: null, next_tap: null, quick_replies: ["How do I get out of the mashonisa's book?", "How am I doing?"], tool_id: null, domain: null }, focus: { kind: "none", step_id: null, domain: null, tool_id: null }, grounded: true };
+    }
+    return res;
+  }
+
+  // ── go ───────────────────────────────────────────────────
+  updateCount();
+  loadState(false);
+})();
+</script>
+</body>
+</html>

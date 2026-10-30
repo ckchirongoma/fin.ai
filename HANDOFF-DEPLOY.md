@@ -1,0 +1,167 @@
+# Fin — deployment handoff
+
+Written for whoever puts this live. Everything needed is in this file, in the
+order it is needed. Sections 1–4 get a working WhatsApp test number. Section 5
+is what is built and what is not.
+
+**Ask the founder before:** spending money, registering the production WhatsApp
+number, and submitting for Meta business verification. Everything else in here
+is safe to do.
+
+Nothing in this file contains a secret value. Secrets are set by name in
+section 3.
+
+---
+
+## Project facts
+
+| | |
+|---|---|
+| Database | A **fresh Supabase project** the founder creates for Fin (Charlie's project is not reused). Region: pick the one closest to Johannesburg. |
+| Hosting | **Vercel** runs the code, Supabase stores the data |
+| Models | **Everything goes through OpenRouter.** Which model does which job comes from the `model_config` table, never from code |
+| Guardrails | Jev (TypeSafe) preferred; the `safety` model row runs the same checks without it. `/api/health` says which is live |
+| Repo | `ckchirongoma/fin.ai` |
+
+---
+
+## Section 1 — create the database and run the scripts (do this first)
+
+1. Supabase → New project. Note the project URL and the service-role key (section 3). Enable the `vector` extension (Database → Extensions) before `0010`.
+2. SQL Editor → New query → paste each file in `db/` → Run. **In order:** `0001` to `0016`, `0018`, `0024` to `0026`, `0032`, `0033`, `0034`, `0035`. `db/README.md` says what each one does. All are safe to run twice.
+3. Check RLS:
+
+```sql
+select relname, relrowsecurity from pg_class
+ where relnamespace = 'public'::regnamespace and relkind = 'r' order by relname;
+```
+
+Every row must say `true`.
+
+4. Check the library landed:
+
+```sql
+select country, count(*) from public.knowledge_entries group by country;
+```
+
+```sql
+select country, count(*) from public.tools group by country;
+```
+
+Expect ZA 56 and ZA 30.
+
+5. Set the models. `db/0002` and `db/0009` seed starting rows; replace each `model` slug with one you have chosen on your OpenRouter dashboard (OpenRouter → Models). One `UPDATE` per role; the webhook reads the table on every call, so a change is live at once.
+
+Without SQL, the library can also be loaded from `seed/` through the REST API: the command is at the top of `db/0034_fin_za_library.sql`.
+
+---
+
+## Section 2 — deploy on Vercel
+
+1. Vercel → Add New Project → import `ckchirongoma/fin.ai`. Framework: Other. No build command. Node 22.
+2. Deploy once with no environment variables: it will come up and `/api/health` will list what is missing.
+3. `vercel.json` already sets the function sizes, the crons (`/api/cron/nudges` daily, `/api/cron/freshness` weekly, `/api/worker?tick=1` every minute) and the rewrites (`/mcp`, `/plan`, `/wa`, `/my-plan`).
+
+---
+
+## Section 3 — set the environment variables
+
+Vercel → Project → Settings → Environment Variables, then **redeploy** (a change does not reach a running deployment). `.env.example` lists every variable with what it is for; the names below are the ones that matter in order.
+
+### Required. Fin will not run without these.
+
+| Name | Where it comes from |
+|---|---|
+| `SUPABASE_URL` | Supabase → Project Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Bypasses RLS: Vercel only, never a browser, never the repo |
+| `OPENROUTER_API_KEY` | openrouter.ai → Keys |
+| `WHATSAPP_APP_SECRET` | Meta → App → App Settings → Basic |
+| `WORKER_SECRET` | Any long random string you generate |
+| `PUBLIC_BASE_URL` | The Vercel URL, e.g. `https://fin.vercel.app` |
+
+### To actually send WhatsApp messages
+
+| Name | Where it comes from |
+|---|---|
+| `WHATSAPP_ACCESS_TOKEN` | Meta → WhatsApp → API Setup (a temporary token first; a System User token for anything lasting) |
+| `WHATSAPP_PHONE_NUMBER_ID` | Same page |
+| `WHATSAPP_VERIFY_TOKEN` | Any string; you type the same one into Meta in section 4 |
+
+Without these Fin still runs, thinks and writes to the database; it sends nothing and logs every skipped send.
+
+### Strongly recommended
+
+`SESSION_SECRET` (the website and the connector cannot issue credentials without it), `CRON_SECRET` (the cron endpoints fail closed without it), `TYPESAFE_API_KEY` (Jev), `ADMIN_SECRET` (the `/admin` dashboard), `RESEND_API_KEY` and `ALERT_EMAIL_TO` (alert emails; `docs/TRACKING.md`), `INTERNAL_WA_IDS` (your own and your testers' numbers, kept out of the funnel).
+
+### The guardrails — read this before going live
+
+`/api/health` must say `guardrails_live: true`. With no Jev key and no `safety` row the checks run on nothing, and the health page says so in capitals. Every check writes a `safety_events` row either way, so a switched-off guardrail is a row in the database, never a silence.
+
+---
+
+## Section 4 — point Meta at the webhook
+
+1. developers.facebook.com → your app → WhatsApp → Configuration → Webhook: Callback URL `https://<your-vercel-url>/api/whatsapp-webhook`, Verify token = `WHATSAPP_VERIFY_TOKEN`. Verify and save.
+2. Subscribe to the `messages` field.
+3. WhatsApp → API Setup: add your own number as a test recipient, send "hi" from it. The first message back is the hello, the consent line (including "forget my money") and question one.
+4. Submit the six templates in `docs/META-TEMPLATES.md`, then mark each approved one in `wa_templates` (last section of that file). Until then follow-ups outside the 24-hour window are not sent, and the plan viewer's login code cannot be delivered outside it either.
+
+### Going live on your own number (the founder's part)
+
+Meta business verification and a production number are the founder's call and cost money: ask first. The test number serves the whole journey for testers until then.
+
+---
+
+## Section 5 — what is built
+
+- The whole money journey: hello → twelve questions → read-back → goal → rule → plan from the fixed library → step loop → outcome. Hardship mode on every door. Voice notes. Forwarded links and photos with a scam check. "Forget my money" with a confirmation.
+- The plan document, printed to PDF in a real browser, with the strategy and the Money Map; the per-step PDF.
+- The web: landing page, sign-in by WhatsApp number, the plan viewer, the web chat with the same guardrails.
+- The connector for the person's own AI, with the plan, the step and the map drawn inside Claude and ChatGPT.
+- The South African library: 56 knowledge entries, 30 tools, sourced and measured (`docs/kb-gap-analysis.md`).
+- Tracking, alert emails, the admin dashboard, the sponsor report.
+
+## What is deliberately not built
+
+- Reading bank statements or the bank's data. Fin knows what it is told.
+- A second market's library.
+- A recommendation to take credit, ever.
+- Testimonials, user counts, pilot results. No cohort has run.
+
+## Definition of done for a first pilot
+
+- [x] RLS fixed with real policies (`db/0001`), to be run on the fresh project.
+- [ ] A real WhatsApp test number where a stranger completes the journey by chat. **Needs the Meta setup above.**
+- [x] The plan from the fixed library, grounded only in shortlisted knowledge (`test/journey.e2e.test.ts`).
+- [x] Every fact confirmed before use; no "you told me" (`test/context-guardrails.test.ts`, `test/safety.test.ts`).
+- [x] One full "Send next step" → walkthrough → "Done" → outcome loop (`test/journey.e2e.test.ts`).
+- [x] The plan document prints correctly (`scripts/check-plan-print.ts`, nothing wider than A4).
+- [x] Every model choice from `model_config`.
+- [x] The web plan viewer shows the same plan (`api/plan.ts`, `public/plan.html`).
+- [x] A landing page with a working link to the number (`public/index.html` → `/wa`).
+
+## Before each release
+
+```bash
+npm run typecheck
+```
+
+```bash
+npm test
+```
+
+```bash
+TRACKING_OFF=1 node --experimental-strip-types --import ./scripts/register-ts.mjs --test "test/**/*.test.ts"
+```
+
+```bash
+npm run eval -- --dry
+```
+
+```bash
+node --experimental-strip-types --import ./scripts/register-ts.mjs scripts/kb-coverage.ts
+```
+
+```bash
+node --experimental-strip-types --import ./scripts/register-ts.mjs scripts/preview-plan.mjs
+```

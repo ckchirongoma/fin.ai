@@ -1,0 +1,588 @@
+{
+  "_about": "Fin's prompt-evaluation questions: South African households, one question each, with what a good answer must and must not do. Run with `npm run eval -- --dry` for the mechanical checks (no API calls); `--judge` spends money and waits for the founder.",
+  "questions": [
+    {
+      "id": "za-mashonisa-card",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "debt",
+      "message": "The mashonisa is keeping my SASSA card and my ID until I finish paying. Can he do that?",
+      "business_context": {
+        "name": "Lerato",
+        "earns": "domestic work three days a week and two child support grants",
+        "location": "Diepsloot, Johannesburg",
+        "depends": "two children and her mother some months",
+        "income": "about R4,800 a month",
+        "owes": "a mashonisa (R800, R200 a week) and a clothing account",
+        "cushion": "nothing",
+        "cover": "a burial society",
+        "records": "in my head",
+        "goal": "pay off the mashonisa and put R1,000 away by Christmas",
+        "headache": "the mashonisa takes R200 every week"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_next_step": true,
+        "must_be_specific_to_business": true,
+        "must_name_any": [
+          "NCR",
+          "National Credit Regulator",
+          "0860 627 627",
+          "SAPS"
+        ],
+        "must_not_state_price_unless_grounded": true,
+        "notes": "The answer says plainly that holding the card and ID is not allowed, names the free line, and never suggests another loan to pay him off."
+      }
+    },
+    {
+      "id": "za-free-credit-report",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "credit_record",
+      "message": "How do I check my credit record for free? I think I am blacklisted.",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_next_step": true,
+        "must_name_any": [
+          "TransUnion",
+          "Experian",
+          "XDS"
+        ],
+        "must_give_cost": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-debt-review-cost",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "debt",
+      "message": "What does debt review actually cost and will it stop the collectors?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_give_cost": true,
+        "must_not_state_price_unless_grounded": true,
+        "must_name_any": [
+          "NCR",
+          "debt counsellor",
+          "National Credit Regulator"
+        ],
+        "must_name_next_step": true
+      }
+    },
+    {
+      "id": "za-sassa-deductions",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "income",
+      "message": "Every month a funeral policy comes off my grant before I even see it. Is that allowed?",
+      "business_context": {
+        "name": "Gogo Dlamini",
+        "earns": "the old age grant",
+        "location": "KwaMashu, Durban",
+        "depends": "two grandchildren",
+        "income": "the grant, about R2,400",
+        "owes": "nobody",
+        "cushion": "nothing",
+        "cover": "two funeral policies",
+        "records": "in my head",
+        "goal": "stop the money finishing before the month ends",
+        "headache": "deductions come off the grant before I see it"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "SASSA"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-srd-declined",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "income",
+      "message": "My SRD grant was declined this month, what do I do?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "SASSA",
+          "srd.sassa.gov.za"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-month-too-long",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "spending",
+      "message": "The month is longer than the money every single time. Where do I even start?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_next_step": true,
+        "must_be_specific_to_business": true,
+        "must_not_state_price_unless_grounded": true,
+        "notes": "One move: the three pots or a week of writing it down. Never a loan."
+      }
+    },
+    {
+      "id": "za-loan-to-cover",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "debt",
+      "message": "Should I just take a small loan from the app to cover the rent this month?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_refuse_paid_tools": true,
+        "must_name_any": [
+          "NCR",
+          "National Credit Regulator"
+        ],
+        "must_not_state_price_unless_grounded": true,
+        "notes": "Hardship: the answer protects cash, names the free help, and does not recommend the loan."
+      }
+    },
+    {
+      "id": "za-two-pot",
+      "country": "ZA",
+      "stage": "steady",
+      "domain": "cushion",
+      "message": "Can I take money out of my two-pot savings for the school fees?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_not_state_price_unless_grounded": true,
+        "must_name_next_step": true,
+        "must_name_any": [
+          "fund",
+          "SARS",
+          "tax"
+        ]
+      }
+    },
+    {
+      "id": "za-tfsa",
+      "country": "ZA",
+      "stage": "building",
+      "domain": "goals",
+      "message": "Is a tax-free savings account worth it for R500 a month?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_not_state_price_unless_grounded": true,
+        "must_give_cost": true,
+        "must_name_next_step": true
+      }
+    },
+    {
+      "id": "za-stokvel-safe",
+      "country": "ZA",
+      "stage": "steady",
+      "domain": "family_money",
+      "message": "Is my stokvel safe? The treasurer keeps the money in her own account.",
+      "business_context": {
+        "name": "Lerato",
+        "earns": "domestic work three days a week and two child support grants",
+        "location": "Diepsloot, Johannesburg",
+        "depends": "two children and her mother some months",
+        "income": "about R4,800 a month",
+        "owes": "a mashonisa (R800, R200 a week) and a clothing account",
+        "cushion": "nothing",
+        "cover": "a burial society",
+        "records": "in my head",
+        "goal": "pay off the mashonisa and put R1,000 away by Christmas",
+        "headache": "the mashonisa takes R200 every week"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "NASASA",
+          "constitution",
+          "bank account"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-funeral-waiting",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "protection",
+      "message": "My father died two months after I took the funeral policy and they refuse to pay. What now?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "Ombud",
+          "National Financial Ombud",
+          "waiting period"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-family-asks",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "family_money",
+      "message": "My family asks me for money every month and I am the one who earns the least. How do I say no?",
+      "business_context": {
+        "name": "Lerato",
+        "earns": "domestic work three days a week and two child support grants",
+        "location": "Diepsloot, Johannesburg",
+        "depends": "two children and her mother some months",
+        "income": "about R4,800 a month",
+        "owes": "a mashonisa (R800, R200 a week) and a clothing account",
+        "cushion": "nothing",
+        "cover": "a burial society",
+        "records": "in my head",
+        "goal": "pay off the mashonisa and put R1,000 away by Christmas",
+        "headache": "the mashonisa takes R200 every week"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_be_specific_to_business": true,
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-prize-sms",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "protection",
+      "message": "https://win-now-claim.co.za/claim I got this SMS saying I won R50,000, I just pay R350 to release it. Is it real?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_flag_scam": true,
+        "must_name_any": [
+          "NCR",
+          "National Credit Regulator",
+          "bank",
+          "SAPS",
+          "SAFPS"
+        ],
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-uif",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "income",
+      "message": "I was retrenched last week. Can I get UIF and how long does it take?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "uFiling",
+          "Department of Labour",
+          "labour centre",
+          "labour"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-prescribed",
+      "country": "ZA",
+      "stage": "steady",
+      "domain": "debt",
+      "message": "A debt collector phoned about an account from 2019 I forgot about. Must I pay it?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "prescribed",
+          "three years",
+          "NCR",
+          "Council for Debt Collectors"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true,
+        "notes": "Never acknowledge the debt before checking whether it has prescribed."
+      }
+    },
+    {
+      "id": "za-bank-fees",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": "spending",
+      "message": "My bank takes nearly R100 a month in fees. How do I stop that?",
+      "business_context": {
+        "name": "Nomsa",
+        "earns": "a cleaning job at a school",
+        "location": "Tembisa",
+        "depends": "one child",
+        "income": "about R3,200 a month",
+        "owes": "a bank loan and a cellphone contract",
+        "cushion": "less than a week's spend",
+        "cover": "none",
+        "records": "a notebook",
+        "goal": "get the month to fit without borrowing",
+        "headache": "the month is longer than the money"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true,
+        "must_give_cost": true
+      }
+    },
+    {
+      "id": "za-off-topic",
+      "country": "ZA",
+      "stage": "stretching",
+      "domain": null,
+      "message": "Who is going to win the Springboks game this weekend?",
+      "business_context": {
+        "name": "Lerato",
+        "earns": "domestic work three days a week and two child support grants",
+        "location": "Diepsloot, Johannesburg",
+        "depends": "two children and her mother some months",
+        "income": "about R4,800 a month",
+        "owes": "a mashonisa (R800, R200 a week) and a clothing account",
+        "cushion": "nothing",
+        "cover": "a burial society",
+        "records": "in my head",
+        "goal": "pay off the mashonisa and put R1,000 away by Christmas",
+        "headache": "the mashonisa takes R200 every week"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "notes": "Off topic: a short, warm decline that brings it back to the plan."
+      }
+    },
+    {
+      "id": "za-unknown-fact",
+      "country": "ZA",
+      "stage": "building",
+      "domain": "goals",
+      "message": "What is the interest rate on a fixed deposit at the bank right now?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_say_unknown": true,
+        "must_not_state_price_unless_grounded": true,
+        "notes": "The library carries no rate: the answer says so and names who would know."
+      }
+    },
+    {
+      "id": "za-garnishee",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "debt",
+      "message": "There is a garnishee on my salary and I am left with almost nothing. Is that legal?",
+      "business_context": {
+        "name": "Thabo",
+        "earns": "a salary from a warehouse job",
+        "location": "Soweto",
+        "depends": "just me",
+        "income": "about R9,500 a month",
+        "owes": "a clothing account in arrears",
+        "cushion": "about a month",
+        "cover": "a funeral policy",
+        "records": "the bank app",
+        "goal": "fix my credit record and start saving for a deposit",
+        "headache": "I was declined for a phone contract"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_name_any": [
+          "court",
+          "NCR",
+          "National Credit Regulator",
+          "Legal Aid"
+        ],
+        "must_name_next_step": true,
+        "must_not_state_price_unless_grounded": true
+      }
+    },
+    {
+      "id": "za-electricity",
+      "country": "ZA",
+      "stage": "surviving",
+      "domain": "spending",
+      "message": "The electricity is cut and I have no money for units until Friday.",
+      "business_context": {
+        "name": "Gogo Dlamini",
+        "earns": "the old age grant",
+        "location": "KwaMashu, Durban",
+        "depends": "two grandchildren",
+        "income": "the grant, about R2,400",
+        "owes": "nobody",
+        "cushion": "nothing",
+        "cover": "two funeral policies",
+        "records": "in my head",
+        "goal": "stop the money finishing before the month ends",
+        "headache": "deductions come off the grant before I see it"
+      },
+      "expectations": {
+        "must_be_one_recommendation": true,
+        "must_refuse_paid_tools": true,
+        "must_name_any": [
+          "indigent",
+          "free basic electricity",
+          "municipality",
+          "SASSA",
+          "NCR"
+        ],
+        "must_not_state_price_unless_grounded": true
+      }
+    }
+  ]
+}

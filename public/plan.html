@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your plan — Fin</title>
+<meta name="description" content="Sign in with your WhatsApp number and read the same 90-day money plan Fin built with you.">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex">
+
+<!--
+  The WhatsApp button links to /wa?m=plan, which redirects to the number in
+  WHATSAPP_PUBLIC_NUMBER. See the note at the top of public/index.html.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Crect x='9' y='8' width='14' height='3' fill='%23fff'/%3E%3Crect x='9' y='15' width='10' height='3' fill='%23fff'/%3E%3Crect x='9' y='22' width='3' height='3' fill='%23fff'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    /* The plan document's palette (api/_lib/plandoc.ts), so the page and the
+       document inside it read as one thing. */
+    --ink:#ffffff;--ink-2:#f1f5f4;--ink-3:#e6ebea;
+    --line:#dfe3e8;--line-2:#c5ccd2;
+    --text:#14181d;--muted:#6b737c;
+    --green:#0f766e;--green-deep:#0b5a54;--green-light:#0b5a54;
+    --error:#8f1d16;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--ink);color:var(--text);
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.wordmark{
+    font-family:"Instrument Serif",Georgia,"Times New Roman",serif;
+    font-weight:400;line-height:1.08;letter-spacing:-.01em;margin:0;
+  }
+  h1{font-size:clamp(2.1rem,6.4vw,3rem)}
+  h2{font-size:1.5rem}
+  .serif{font-family:"Instrument Serif",Georgia,serif;font-size:1.6rem;line-height:1}
+  p{margin:0 0 1rem}
+  p:last-child{margin-bottom:0}
+  a{color:var(--green-light);text-underline-offset:3px}
+
+  .wrap{width:100%;max-width:640px;margin:0 auto;padding:0 16px}
+  .wrap-wide{max-width:960px}
+
+  .site-head{border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;gap:12px;min-height:60px}
+  .wordmark{display:inline-flex;align-items:center;gap:9px;color:var(--text);text-decoration:none}
+  .head-in nav{margin-left:auto}
+  .head-in nav a{color:var(--muted);text-decoration:none;font-size:.92rem;font-weight:500;padding:8px 10px;border-radius:8px}
+  .head-in nav a:hover{color:var(--text);background:var(--ink-3)}
+
+  main{padding:40px 0 64px}
+  .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green-light);margin:0 0 12px}
+  .lede{color:var(--muted);margin-top:12px}
+
+  .card{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+    padding:22px;margin-top:26px;
+  }
+
+  label{display:block;font-weight:700;font-size:.96rem;margin-bottom:6px}
+  .hint{display:block;font-weight:400;font-size:.87rem;color:var(--muted);margin-bottom:10px}
+
+  input[type="text"]{
+    width:100%;padding:14px 15px;font-family:inherit;font-size:1.05rem;
+    letter-spacing:.02em;color:var(--text);background:var(--ink);
+    border:1px solid var(--line-2);border-radius:11px;
+  }
+  input::placeholder{color:#8a929a}
+  input:focus-visible,button:focus-visible,a:focus-visible{
+    outline:3px solid var(--green-light);outline-offset:3px;
+  }
+  #code{letter-spacing:.35em;font-size:1.25rem;font-weight:700}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 20px;border-radius:11px;font-family:inherit;font-size:1rem;
+    font-weight:700;line-height:1.2;text-decoration:none;border:1px solid transparent;cursor:pointer;
+  }
+  /* White on #0f766e is 5.4:1. */
+  .btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-primary:hover:not(:disabled){background:var(--green-deep)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn-ghost:hover:not(:disabled){background:var(--ink-3)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-full{width:100%;margin-top:16px}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+
+  /* aria-live region: reserves no space when empty so the layout does not jump. */
+  .msg{margin-top:16px;padding:12px 14px;border-radius:11px;font-size:.94rem;border:1px solid transparent}
+  .msg:empty{display:none}
+  .msg.ok{background:#e6f4f1;border-color:#9fd3cb;color:#0b5a54}
+  .msg.bad{background:#fbeae8;border-color:#e3a69f;color:var(--error)}
+
+  .small{font-size:.87rem;color:var(--muted);margin-top:18px}
+
+  /* ── plan view ──────────────────────────────────────────── */
+  #planView[hidden]{display:none}
+  .plan-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:22px}
+  .plan-bar h1{flex:1 1 220px;min-width:0}
+  /* No overflow:hidden here: clipping a very tall frame inside rounded corners
+     is what iPhone Safari renders worst. The frame rounds its own corners. */
+  .frame-shell{
+    margin-top:18px;background:#ffffff;border-radius:14px;
+    border:1px solid var(--line-2);
+  }
+  iframe{display:block;width:100%;border:0;min-height:70vh;background:#fff;border-radius:13px}
+
+  .spinner{
+    display:inline-block;width:17px;height:17px;border-radius:50%;
+    border:2px solid rgba(0,0,0,.15);border-top-color:var(--green);
+    animation:spin .8s linear infinite;vertical-align:-3px;margin-right:9px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.4s}}
+
+  .skip{position:absolute;left:-9999px;background:var(--green);color:#fff;padding:10px 16px;font-weight:700;z-index:50}
+  .skip:focus{left:0}
+
+  [hidden]{display:none !important}
+
+  @media print{
+    .site-head,.plan-bar,.small,.skip{display:none !important}
+    body{background:#fff}
+    .frame-shell{border:0;border-radius:0;margin:0}
+    main{padding:0}
+    .wrap{padding:0;max-width:none}
+  }
+
+  /* ── the two views: the plan, and how it is going ── */
+  .tabs{display:flex;gap:8px;margin:0 0 18px}
+  .tab{appearance:none;font:inherit;font-weight:600;font-size:.95rem;border:1px solid var(--line-2);background:transparent;color:var(--muted);padding:9px 18px;border-radius:999px;cursor:pointer}
+  .tab:hover{color:var(--text)}
+  .tab[aria-selected="true"]{background:var(--green-deep);border-color:var(--green-deep);color:#fff}
+  .tab:focus-visible{outline:2px solid var(--green-light);outline-offset:2px}
+  .pg h2{font-size:1.05rem;margin:28px 0 4px}
+  .pg .sub{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .bar{height:12px;border-radius:999px;background:var(--ink-3);overflow:hidden;margin:12px 0 8px}
+  .bar>i{display:block;height:100%;background:var(--green);border-radius:999px}
+  .areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .area{background:var(--ink-2);border:1px solid var(--line);border-left:4px solid var(--line-2);border-radius:10px;padding:14px}
+  .area.red{border-left-color:#b3261e}.area.amber{border-left-color:#b45309}.area.green{border-left-color:#0f766e}
+  .area b{display:block;font-size:.95rem}
+  .area .st{font-size:.8rem;font-weight:700;margin:3px 0 6px}
+  .area.red .st{color:#b3261e}.area.amber .st{color:#b45309}.area.green .st{color:var(--green)}
+  .area p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.5}
+  .area .was{color:var(--green-light);font-size:.8rem;margin-top:6px}
+  .area details{margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .area summary{cursor:pointer;color:var(--text)}
+  .list{list-style:none;margin:0;padding:0}
+  .list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+  .list .chip{flex:none;font-size:.78rem;font-weight:700;color:var(--muted)}
+  .list .chip.done,.list .chip.better{color:var(--green-light)}
+  .empty{color:var(--muted);font-size:.92rem;margin:6px 0}
+</style>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap wrap-wide head-in">
+    <a class="wordmark" href="/">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#0f766e"/><rect x="9" y="8" width="14" height="3" fill="#fff"/><rect x="9" y="15" width="10" height="3" fill="#fff"/><rect x="9" y="22" width="3" height="3" fill="#fff"/></svg>
+      <span class="serif">Fin</span>
+    </a>
+    <nav aria-label="Main"><a href="/">Home</a></nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Everything below needs JavaScript: the sign-in is three API calls and the
+       plan is a whole HTML document dropped into a frame. Rather than show forms
+       that silently do nothing, hide them and say where else the plan lives. -->
+  <noscript>
+    <style>.needs-js{display:none !important}</style>
+    <div class="wrap">
+      <p class="eyebrow">Your plan</p>
+      <h1>This page needs JavaScript</h1>
+      <div class="card">
+        <p>Turn JavaScript on and reload, and you can sign in with your WhatsApp number to read your plan here.</p>
+        <p>You don't have to. Your plan also lives on WhatsApp — message Fin and ask for it.</p>
+        <p style="margin-top:16px">
+          <a class="btn btn-primary" target="_blank" rel="noopener"
+             href="/wa?m=plan">Ask Fin on WhatsApp</a>
+        </p>
+      </div>
+    </div>
+  </noscript>
+
+  <!-- ── step 1: the number ───────────────────────────────── -->
+  <div class="wrap needs-js" id="signIn">
+    <p class="eyebrow">Your plan</p>
+    <h1 id="signInTitle" tabindex="-1">Read your 90-day money plan</h1>
+    <p class="lede">It's the same plan Fin built with you on WhatsApp — same words, same steps. Sign in with the number you use to talk to Fin.</p>
+
+    <div class="card" id="stepNumber">
+      <form id="numberForm" novalidate>
+        <label for="wa_id">Your WhatsApp number</label>
+        <span class="hint" id="waHint">Country code first, no plus and no spaces. A South African number starts with 27.</span>
+        <input id="wa_id" name="wa_id" type="text" inputmode="numeric" autocomplete="tel"
+               placeholder="27809930000" maxlength="18" aria-describedby="waHint" required>
+        <button class="btn btn-primary btn-full" type="submit" id="sendCodeBtn">Send me a code</button>
+      </form>
+    </div>
+
+    <!-- ── step 2: the code ───────────────────────────────── -->
+    <div class="card" id="stepCode" hidden>
+      <form id="codeForm" novalidate>
+        <label for="code">The 6-digit code</label>
+        <span class="hint" id="codeHint">Fin sent it to <span id="waEcho">your number</span> on WhatsApp — look for a six-digit number. It works for ten minutes.</span>
+        <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+               pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-describedby="codeHint" required>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="submit" id="verifyBtn">Open my plan</button>
+          <button class="btn btn-ghost" type="button" id="resendBtn">Send a new code</button>
+          <button class="btn btn-ghost" type="button" id="changeNumberBtn">Change number</button>
+        </div>
+      </form>
+    </div>
+
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+    <p class="small">
+      Only someone holding that phone can sign in, because the code arrives on WhatsApp.
+      Nothing about your money is shown until the code checks out.
+    </p>
+  </div>
+
+  <!-- ── the plan ─────────────────────────────────────────── -->
+  <div class="wrap wrap-wide needs-js" id="planView" hidden>
+    <div class="tabs" role="tablist" aria-label="Your plan and your progress">
+      <button class="tab" role="tab" id="tabPlan" aria-selected="true" aria-controls="planPanel" type="button">My plan</button>
+      <button class="tab" role="tab" id="tabProgress" aria-selected="false" aria-controls="progressPanel" type="button">How it's going</button>
+    </div>
+    <div id="planPanel" role="tabpanel" aria-labelledby="tabPlan">
+    <div class="plan-bar">
+      <h1 id="planTitle" tabindex="-1">Your 90-day money plan</h1>
+      <a class="btn btn-primary" href="/ask.html" id="askLink">Ask Fin about your plan</a>
+      <button class="btn btn-ghost" type="button" id="printBtn">Print / Save as PDF</button>
+      <a class="btn btn-ghost" href="/my-plan" id="rawLink">Open on its own page</a>
+    </div>
+    <div class="frame-shell">
+      <!-- srcdoc, not innerHTML: the plan is a complete document whose inline styles
+           would otherwise fight this page's CSS. Sandboxed with no allow-scripts, so
+           nothing in the plan can run; allow-same-origin lets this page measure its
+           height, and allow-modals is what makes contentWindow.print() legal. -->
+      <iframe id="planFrame" title="Your 90-day plan" sandbox="allow-same-origin allow-modals"></iframe>
+    </div>
+    <p class="small">
+      Printing gives you the same document Fin sends on WhatsApp. If the print dialog
+      doesn't open, use “Open on its own page” and print from there.
+    </p>
+    </div>
+    <div id="progressPanel" class="pg" role="tabpanel" aria-labelledby="tabProgress" hidden></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var API = "/api/plan";
+
+  var el = function (id) { return document.getElementById(id); };
+  var signIn = el("signIn"), planView = el("planView"), msg = el("msg");
+  var stepNumber = el("stepNumber"), stepCode = el("stepCode");
+  var waInput = el("wa_id"), codeInput = el("code");
+  var sendCodeBtn = el("sendCodeBtn"), verifyBtn = el("verifyBtn"), resendBtn = el("resendBtn");
+  var frame = el("planFrame");
+  var waId = "";
+  var cooldownTimer = null;
+
+  // ── talking to the API ──────────────────────────────────
+  // Every failure mode ends up as a sentence a person can act on. A person on a
+  // taxi with one bar should never see "TypeError: Failed to fetch".
+  var UNREACHABLE = "Fin isn't answering right now. Check your connection and try again — or just ask on WhatsApp.";
+
+  function say(text, kind) {
+    msg.textContent = text || "";
+    msg.className = "msg" + (text ? " " + (kind || "ok") : "");
+  }
+
+  function post(action, body) {
+    return fetch(API + "?action=" + action, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        return { status: res.status, ok: res.ok, data: data };
+      });
+    });
+  }
+
+  // The API answers with a `message` on every failure it knows about. Prefer it
+  // over anything invented here; fall back only when it is genuinely absent.
+  function problem(r) {
+    if (r.data && r.data.message) return r.data.message;
+    if (r.status === 429) return "Too many tries. Wait a minute and ask for a new code.";
+    if (r.status >= 500) return "Something broke on our side. Try again in a minute.";
+    return "That didn't work. Try again.";
+  }
+
+  function busy(btn, on, labelWhenBusy) {
+    if (on) {
+      btn.dataset.label = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>' + labelWhenBusy;
+    } else {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.label || btn.textContent;
+    }
+  }
+
+  // ── step 1 ──────────────────────────────────────────────
+
+  function cleanNumber(raw) {
+    return (raw || "").replace(/\D/g, "").replace(/^0+/, "");
+  }
+
+  // An example for each market the local number's shape fits — the same
+  // table as the server's wrongFormatMessage (api/plan.ts).
+  var LOCAL_EXAMPLES = [
+    ["South Africa", /^0[678]\d{8}$/, "080 993 0000 becomes 27809930000"]
+  ];
+  function wrongFormatMessage(raw) {
+    var digits = String(raw || "").replace(/\D/g, "");
+    var fits = LOCAL_EXAMPLES.filter(function (e) { return e[1].test(digits); });
+    var shown = fits.length ? fits : LOCAL_EXAMPLES;
+    return "Start with your country code and leave out the first 0 and the plus. " + shown.map(function (e) { return "In " + e[0] + ", " + e[2] + "."; }).join(" ");
+  }
+
+  el("numberForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var digits = cleanNumber(waInput.value);
+    // Typed the local way (082…): the country code is missing, and without it
+    // no record matches — so say so here instead of "a code is on its way".
+    // Same rule as the server's typedLocally (api/plan.ts): ignore spaces,
+    // brackets, dots and dashes, then a single leading 0 means no country code.
+    if (/^0(?!0)/.test(waInput.value.replace(/[\s().\-]/g, ""))) {
+      say(wrongFormatMessage(waInput.value), "bad");
+      waInput.focus();
+      return;
+    }
+    if (digits.length < 8 || digits.length > 15) {
+      say("That doesn't look like a full number. Start with the country code — 27, 254, 256, 234 or 233 — and leave out the plus.", "bad");
+      waInput.focus();
+      return;
+    }
+    waId = digits;
+    say("");
+    busy(sendCodeBtn, true, "Sending…");
+    post("request_code", { wa_id: waId }).then(function (r) {
+      busy(sendCodeBtn, false);
+      if (!r.ok) { say(problem(r), "bad"); return; }
+      showCodeStep(r.data.message);
+    }, function () {
+      busy(sendCodeBtn, false);
+      say(UNREACHABLE, "bad");
+    });
+  });
+
+  function showCodeStep(message) {
+    stepNumber.hidden = true;
+    stepCode.hidden = false;
+    el("waEcho").textContent = "+" + waId;
+    say(message || "If that number has a plan with Fin, a code is on its way to it on WhatsApp. No code after a minute? Send \"hi\" to Fin on WhatsApp, then ask for a new code here.", "ok");
+    codeInput.value = "";
+    codeInput.focus();
+    startCooldown(60);
+  }
+
+  el("changeNumberBtn").addEventListener("click", function () {
+    stepCode.hidden = true;
+    stepNumber.hidden = false;
+    say("");
+    waInput.focus();
+  });
+
+  // The server quietly ignores a second code request inside 60 seconds, so the
+  // button has to show that instead of looking broken when nothing arrives.
+  function startCooldown(seconds) {
+    clearInterval(cooldownTimer);
+    var left = seconds;
+    var tick = function () {
+      if (left <= 0) {
+        clearInterval(cooldownTimer);
+        resendBtn.disabled = false;
+        resendBtn.textContent = "Send a new code";
+        return;
+      }
+      resendBtn.disabled = true;
+      resendBtn.textContent = "New code in " + left + "s";
+      left--;
+    };
+    tick();
+    cooldownTimer = setInterval(tick, 1000);
+  }
+
+  resendBtn.addEventListener("click", function () {
+    say("");
+    post("request_code", { wa_id: waId }).then(function (r) {
+      if (!r.ok) { say(problem(r), "bad"); return; }
+      say(r.data.message || "A new code is on its way.", "ok");
+      startCooldown(60);
+      codeInput.focus();
+    }, function () { say(UNREACHABLE, "bad"); });
+  });
+
+  // ── step 2 ──────────────────────────────────────────────
+
+  el("codeForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var code = (codeInput.value || "").replace(/\D/g, "");
+    if (code.length !== 6) {
+      say("The code is six digits.", "bad");
+      codeInput.focus();
+      return;
+    }
+    say("");
+    busy(verifyBtn, true, "Checking…");
+    post("verify", { wa_id: waId, code: code }).then(function (r) {
+      busy(verifyBtn, false);
+      if (!r.ok || !r.data.ok) {
+        say(problem(r), "bad");
+        codeInput.select();
+        // Out of attempts or expired — the server has thrown the code away, so
+        // the only way forward is a new one.
+        if (r.status === 429 || /expired|new code/i.test(r.data.message || "")) {
+          clearInterval(cooldownTimer);
+          resendBtn.disabled = false;
+          resendBtn.textContent = "Send a new code";
+        }
+        return;
+      }
+      loadPlan();
+    }, function () {
+      busy(verifyBtn, false);
+      say(UNREACHABLE, "bad");
+    });
+  });
+
+  // ── the plan itself ─────────────────────────────────────
+
+  function loadPlan() {
+    say("Opening your plan…", "ok");
+    fetch(API, { credentials: "same-origin", headers: { Accept: "text/html" } })
+      .then(function (res) {
+        if (res.status === 401) {
+          say("That session has run out. Sign in again.", "bad");
+          stepCode.hidden = true;
+          stepNumber.hidden = false;
+          return null;
+        }
+        if (!res.ok) { say("Fin couldn't fetch your plan just now. Try again in a minute.", "bad"); return null; }
+        return res.text();
+      })
+      .then(function (html) {
+        if (html === null || html === undefined) return;
+        say("");
+        signIn.hidden = true;
+        planView.hidden = false;
+        frame.srcdoc = html;
+        el("planTitle").focus();
+        nameTheHeading();
+      }, function () { say(UNREACHABLE, "bad"); });
+  }
+
+  // verify returns no name, so put the person's own name on the heading
+  // from the session endpoint — seeing their name is the confirmation
+  // that this is their plan and not somebody else's.
+  function nameTheHeading() {
+    var h = el("planTitle");
+    if (h.dataset.named) return;
+    fetch(API + "?action=session", { credentials: "same-origin" })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data && data.business) {
+          h.textContent = data.business + " — your 90-day money plan";
+          h.dataset.named = "1";
+        }
+      })
+      .catch(function () { /* the heading already reads "Your 90-day plan" */ });
+  }
+
+  // Grow the frame to the document inside it: with no allow-scripts, the plan
+  // cannot report its own height, so measure it from out here.
+  //
+  // Owner report, 2026-09-24: on a phone the plan "glitches, doesn't scroll
+  // all the way". iPhone Safari fires resize again and again while you scroll
+  // (the address bar shrinks and grows), and this used to set the frame to
+  // 0px and re-measure on every one — for that instant the page was only as
+  // tall as its header, so Safari snapped the scroll position back up. Now:
+  //   - the CONTENT is measured (the body's own box), so the frame never has
+  //     to collapse first to find out how tall the plan is;
+  //   - only a change of WIDTH (rotation, a real resize) triggers a refit;
+  //   - nothing is measured while the plan tab is hidden;
+  //   - it refits a few more times as the page settles, since a phone can lay
+  //     the plan out after "load" has already fired;
+  //   - if measuring fails, the frame keeps its own scrollbar, so the whole
+  //     plan is always reachable.
+  var fittedWidth = 0;
+  function planHeight(doc) {
+    var body = doc.body;
+    var rect = body.getBoundingClientRect();
+    var cs = doc.defaultView ? doc.defaultView.getComputedStyle(body) : null;
+    var margins = cs ? (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0) : 0;
+    return Math.ceil(rect.height + margins);
+  }
+  function fitFrame() {
+    if ((planPanel && planPanel.hidden) || planView.hidden) return;
+    try {
+      var doc = frame.contentDocument;
+      if (!doc || !doc.body) return;
+      var h = planHeight(doc);
+      if (!h || h < 50) throw new Error("no layout yet");
+      var want = h + 24 + "px";
+      if (frame.style.height !== want) {
+        frame.style.minHeight = "0";
+        frame.style.height = want;
+      }
+      frame.setAttribute("scrolling", "no");
+      fittedWidth = frame.clientWidth;
+    } catch (err) {
+      frame.style.minHeight = "";
+      frame.style.height = "";  /* fall back to the CSS min-height... */
+      frame.removeAttribute("scrolling");  /* ...and let the frame scroll itself */
+    }
+  }
+  function settleFit() {
+    fitFrame();
+    [150, 600, 1500, 3000].forEach(function (ms) { setTimeout(fitFrame, ms); });
+    try {
+      var doc = frame.contentDocument;
+      if (doc && doc.fonts && doc.fonts.ready) doc.fonts.ready.then(fitFrame, function () {});
+      if (window.ResizeObserver && doc && doc.body) new ResizeObserver(function () { fitFrame(); }).observe(doc.body);
+    } catch (err) { /* the timed refits still run */ }
+  }
+  frame.addEventListener("load", settleFit);
+  window.addEventListener("resize", function () {
+    // Height-only resizes are the address bar moving while the person scrolls.
+    if (!planView.hidden && frame.clientWidth !== fittedWidth) fitFrame();
+  });
+  window.addEventListener("orientationchange", function () { setTimeout(fitFrame, 300); });
+
+  el("printBtn").addEventListener("click", function () {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    } catch (err) {
+      // Some browsers refuse print() inside a sandboxed frame. The plan is a real
+      // page of its own at /my-plan, so send them there rather than printing this
+      // page's chrome around it.
+      window.open("/my-plan", "_blank", "noopener");
+    }
+  });
+
+  // ── how it is going ─────────────────────────────────────
+  // Everything below builds nodes and sets textContent. Some of this is words the
+  // person typed, and words they typed never get to become markup.
+
+  var tabPlan = el("tabPlan"), tabProgress = el("tabProgress");
+  var planPanel = el("planPanel"), progressPanel = el("progressPanel");
+  var progressLoaded = false;
+
+  function showTab(which) {
+    var p = which === "progress";
+    planPanel.hidden = p;
+    progressPanel.hidden = !p;
+    tabPlan.setAttribute("aria-selected", String(!p));
+    tabProgress.setAttribute("aria-selected", String(p));
+    if (p) loadProgress(); else fitFrame();
+  }
+  tabPlan.addEventListener("click", function () { showTab("plan"); });
+  tabProgress.addEventListener("click", function () { showTab("progress"); });
+
+  function node(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+  function shortDate(v) {
+    try { return new Date(v).toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return ""; }
+  }
+  var STATUS_WORD = { red: "Not sorted yet", amber: "In progress", green: "Sorted" };
+  var EFFECT_WORD = { better: "Better already", same: "No change yet", too_early: "Too early to say", worse: "Got worse" };
+  var COMMIT_WORD = { open: "Open", done: "Done", dropped: "Dropped", stuck: "Stuck" };
+
+  function loadProgress() {
+    if (progressLoaded) return;
+    progressPanel.textContent = "Loading…";
+    fetch(API + "?action=dashboard", { credentials: "same-origin" })
+      .then(function (res) {
+        if (res.status === 401) { progressPanel.textContent = "That session has run out. Reload and sign in again."; return null; }
+        return res.json();
+      })
+      .then(function (d) {
+        if (!d) return;
+        if (!d.ok) { progressPanel.textContent = d.message || "Couldn't load this just now."; return; }
+        renderProgress(d);
+        progressLoaded = true;
+      })
+      .catch(function () { progressPanel.textContent = "Fin couldn't load this just now. Try again in a minute."; });
+  }
+
+  function renderProgress(d) {
+    progressPanel.textContent = "";
+    var pr = d.progress || { done: 0, total: 0, percent: 0 };
+
+    progressPanel.appendChild(node("h2", null, "The 90 days"));
+    if (!d.hasPlan) {
+      progressPanel.appendChild(node("p", "empty", "Your plan will show here once you've finished the questions on WhatsApp."));
+    } else {
+      progressPanel.appendChild(node("p", "sub", pr.done + " of " + pr.total + " steps done" + (pr.skipped ? ", " + pr.skipped + " skipped" : "") + "."));
+      var bar = node("div", "bar"); var fill = node("i"); fill.style.width = Math.max(2, pr.percent) + "%"; bar.appendChild(fill);
+      bar.setAttribute("role", "progressbar"); bar.setAttribute("aria-valuenow", String(pr.percent)); bar.setAttribute("aria-valuemin", "0"); bar.setAttribute("aria-valuemax", "100");
+      progressPanel.appendChild(bar);
+      if (pr.next_step) progressPanel.appendChild(node("p", "sub", "Up next: " + pr.next_step));
+      else if (pr.total && pr.done + (pr.skipped || 0) >= pr.total) progressPanel.appendChild(node("p", "sub", "That's the whole plan. Message Fin to build the next 90 days."));
+    }
+
+    progressPanel.appendChild(node("h2", null, "Where your money stands"));
+    progressPanel.appendChild(node("p", "sub", "Against what “sorted” concretely means for each area — and where you started."));
+    var areas = node("div", "areas");
+    (d.map || []).forEach(function (m) {
+      var a = node("div", "area " + m.status);
+      a.appendChild(node("b", null, m.label));
+      a.appendChild(node("div", "st", STATUS_WORD[m.status] || ""));
+      if (m.note) a.appendChild(node("p", null, m.note));
+      if (m.was && m.was !== m.status) a.appendChild(node("div", "was", "Moved up from “" + (STATUS_WORD[m.was] || m.was).toLowerCase() + "”"));
+      if (m.sorted_means) {
+        var det = node("details"); det.appendChild(node("summary", null, "What sorted looks like")); det.appendChild(node("p", null, m.sorted_means)); a.appendChild(det);
+      }
+      areas.appendChild(a);
+    });
+    if (!(d.map || []).length) areas.appendChild(node("p", "empty", "Your map appears once your plan is built."));
+    progressPanel.appendChild(areas);
+
+    progressPanel.appendChild(node("h2", null, "What you've said you'll do"));
+    var cl = node("ul", "list");
+    (d.commitments || []).forEach(function (c) {
+      var li = node("li");
+      li.appendChild(node("span", null, c.what + (c.due && c.status === "open" ? " · due " + shortDate(c.due) : "")));
+      li.appendChild(node("span", "chip " + c.status, COMMIT_WORD[c.status] || c.status));
+      cl.appendChild(li);
+    });
+    if (cl.childNodes.length) progressPanel.appendChild(cl); else progressPanel.appendChild(node("p", "empty", "Nothing yet. When you start a step, it shows up here."));
+
+    progressPanel.appendChild(node("h2", null, "What's worked"));
+    var ol = node("ul", "list");
+    (d.outcomes || []).forEach(function (o) {
+      var li = node("li");
+      li.appendChild(node("span", null, o.what));
+      li.appendChild(node("span", "chip " + o.effect, (EFFECT_WORD[o.effect] || o.effect) + (o.at ? " · " + shortDate(o.at) : "")));
+      ol.appendChild(li);
+    });
+    if (ol.childNodes.length) progressPanel.appendChild(ol); else progressPanel.appendChild(node("p", "empty", "When you finish a step, Fin asks whether it made a difference. Your answers collect here."));
+  }
+
+  // ── already signed in? ──────────────────────────────────
+  // Thirty-day cookie, so the common case is landing here and going straight in.
+  fetch(API + "?action=session", { credentials: "same-origin" })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (data && data.signedIn) {
+        if (data.business) {
+          el("planTitle").textContent = data.business + " — your 90-day money plan";
+          el("planTitle").dataset.named = "1";
+        }
+        loadPlan();
+      }
+    })
+    .catch(function () {
+      say("Fin isn't answering right now. You can still ask for your plan on WhatsApp.", "bad");
+    });
+})();
+</script>
+</body>
+</html>

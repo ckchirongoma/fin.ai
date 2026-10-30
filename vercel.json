@@ -1,0 +1,110 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "functions": {
+    "api/whatsapp-webhook.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "api/worker.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "api/mcp.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/plan.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    },
+    "api/health.ts": {
+      "maxDuration": 15,
+      "memory": 512
+    },
+    "api/render-pdf.ts": {
+      "maxDuration": 120,
+      "memory": 2048,
+      "includeFiles": "{node_modules/@sparticuz/chromium/bin/**,fonts/**}"
+    },
+    "api/cron/nudges.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "api/cron/freshness.ts": {
+      "maxDuration": 120,
+      "memory": 512
+    },
+    "api/sponsor.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/knowledge-signals.ts": {
+      "maxDuration": 30,
+      "memory": 512
+    },
+    "api/ask.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    },
+    "api/admin.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/nudges",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/freshness",
+      "schedule": "0 3 * * 1"
+    },
+    {
+      "path": "/api/worker?tick=1",
+      "schedule": "* * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    },
+    {
+      "source": "/mcp/:token",
+      "destination": "/api/mcp?k=:token"
+    },
+    {
+      "source": "/plan",
+      "destination": "/plan.html"
+    },
+    {
+      "source": "/wa",
+      "destination": "/api/plan?action=whatsapp"
+    },
+    {
+      "source": "/my-plan",
+      "destination": "/api/plan"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    }
+  ]
+}

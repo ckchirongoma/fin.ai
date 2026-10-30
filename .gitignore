@@ -1,0 +1,19 @@
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+dist/
+build/
+.vercel
+.env*
+preview/
+
+# The example is documentation, not a secret.
+!.env.example
+
+# Supabase CLI cache (round 25: written into the repo folder when the CLI ran from here).
+supabase/.temp/
+
+# eval.ts dry runs write here; results are not source.
+eval/results-*.json

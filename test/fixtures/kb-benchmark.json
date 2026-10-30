@@ -1,0 +1,437 @@
+{
+  "_about": "Fin's knowledge-base benchmark: 72 questions a South African household might type, across the eight money areas and four money stages. Written blind on 2026-10-30, before the library rows were read. scripts/kb-coverage.ts counts a question answered when a row in the person's market, in the question's area, overlaps its words. Never tune a row to a question here without adding the real phrasing a person used. Each question is tagged with the money area a plan would file it under; a few tags were corrected on 2026-10-30 to the area the question actually belongs to (a stokvel is family money; a pension pot is the future), before any floor was set.",
+  "questions": [
+    {
+      "id": "income.1",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "my grant was declined, what do I do"
+    },
+    {
+      "id": "income.2",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "I lost my job last month, can I claim anything"
+    },
+    {
+      "id": "income.3",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "how do I apply for the child grant"
+    },
+    {
+      "id": "income.4",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "can I get UIF if I was retrenched"
+    },
+    {
+      "id": "income.5",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "is there money I can claim back from tax"
+    },
+    {
+      "id": "income.6",
+      "domain": "income",
+      "stage": "steady",
+      "question": "do I have to pay tax on my salary"
+    },
+    {
+      "id": "income.7",
+      "domain": "income",
+      "stage": "building",
+      "question": "how do I get my tax number"
+    },
+    {
+      "id": "income.8",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "the social grant office says my card is blocked"
+    },
+    {
+      "id": "income.9",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "my employer didn't pay me, who do I report it to"
+    },
+    {
+      "id": "spending.1",
+      "domain": "spending",
+      "stage": "surviving",
+      "question": "the month is longer than the money, what do I do first"
+    },
+    {
+      "id": "spending.2",
+      "domain": "spending",
+      "stage": "surviving",
+      "question": "I don't know where my money goes"
+    },
+    {
+      "id": "spending.3",
+      "domain": "spending",
+      "stage": "stretching",
+      "question": "how do I make a budget that I can actually keep"
+    },
+    {
+      "id": "spending.4",
+      "domain": "spending",
+      "stage": "stretching",
+      "question": "airtime and data eat my money every month"
+    },
+    {
+      "id": "spending.5",
+      "domain": "cushion",
+      "stage": "steady",
+      "question": "how much should I be saving each month"
+    },
+    {
+      "id": "spending.6",
+      "domain": "spending",
+      "stage": "building",
+      "question": "is lay-by a good way to buy a fridge"
+    },
+    {
+      "id": "spending.7",
+      "domain": "spending",
+      "stage": "surviving",
+      "question": "my bank charges me every month for nothing, can I stop it"
+    },
+    {
+      "id": "spending.8",
+      "domain": "spending",
+      "stage": "stretching",
+      "question": "the debit order went off before my pay came in and I got charged"
+    },
+    {
+      "id": "spending.9",
+      "domain": "spending",
+      "stage": "steady",
+      "question": "how do I split my salary when it comes in"
+    },
+    {
+      "id": "debt.1",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "the mashonisa is keeping my bank card, is that allowed"
+    },
+    {
+      "id": "debt.2",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "debt collectors are calling me every day, what are my rights"
+    },
+    {
+      "id": "debt.3",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "I can't pay all my accounts, which one do I pay first"
+    },
+    {
+      "id": "debt.4",
+      "domain": "debt",
+      "stage": "stretching",
+      "question": "what is debt review and what does it cost"
+    },
+    {
+      "id": "debt.5",
+      "domain": "debt",
+      "stage": "stretching",
+      "question": "an old debt from 5 years ago came back, must I pay it"
+    },
+    {
+      "id": "debt.6",
+      "domain": "debt",
+      "stage": "stretching",
+      "question": "they are taking money off my salary for a debt, is that legal"
+    },
+    {
+      "id": "debt.7",
+      "domain": "debt",
+      "stage": "steady",
+      "question": "should I pay off the smallest debt or the biggest interest first"
+    },
+    {
+      "id": "debt.8",
+      "domain": "debt",
+      "stage": "building",
+      "question": "how do I settle my clothing account early"
+    },
+    {
+      "id": "debt.9",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "the loan shark charges me 50% a month"
+    },
+    {
+      "id": "debt.10",
+      "domain": "debt",
+      "stage": "steady",
+      "question": "can I cancel my cellphone contract without paying everything"
+    },
+    {
+      "id": "cushion.1",
+      "domain": "cushion",
+      "stage": "surviving",
+      "question": "I have nothing saved, where do I even start"
+    },
+    {
+      "id": "cushion.2",
+      "domain": "cushion",
+      "stage": "stretching",
+      "question": "how much emergency money should I keep"
+    },
+    {
+      "id": "cushion.3",
+      "domain": "cushion",
+      "stage": "stretching",
+      "question": "where do I keep savings so I don't touch it"
+    },
+    {
+      "id": "cushion.4",
+      "domain": "family_money",
+      "stage": "steady",
+      "question": "is a stokvel a safe place to save"
+    },
+    {
+      "id": "cushion.5",
+      "domain": "cushion",
+      "stage": "building",
+      "question": "what is a tax-free savings account and is it worth it"
+    },
+    {
+      "id": "cushion.6",
+      "domain": "goals",
+      "stage": "building",
+      "question": "can I take money out of my pension savings pot"
+    },
+    {
+      "id": "cushion.7",
+      "domain": "family_money",
+      "stage": "steady",
+      "question": "how do I know if my stokvel is a pyramid scheme"
+    },
+    {
+      "id": "cushion.8",
+      "domain": "cushion",
+      "stage": "stretching",
+      "question": "how do I save when there is nothing left at month end"
+    },
+    {
+      "id": "credit_record.1",
+      "domain": "credit_record",
+      "stage": "stretching",
+      "question": "how do I check my credit record for free"
+    },
+    {
+      "id": "credit_record.2",
+      "domain": "credit_record",
+      "stage": "stretching",
+      "question": "I am blacklisted, how do I clear my name"
+    },
+    {
+      "id": "credit_record.3",
+      "domain": "credit_record",
+      "stage": "steady",
+      "question": "there is a listing on my credit report that is not mine"
+    },
+    {
+      "id": "credit_record.4",
+      "domain": "credit_record",
+      "stage": "steady",
+      "question": "how do I improve my credit score"
+    },
+    {
+      "id": "credit_record.5",
+      "domain": "credit_record",
+      "stage": "building",
+      "question": "does a paid-up account still show on my record"
+    },
+    {
+      "id": "credit_record.6",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "a company offered to remove my bad credit for a fee, is it real"
+    },
+    {
+      "id": "credit_record.7",
+      "domain": "credit_record",
+      "stage": "stretching",
+      "question": "how long does a default stay on my credit record"
+    },
+    {
+      "id": "credit_record.8",
+      "domain": "credit_record",
+      "stage": "building",
+      "question": "I paid the judgment, how do I get it taken off"
+    },
+    {
+      "id": "protection.1",
+      "domain": "protection",
+      "stage": "surviving",
+      "question": "I can't afford my funeral policy anymore, what happens if I stop paying"
+    },
+    {
+      "id": "protection.2",
+      "domain": "protection",
+      "stage": "stretching",
+      "question": "how many funeral policies do I need"
+    },
+    {
+      "id": "protection.3",
+      "domain": "protection",
+      "stage": "stretching",
+      "question": "the funeral policy didn't pay out when my father died"
+    },
+    {
+      "id": "protection.4",
+      "domain": "protection",
+      "stage": "steady",
+      "question": "what is a waiting period on a funeral policy"
+    },
+    {
+      "id": "protection.5",
+      "domain": "protection",
+      "stage": "building",
+      "question": "do I need life cover if I have children"
+    },
+    {
+      "id": "protection.6",
+      "domain": "protection",
+      "stage": "steady",
+      "question": "how do I make sure my children get my money if I die"
+    },
+    {
+      "id": "protection.7",
+      "domain": "protection",
+      "stage": "stretching",
+      "question": "how do I cancel a funeral policy I was talked into"
+    },
+    {
+      "id": "protection.8",
+      "domain": "protection",
+      "stage": "building",
+      "question": "is a burial society better than a funeral policy"
+    },
+    {
+      "id": "family_money.1",
+      "domain": "family_money",
+      "stage": "surviving",
+      "question": "my family keeps asking me for money and I have nothing left"
+    },
+    {
+      "id": "family_money.2",
+      "domain": "family_money",
+      "stage": "stretching",
+      "question": "how do I say no to family without a fight"
+    },
+    {
+      "id": "family_money.3",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "my mother's funeral policy is deducted from her grant, is that allowed"
+    },
+    {
+      "id": "family_money.4",
+      "domain": "family_money",
+      "stage": "steady",
+      "question": "how do we share the bills with my partner fairly"
+    },
+    {
+      "id": "family_money.5",
+      "domain": "family_money",
+      "stage": "building",
+      "question": "I want to help my sister with school fees but keep my own savings"
+    },
+    {
+      "id": "family_money.6",
+      "domain": "family_money",
+      "stage": "surviving",
+      "question": "I pay for everyone at home and I earn the least"
+    },
+    {
+      "id": "family_money.7",
+      "domain": "family_money",
+      "stage": "steady",
+      "question": "my husband hides money from me, what are my rights"
+    },
+    {
+      "id": "family_money.8",
+      "domain": "family_money",
+      "stage": "stretching",
+      "question": "should I lend money to my brother"
+    },
+    {
+      "id": "goals.1",
+      "domain": "goals",
+      "stage": "stretching",
+      "question": "I want to save for my child's school fees next year"
+    },
+    {
+      "id": "goals.2",
+      "domain": "goals",
+      "stage": "steady",
+      "question": "how do I save for a house deposit"
+    },
+    {
+      "id": "goals.3",
+      "domain": "goals",
+      "stage": "building",
+      "question": "can I get help from government to buy my first house"
+    },
+    {
+      "id": "goals.4",
+      "domain": "goals",
+      "stage": "building",
+      "question": "is it better to save or invest"
+    },
+    {
+      "id": "goals.5",
+      "domain": "goals",
+      "stage": "steady",
+      "question": "I want to start a small business with my savings"
+    },
+    {
+      "id": "goals.6",
+      "domain": "goals",
+      "stage": "building",
+      "question": "how do I plan for retirement with no pension at work"
+    },
+    {
+      "id": "goals.7",
+      "domain": "goals",
+      "stage": "stretching",
+      "question": "I want to buy a car, how much should I have saved first"
+    },
+    {
+      "id": "goals.8",
+      "domain": "goals",
+      "stage": "steady",
+      "question": "what is the safest way to grow R10,000"
+    },
+    {
+      "id": "goals.9",
+      "domain": "protection",
+      "stage": "building",
+      "question": "someone invited me to an investment club promising 30% a month"
+    },
+    {
+      "id": "goals.10",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "is it worth saving when I owe money"
+    },
+    {
+      "id": "income.10",
+      "domain": "income",
+      "stage": "building",
+      "question": "should I register for tax if I do piece jobs"
+    },
+    {
+      "id": "spending.10",
+      "domain": "spending",
+      "stage": "building",
+      "question": "how do I stop impulse buying on payday"
+    }
+  ]
+}

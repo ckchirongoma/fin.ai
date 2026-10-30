@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fin — tracking</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Crect x='9' y='8' width='14' height='3' fill='%23fff'/%3E%3Crect x='9' y='15' width='10' height='3' fill='%23fff'/%3E%3Crect x='9' y='22' width='3' height='3' fill='%23fff'/%3E%3C/svg%3E">
+<!--
+  The founder's tracking dashboard. Everything comes from /api/admin with the
+  ADMIN_SECRET as a bearer token, kept in this tab's sessionStorage only.
+  No phone numbers anywhere: people are the first 8 characters of their id.
+  docs/TRACKING.md explains every event shown here.
+-->
+<style>
+  :root{--ink:#ffffff;--ink2:#f1f5f4;--ink3:#dfe3e8;--line:#dfe3e8;--text:#14181d;--muted:#6b737c;--green:#0f766e;--greenL:#0b5a54;--amber:#b45309;--red:#b3261e;--crit:#8f1d16}
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font:15px/1.5 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em;margin:0}
+  header{position:sticky;top:0;z-index:5;background:var(--ink);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  header h1{font-size:22px;margin-right:auto}
+  nav{display:flex;flex-wrap:wrap;gap:6px}
+  nav button,select,input,.btn{background:var(--ink2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 11px;font:inherit;font-size:14px;cursor:pointer}
+  nav button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary{background:var(--green);border-color:var(--green)}
+  main{max-width:1200px;margin:0 auto;padding:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0 0 18px}
+  .tile{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .tile .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  .tile .v{font-family:"Instrument Serif",Georgia,serif;font-size:30px;font-weight:400;margin-top:2px}
+  .tile .s{color:var(--muted);font-size:12.5px}
+  section{background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 16px;overflow:hidden}
+  section h2{font-size:21px;margin:0 0 10px}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  td.num,th.num{text-align:right;white-space:nowrap}
+  .sev-critical{color:var(--crit);font-weight:700}.sev-error{color:var(--red);font-weight:700}.sev-warn{color:var(--amber);font-weight:700}.sev-info{color:var(--muted)}
+  .bar{height:10px;background:var(--green);border-radius:5px;min-width:2px}
+  .barwrap{background:var(--ink3);border-radius:5px;width:100%}
+  .said{color:var(--text);font-style:italic}
+  .muted{color:var(--muted)}
+  .pill{display:inline-block;padding:1px 7px;border-radius:999px;background:var(--ink3);color:var(--muted);font-size:12px}
+  .owner{color:var(--greenL);cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
+  #login{max-width:420px;margin:12vh auto;padding:0 16px}
+  #login input{width:100%;margin:10px 0}
+  .err{color:var(--red);margin:10px 0}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:12px;color:var(--muted);margin:4px 0 0}
+  @media (max-width:640px){header h1{width:100%}.tile .v{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h1>Fin tracking</h1>
+  <p class="muted">Paste the ADMIN_SECRET from Vercel. It stays in this tab only and goes nowhere but Fin's own API.</p>
+  <input id="secret" type="password" autocomplete="off" placeholder="ADMIN_SECRET">
+  <button class="btn primary" id="go">Open dashboard</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <h1>Fin tracking</h1>
+    <nav id="tabs"></nav>
+    <select id="days" aria-label="Period">
+      <option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option>
+    </select>
+    <button class="btn" id="refresh">Refresh</button>
+    <button class="btn" id="logout">Sign out</button>
+  </header>
+  <main id="view"><p class="muted">Loading…</p></main>
+</div>
+
+<script>
+(() => {
+  const TABS = [["overview","Overview"],["funnel","Funnel"],["unmet","Couldn't do"],["incidents","Problems"],["performance","Performance"],["events","Events"],["owner","One person"]];
+  let secret = "";
+  try { secret = sessionStorage.getItem("fin_admin") || ""; } catch {}
+  let tab = "overview";
+  try { tab = sessionStorage.getItem("fin_admin_tab") || "overview"; } catch {}
+  const $ = (s) => document.querySelector(s);
+  const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const secs = (ms) => (ms == null ? "—" : ms >= 60000 ? (ms / 60000).toFixed(1) + " min" : (ms / 1000).toFixed(1) + "s");
+  const when = (iso) => { try { return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); } catch { return iso; } };
+  const sev = (s) => `<span class="sev-${esc(s)}">${esc(String(s).toUpperCase())}</span>`;
+  const owner = (ref) => (ref && ref !== "—" ? `<span class="owner" data-owner="${esc(ref)}">${esc(ref)}</span>` : "—");
+  const days = () => $("#days").value;
+
+  async function api(path, opts = {}) {
+    const res = await fetch("/api/admin" + path, { ...opts, headers: { Authorization: "Bearer " + secret } });
+    const body = await res.json().catch(() => ({ error: "Not JSON (" + res.status + ")" }));
+    if (res.status === 403) { showLogin(body.error); throw new Error(body.error); }
+    if (!res.ok) throw new Error(body.error || res.status);
+    return body;
+  }
+
+  function showLogin(msg) {
+    $("#app").hidden = true; $("#login").hidden = false; $("#loginErr").textContent = msg || "";
+  }
+  function showApp() { $("#login").hidden = true; $("#app").hidden = false; renderTabs(); load(); }
+  $("#go").onclick = () => { secret = $("#secret").value.trim(); try { sessionStorage.setItem("fin_admin", secret); } catch {} showApp(); };
+  $("#secret").onkeydown = (e) => { if (e.key === "Enter") $("#go").click(); };
+  $("#logout").onclick = () => { secret = ""; try { sessionStorage.removeItem("fin_admin"); } catch {} showLogin(); };
+  $("#refresh").onclick = () => load();
+  $("#days").onchange = () => load();
+
+  function renderTabs() {
+    $("#tabs").innerHTML = TABS.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${k === tab}">${l}</button>`).join("");
+    $("#tabs").querySelectorAll("button").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; try { sessionStorage.setItem("fin_admin_tab", tab); } catch {} renderTabs(); load(); }));
+  }
+
+  document.addEventListener("click", (e) => {
+    const o = e.target.closest("[data-owner]");
+    if (o) { tab = "owner"; renderTabs(); load(o.dataset.owner); }
+  });
+
+  const tile = (k, v, s) => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>${s ? `<div class="s">${esc(s)}</div>` : ""}</div>`;
+  const table = (head, rows) => `<div class="scroll"><table><thead><tr>${head.map((h) => `<th${/^#|count|p50|p95|max|\$/i.test(h) ? ' class="num"' : ""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${head.length}" class="muted">Nothing in this period.</td></tr>`}</tbody></table></div>`;
+
+  async function load(arg) {
+    const v = $("#view");
+    v.innerHTML = '<p class="muted">Loading…</p>';
+    try {
+      v.innerHTML = await VIEWS[tab](arg);
+      v.querySelectorAll("[data-resolve]").forEach((b) => (b.onclick = async () => { await api("?action=resolve&fingerprint=" + encodeURIComponent(b.dataset.resolve), { method: "POST" }); load(); }));
+      const t = v.querySelector("#testEmail");
+      if (t) t.onclick = async () => { t.textContent = "Sending…"; try { await api("?action=test_email", { method: "POST" }); t.textContent = "Sent — check your inbox"; } catch (e) { t.textContent = "Failed: " + e.message; } };
+      const f = v.querySelector("#evFilter");
+      if (f) f.onsubmit = (e) => { e.preventDefault(); load(new FormData(f)); };
+      const of = v.querySelector("#ownerForm");
+      if (of) of.onsubmit = (e) => { e.preventDefault(); load(of.ref.value.trim()); };
+    } catch (e) {
+      if (!$("#login").hidden) return;
+      v.innerHTML = `<section><h2>Couldn't load this</h2><p class="err">${esc(e.message)}</p><p class="muted">If it says a table does not exist, db/0024_tracking.sql has not been applied yet.</p></section>`;
+    }
+  }
+
+  const VIEWS = {
+    async overview() {
+      const { summary: s, email } = await api("?view=overview&days=" + days());
+      const quiet = s.owners_active === 0;
+      const top = Math.max(1, ...s.funnel.map((f) => f.owners));
+      return `
+      ${email.startsWith("OFF") ? `<section><h2>Alert emails are off</h2><p class="muted">${esc(email)}. Everything is still recorded and shown here.</p></section>` : `<div class="row"><button class="btn" id="testEmail">Send a test alert email</button></div>`}
+      ${s.truncated ? `<section><h2>Partial numbers</h2><p class="muted">This period has more events than one view can read, so totals are a lower bound. Pick a shorter period for exact figures.</p></section>` : ""}
+      ${quiet ? `<section><h2>No traffic from real people in this period</h2><p class="muted">Nothing from real people yet${s.internal_events ? ` — ${s.internal_events} internal (founder/tester) events are excluded` : ""}.</p></section>` : ""}
+      <div class="grid">
+        ${tile("People active", s.owners_active, `${s.owners_new} new`)}
+        ${tile("Messages in", s.messages_in, `${s.questions} questions`)}
+        ${tile("Plans built", s.plan_build.built, `median ${secs(s.plan_build.p50)} · failed ${s.plan_build.failed}`)}
+        ${tile("Reply time", secs(s.reply.p50), `p95 ${secs(s.reply.p95)} · ${s.reply.turns} turns`)}
+        ${tile("Couldn't do", s.unmet.reduce((a, u) => a + u.count, 0), "people asked, Fin couldn't")}
+        ${tile("Failures", s.failures.reduce((a, u) => a + u.count, 0), `${s.incidents_open.length} open problems`)}
+        ${tile("Model calls", s.models.calls, `failed ${s.models.failed} · $${s.models.cost_usd}`)}
+        ${tile("WhatsApp sends", s.whatsapp.sent, `failed ${s.whatsapp.failed}`)}
+      </div>
+      <section><h2>How far people got</h2>${table(["Point", "People", ""], s.funnel.map((f) => `<tr><td>${esc(f.label)}</td><td class="num">${f.owners}</td><td style="width:45%"><div class="barwrap"><div class="bar" style="width:${(100 * f.owners) / top}%"></div></div></td></tr>`))}</section>
+      <section><h2>What people tried and Fin couldn't do</h2>${table(["What", "Count"], s.unmet.map((u) => `<tr><td>${esc(u.name.replace(/_/g, " "))}</td><td class="num">${u.count}</td></tr>`))}
+        ${s.unmet_examples.filter((x) => x.excerpt).map((x) => `<div style="margin-top:8px"><span class="said">“${esc(x.excerpt)}”</span> <span class="muted">— ${owner(x.owner)}${x.stage ? `, at ${esc(x.stage)}` : ""}</span></div>`).join("")}</section>
+      <section><h2>What failed</h2>${table(["What", "Count"], s.failures.map((u) => `<tr><td>${esc(u.name.replace(/_/g, " "))}</td><td class="num">${u.count}</td></tr>`))}</section>`;
+    },
+
+    async funnel() {
+      const f = await api("?view=funnel&days=" + days());
+      const top = Math.max(1, ...f.steps.map((x) => x.reached));
+      return `${f.truncated ? `<section><p class="muted">More events than one view can read — counts are a lower bound. Pick a shorter period.</p></section>` : ""}<section><h2>Funnel — ${f.owners} people seen</h2><p class="muted">"Stopped here" = this was the furthest point they reached and they've sent nothing for 48 hours.</p>
+        ${table(["Point", "Reached", "Stopped here", ""], f.steps.map((x) => `<tr><td>${esc(x.label)}</td><td class="num">${x.reached}</td><td class="num">${x.stopped_here}</td><td style="width:40%"><div class="barwrap"><div class="bar" style="width:${(100 * x.reached) / top}%"></div></div></td></tr>`))}</section>
+        <section><h2>Where people are right now</h2>${table(["Stage", "People"], Object.entries(f.current_stage).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${esc(k)}</td><td class="num">${n}</td></tr>`))}</section>`;
+    },
+
+    async unmet() {
+      const u = await api("?view=unmet&days=" + days());
+      return `<section><h2>Couldn't do — ${u.total}</h2>${table(["What", "Count"], u.by_kind.map((x) => `<tr><td>${esc(x.name.replace(/_/g, " "))}</td><td class="num">${x.count}</td></tr>`))}</section>
+        <section><h2>Every one, newest first</h2>${table(["When", "What", "Person", "Where", "They said / Fin said"], u.recent.map((e) => `<tr><td class="muted" style="white-space:nowrap">${when(e.at)}</td><td>${esc(e.name.replace(/_/g, " "))}${e.internal ? ' <span class="pill">internal</span>' : ""}</td><td>${owner(e.owner)}</td><td class="muted">${esc([e.country, e.channel, e.stage].filter(Boolean).join(" · "))}</td><td>${e.said ? `<span class="said">“${esc(e.said)}”</span>` : ""}${e.reply ? `<div class="muted">Fin: “${esc(e.reply)}”</div>` : ""}</td></tr>`))}</section>`;
+    },
+
+    async incidents() {
+      const { incidents } = await api("?view=incidents");
+      return `<section><h2>Open problems — ${incidents.length}</h2><p class="muted">One row per distinct problem. "New" is the count since it was last emailed. Resolve one to stop it showing until it happens again.</p>
+        ${table(["Severity", "Problem", "Count", "New", "First / last seen", "Emailed", ""], incidents.map((i) => `<tr><td>${sev(i.severity)}<div class="pill">${esc(i.alert)}</div></td><td>${esc(i.summary)}<pre>${esc(i.fingerprint)}${i.last_props && Object.keys(i.last_props).length ? "\n" + esc(JSON.stringify(i.last_props)) : ""}</pre></td><td class="num">${i.count}</td><td class="num">${i.since_email}</td><td class="muted" style="white-space:nowrap">${when(i.first_seen)}<br>${when(i.last_seen)}</td><td class="muted">${i.emailed_at ? when(i.emailed_at) : "not yet"}</td><td><button class="btn" data-resolve="${esc(i.fingerprint)}">Resolve</button></td></tr>`))}</section>`;
+    },
+
+    async performance() {
+      const p = await api("?view=performance&days=" + days());
+      const rows = (xs, cost) => xs.map((r) => `<tr><td>${esc(r.key)}</td><td class="num">${r.count}</td><td class="num">${r.failed}</td><td class="num">${secs(r.p50)}</td><td class="num">${secs(r.p95)}</td><td class="num">${secs(r.max)}</td>${cost ? `<td class="num">$${r.cost_usd}</td><td class="num">${r.fallbacks}</td>` : ""}</tr>`);
+      const H = ["What", "Count", "Failed", "p50", "p95", "Max"];
+      return `<div class="grid">${tile("Plan builds", p.plan_builds.count, `median ${secs(p.plan_builds.p50)} · p95 ${secs(p.plan_builds.p95)}`)}</div>
+        <section><h2>Model calls by job</h2>${table([...H, "$", "Fallbacks"], rows(p.models_by_label, true))}</section>
+        <section><h2>Model calls by model</h2>${table([...H, "$", "Fallbacks"], rows(p.models_by_model, true))}</section>
+        <section><h2>Turns by path</h2>${table(H, rows(p.turns_by_path))}</section>
+        <section><h2>WhatsApp sends</h2>${table(H, rows(p.sends))}</section>
+        <section><h2>Jobs</h2>${table(H, rows(p.jobs))}</section>
+        <section><h2>Functions</h2>${table(H, rows(p.functions))}</section>`;
+    },
+
+    async events(form) {
+      const q = new URLSearchParams({ view: "events", limit: "300" });
+      if (form) for (const [k, v] of form.entries()) if (String(v).trim()) q.set(k, String(v).trim());
+      const { events, error } = await api("?" + q.toString());
+      if (error) throw new Error(error);
+      const val = (k) => esc(form?.get(k) ?? "");
+      return `<section><h2>Events</h2><form id="evFilter" class="row">
+          <input name="name" placeholder="event name" value="${val("name")}">
+          <select name="category"><option value="">any category</option>${["behaviour", "funnel", "performance", "failure", "unmet_request", "security", "ops"].map((c) => `<option ${form?.get("category") === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+          <select name="severity"><option value="">any severity</option>${["info", "warn", "error", "critical"].map((c) => `<option ${form?.get("severity") === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+          <input name="owner" placeholder="person id (6+ chars)" value="${val("owner")}">
+          <button class="btn primary">Filter</button></form>
+        ${table(["When", "Event", "Person", "Where", "ms", "Details"], events.map((e) => `<tr><td class="muted" style="white-space:nowrap">${when(e.at)}</td><td>${sev(e.severity)} ${esc(e.name)}${e.internal ? ' <span class="pill">internal</span>' : ""}</td><td>${owner(e.owner)}</td><td class="muted">${esc([e.channel, e.country, e.stage].filter(Boolean).join(" · "))}</td><td class="num">${e.ms ?? ""}</td><td>${e.excerpt ? `<span class="said">“${esc(e.excerpt)}”</span>` : ""}<pre>${esc(JSON.stringify(e.props))}</pre></td></tr>`))}</section>`;
+    },
+
+    async owner(ref) {
+      const form = `<form id="ownerForm" class="row"><input name="ref" placeholder="person id — the 8 characters from an email" value="${esc(ref || "")}"><button class="btn primary">Show</button></form>`;
+      if (!ref) return `<section><h2>One person's story</h2>${form}<p class="muted">Click any person id elsewhere on this page, or paste one from an email.</p></section>`;
+      const r = await api("?view=owner&ref=" + encodeURIComponent(ref));
+      if (r.error) return `<section><h2>One person's story</h2>${form}<p class="err">${esc(r.error)}</p></section>`;
+      const o = r.owner;
+      return `<section><h2>Person ${esc(ref)}</h2>${form}${o ? `<div class="grid">${tile("Stage now", o.stage)}${tile("Country", o.country)}${tile("Since", when(o.since))}${tile("Last message", o.last_message ? when(o.last_message) : "—")}${tile("Plan", o.has_plan ? "yes" : "no")}</div>` : `<p class="muted">This person no longer exists (they sent "forget my money") — their events are anonymous now.</p>`}</section>
+        <section><h2>Timeline (${r.timeline.length}${r.truncated ? ", the most recent" : ""})</h2>${table(["When", "Event", "Stage", "ms", "Details"], r.timeline.map((e) => `<tr><td class="muted" style="white-space:nowrap">${when(e.at)}</td><td>${sev(e.severity)} ${esc(e.name)}</td><td class="muted">${esc(e.stage ?? "")}</td><td class="num">${e.ms ?? ""}</td><td>${e.excerpt ? `<span class="said">“${esc(e.excerpt)}”</span>` : ""}<pre>${esc(JSON.stringify(e.props))}</pre></td></tr>`))}</section>`;
+    },
+  };
+
+  if (secret) showApp(); else showLogin();
+})();
+</script>
+</body>
+</html>

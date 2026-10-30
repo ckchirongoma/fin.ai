@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cohort console — Fin</title>
+<meta name="description" content="Aggregate results for a Fin cohort, for the bank or programme that sponsors it.">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#ffffff;--ink-2:#f1f5f4;--ink-3:#f1f5f4;
+    --line:#dfe3e8;--line-2:#c5ccd2;
+    --text:#14181d;--muted:#6b737c;
+    --green:#0f766e;--green-deep:#0b5a54;--green-light:#0b5a54;
+    --warn:#b45309;--error:#8f1d16;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;font-size:16px}
+  header{border-bottom:1px solid var(--line);padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+  header b{font-family:"Instrument Serif",Georgia,serif;font-size:1.6rem;font-weight:400;line-height:1}
+  .wrap{max-width:980px;margin:0 auto;padding:34px 22px 80px}
+  .eyebrow{color:var(--green-light);font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px}
+  h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(2.1rem,4.6vw,3rem);line-height:1.08;margin:0 0 10px}
+  h2{font-size:1.05rem;margin:34px 0 6px}
+  .lede{color:var(--muted);max-width:60ch;margin:0 0 22px}
+  .sub{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .card{background:var(--ink-3);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:520px}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  input[type=password]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line-2);background:var(--ink);color:var(--text);font:inherit}
+  input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--green-light);outline-offset:2px}
+  .btn{appearance:none;font:inherit;font-weight:700;border-radius:999px;border:1px solid transparent;padding:11px 22px;cursor:pointer;background:var(--green);color:#fff;margin-top:14px}
+  .btn:hover{background:var(--green-deep)}
+  .btn-ghost{background:transparent;border-color:var(--line-2);color:var(--text);margin-left:8px}
+  .btn-ghost:hover{background:var(--ink-3)}
+  .msg{min-height:1.4em;margin:12px 0 0;font-size:.92rem;color:var(--muted)}
+  .msg.bad{color:var(--error)}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 6px}
+  select{font:inherit;background:var(--ink-3);color:var(--text);border:1px solid var(--line-2);border-radius:10px;padding:8px 12px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .stat{background:var(--ink-3);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:2.3rem;line-height:1.1}
+  .stat span{color:var(--muted);font-size:.86rem}
+  .callout{border:1px solid var(--line-2);border-left:5px solid var(--green);border-radius:12px;background:var(--ink-3);padding:18px 20px;margin:22px 0}
+  .callout.watch{border-left-color:var(--warn)}
+  .callout b{display:block;margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;font-size:.92rem;margin-top:6px}
+  th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  .scroll{overflow-x:auto}
+  ul.plain{margin:6px 0 0;padding-left:20px;color:var(--muted);font-size:.9rem}
+  [hidden]{display:none !important}
+  @media print{header .btn,.bar,#signOut,#printBtn{display:none}body{background:#fff;color:#000}.stat,.callout,.card{background:#fff;border-color:#999}.stat span,.sub,.lede,ul.plain,th{color:#333}}
+</style>
+</head>
+<body>
+<header><b>Fin</b><span class="sub" style="margin:0">Cohort console</span></header>
+
+<main class="wrap">
+  <noscript><p>This console needs JavaScript. Ask the operator for the report as a file instead.</p></noscript>
+
+  <section id="signIn">
+    <p class="eyebrow">For the bank or programme that sponsors a cohort</p>
+    <h1>Cohort console</h1>
+    <p class="lede">Aggregate results only. No names, no phone numbers, nothing a person wrote about their money — and any group of fewer than five people is withheld so nobody can be picked out of it.</p>
+    <div class="card">
+      <form id="keyForm" novalidate>
+        <label for="key">Your sponsor key</label>
+        <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="sp_…" required>
+        <button class="btn" type="submit">Open the console</button>
+      </form>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      <p class="sub">The key stays in this browser tab only and is cleared when you close it or sign out. It can read this report and nothing else.</p>
+    </div>
+  </section>
+
+  <section id="console" hidden>
+    <p class="eyebrow">Cohort results</p>
+    <h1 id="title">Where the cohort stands</h1>
+    <div class="bar">
+      <label for="days" style="margin:0">Window</label>
+      <select id="days"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last year</option></select>
+      <button class="btn btn-ghost" type="button" id="printBtn" style="margin-top:0">Print / save as PDF</button>
+      <button class="btn btn-ghost" type="button" id="signOut" style="margin-top:0">Sign out</button>
+    </div>
+    <p class="sub" id="generated"></p>
+    <div id="report"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "fin_sponsor_key";
+  var API = "/api/sponsor";
+  function el(id) { return document.getElementById(id); }
+  var signIn = el("signIn"), consoleView = el("console"), msg = el("msg"), report = el("report");
+
+  // Everything below builds nodes and sets textContent: the report is built from
+  // database rows, and rows do not get to become markup.
+  function node(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  }
+  function say(t, bad) { msg.textContent = t || ""; msg.className = "msg" + (bad ? " bad" : ""); }
+  function nice(k) { return String(k).replace(/_/g, " "); }
+  function val(v) { return v === null || v === undefined ? "—" : (typeof v === "object" && v.suppressed ? v.businesses + " (withheld)" : String(v)); }
+
+  function stat(n, label) { var s = node("div", "stat"); s.appendChild(node("b", null, val(n))); s.appendChild(node("span", null, label)); return s; }
+
+  function table(head, rows) {
+    var wrap = node("div", "scroll"); var t = node("table"); var thead = node("thead"); var hr = node("tr");
+    head.forEach(function (h) { hr.appendChild(node("th", null, h)); }); thead.appendChild(hr); t.appendChild(thead);
+    var tb = node("tbody");
+    rows.forEach(function (r) { var tr = node("tr"); r.forEach(function (c) { tr.appendChild(node("td", null, c)); }); tb.appendChild(tr); });
+    t.appendChild(tb); wrap.appendChild(t); return wrap;
+  }
+
+  function render(d) {
+    report.textContent = "";
+    el("generated").textContent = d.generated_at ? "Generated " + new Date(d.generated_at).toLocaleString() + " · window " + d.window_days + " days" : "";
+
+    if (d.suppressed) {
+      var c = node("div", "callout"); c.appendChild(node("b", null, "Not enough data yet"));
+      c.appendChild(node("span", null, d.note || "Numbers are withheld until the group is large enough that no individual can be picked out.")); report.appendChild(c);
+      return;
+    }
+
+    // The sentence that matters most goes first.
+    var watch = /^WATCH THIS/.test(d.harm_monitoring || "");
+    var hm = node("div", "callout" + (watch ? " watch" : ""));
+    hm.appendChild(node("b", null, "Do-no-harm check"));
+    hm.appendChild(node("span", null, d.harm_monitoring || ""));
+    report.appendChild(hm);
+
+    report.appendChild(node("h2", null, "The cohort"));
+    var st = node("div", "stats"); var co = d.cohort || {};
+    st.appendChild(stat(co.onboarded, "onboarded"));
+    st.appendChild(stat(co.completed_a_plan, "finished a plan"));
+    st.appendChild(stat(co.weekly_active, "active this week"));
+    st.appendChild(stat(co.monthly_active, "active this month"));
+    report.appendChild(st);
+
+    report.appendChild(node("h2", null, "Getting things done"));
+    var pr = d.progress || {}; var ps = node("div", "stats");
+    ps.appendChild(stat(pr.steps_done + " of " + pr.steps_total, "plan steps done"));
+    ps.appendChild(stat(pr.commitments_done, "commitments kept"));
+    ps.appendChild(stat(pr.commitments_open, "commitments open"));
+    ps.appendChild(stat(pr.areas_green_total, "money areas sorted"));
+    report.appendChild(ps);
+
+    report.appendChild(node("h2", null, "By where each person started"));
+    report.appendChild(node("p", "sub", "Starting tier is fixed on day one from each person's own Money Map, and never recomputed."));
+    var rows = []; var tiers = d.by_baseline_tier || {};
+    ["low", "mid", "high", "unknown"].forEach(function (k) {
+      var t = tiers[k]; if (!t) return;
+      if (t.suppressed) rows.push([k, t.businesses + " (withheld)", "", "", "", ""]);
+      else rows.push([k, val(t.businesses), val(t.better), val(t.same), val(t.worse), val(t.commitments_done_rate)]);
+    });
+    report.appendChild(table(["Starting tier", "People", "Better", "No change", "Worse", "Commitments done"], rows));
+
+    report.appendChild(node("h2", null, "By country"));
+    var crow = []; Object.keys(d.by_country || {}).forEach(function (k) {
+      var v = d.by_country[k]; crow.push(v && v.suppressed ? [k, v.businesses + " (withheld)", ""] : [k, val(v.onboarded), val(v.with_plan)]);
+    });
+    report.appendChild(table(["Country", "Onboarded", "With a plan"], crow));
+
+    if (d.guardrails) {
+      report.appendChild(node("h2", null, "Are the safety checks running?"));
+      report.appendChild(node("p", "sub", (d.guardrails.checks_in_window || 0) + " checks in the window. " + (d.guardrails.note || "")));
+    }
+
+    report.appendChild(node("h2", null, "What this report leaves out, on purpose"));
+    var ul = node("ul", "plain");
+    (d.omitted_on_purpose || []).concat(d.withheld_for_privacy ? [d.withheld_for_privacy] : []).forEach(function (t) { ul.appendChild(node("li", null, t)); });
+    report.appendChild(ul);
+  }
+
+  function load() {
+    var key = sessionStorage.getItem(KEY);
+    if (!key) return;
+    say("Loading…");
+    fetch(API + "?days=" + encodeURIComponent(el("days").value), { headers: { Authorization: "Bearer " + key, Accept: "application/json" } })
+      .then(function (res) {
+        if (res.status === 403) { sessionStorage.removeItem(KEY); signIn.hidden = false; consoleView.hidden = true; say("That key isn't valid, or it has been revoked.", true); return null; }
+        if (!res.ok) { say("Couldn't load the report just now. Try again in a minute.", true); return null; }
+        return res.json();
+      })
+      .then(function (d) { if (!d) return; say(""); signIn.hidden = true; consoleView.hidden = false; render(d); })
+      .catch(function () { say("Couldn't reach the server. Check your connection.", true); });
+  }
+
+  el("keyForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var k = el("key").value.trim();
+    if (!k) { say("Paste your sponsor key.", true); return; }
+    try { sessionStorage.setItem(KEY, k); } catch (err) { say("This browser won't keep the key for the session. Allow storage and try again.", true); return; }
+    el("key").value = "";
+    load();
+  });
+  el("days").addEventListener("change", load);
+  el("signOut").addEventListener("click", function () { sessionStorage.removeItem(KEY); consoleView.hidden = true; signIn.hidden = false; report.textContent = ""; say(""); });
+  el("printBtn").addEventListener("click", function () { window.print(); });
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+# Fin — CI.
+#
+# WHY THIS FILE EXISTS AT ALL:
+# Vercel transpiles each TypeScript file on its own at deploy time and does NOT
+# typecheck. A type error does not fail the build. It ships, and then it fails
+# at runtime — in production, on a real owner's WhatsApp message, which is the
+# one place we cannot see it happen. This workflow is the only thing standing
+# between a type error and that owner.
+#
+# The two grep steps below guard the same class of failure: mistakes that are
+# invisible locally and fatal in production.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22.6+ is a hard requirement, not a preference: the tests and the
+      # eval harness run the TypeScript sources through the runtime's native
+      # type stripping, so there is no build step anywhere in this repo.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # Vercel leaves import specifiers untouched. Locally "./db.ts" resolves
+      # (allowImportingTsExtensions is on) and tsc is happy; deployed, the .ts
+      # file does not exist and the function dies with ERR_MODULE_NOT_FOUND on
+      # the first request. Every relative import in api/ must be written ".js".
+      #
+      # The grep only matches a specifier sitting directly after from/import/
+      # require, so bare package names ("@supabase/supabase-js") and node:
+      # builtins cannot match — neither begins with ./ or ../. The second grep
+      # drops comment lines, so prose that quotes an import statement as an
+      # example does not fail the build.
+      - name: Relative imports must end in .js
+        run: |
+          offenders="$(grep -rnHP --include='*.ts' \
+            "(?:\bfrom|\bimport|\brequire)\s*\(?\s*(['\"])\.{1,2}/[^'\"]*(?<!\.js)\1" \
+            api/ | grep -vP '^[^:]+:[0-9]+:\s*(//|\*|/\*)' || true)"
+          if [ -n "$offenders" ]; then
+            echo "::error::Relative imports in api/ must end in '.js'. Vercel does not rewrite specifiers, so these deploy as imports of files that do not exist."
+            echo "$offenders"
+            exit 1
+          fi
+          echo "All relative imports under api/ end in .js"
+
+      # CLAUDE.md: which model does which job lives in the model_config table,
+      # never in code. Hosted catalogues retire models with a few weeks' notice;
+      # the fix has to be one UPDATE, not a redeploy. A slug baked into api/ is
+      # a redeploy waiting to happen, and it will be discovered when the model
+      # is already gone.
+      #
+      # Matching on the shape of an OpenRouter slug — vendor/name where the name
+      # carries a version digit or a ':free' tag — keeps MIME types
+      # ("application/json"), MCP method names ("tools/call") and URL paths out
+      # of the results. db/*.sql is not scanned: seeding model_config is exactly
+      # where slugs belong.
+      #
+      # api/_lib/models.ts is the one exemption, and it says so at the top of the
+      # file: the last-resort chain cannot live in the table it exists to
+      # survive the loss of. Everything else in api/ must read its model from
+      # model_config. Keeping the exemption to one FILE rather than a list of
+      # allowed slugs means the chain can be edited without also editing CI.
+      - name: No hardcoded model slugs in api/
+        run: |
+          offenders="$(grep -rnoHE --include='*.ts' \
+            "[\"'\`][a-z0-9][a-z0-9._-]*/([a-z0-9._-]*[0-9][a-z0-9._:-]*|[a-z0-9._-]+:free)[\"'\`]" \
+            api/ | grep -v '^api/_lib/models\.ts:' || true)"
+          if [ -n "$offenders" ]; then
+            echo "::error::Hardcoded model slug under api/. Model choices belong in the model_config table (CLAUDE.md), so a retirement is one UPDATE and not a redeploy."
+            echo "$offenders"
+            exit 1
+          fi
+          echo "No hardcoded model slugs under api/"

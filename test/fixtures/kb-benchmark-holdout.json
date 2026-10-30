@@ -1,0 +1,263 @@
+{
+  "_about": "Held-out set, written blind on 2026-10-30 by the same hand but without re-reading the main benchmark: no row or keyword may be tuned to it. Its floor in test/kb-coverage.test.ts is the level it reached on the day the library landed.",
+  "questions": [
+    {
+      "id": "h.income.1",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "my grant money didn't come this month"
+    },
+    {
+      "id": "h.income.2",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "I was fired, can I get unemployment money"
+    },
+    {
+      "id": "h.income.3",
+      "domain": "income",
+      "stage": "steady",
+      "question": "do I get tax back if I earn less than the threshold"
+    },
+    {
+      "id": "h.income.4",
+      "domain": "income",
+      "stage": "building",
+      "question": "how do I file my tax return myself"
+    },
+    {
+      "id": "h.income.5",
+      "domain": "income",
+      "stage": "surviving",
+      "question": "they cut my hours and I can't make the month"
+    },
+    {
+      "id": "h.spending.1",
+      "domain": "spending",
+      "stage": "surviving",
+      "question": "how do I survive until payday with R200"
+    },
+    {
+      "id": "h.spending.2",
+      "domain": "spending",
+      "stage": "stretching",
+      "question": "what is the three pots way of budgeting"
+    },
+    {
+      "id": "h.spending.3",
+      "domain": "spending",
+      "stage": "steady",
+      "question": "my bank fees are too high, which account is cheaper"
+    },
+    {
+      "id": "h.spending.4",
+      "domain": "spending",
+      "stage": "building",
+      "question": "should I buy on credit or save up"
+    },
+    {
+      "id": "h.spending.5",
+      "domain": "spending",
+      "stage": "stretching",
+      "question": "how do I write down my spending for a week"
+    },
+    {
+      "id": "h.debt.1",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "the mashonisa took my ID book"
+    },
+    {
+      "id": "h.debt.2",
+      "domain": "debt",
+      "stage": "surviving",
+      "question": "I owe more than I earn, what are my options"
+    },
+    {
+      "id": "h.debt.3",
+      "domain": "debt",
+      "stage": "stretching",
+      "question": "how do I write to a creditor to ask for a lower instalment"
+    },
+    {
+      "id": "h.debt.4",
+      "domain": "debt",
+      "stage": "steady",
+      "question": "how do I get a settlement letter"
+    },
+    {
+      "id": "h.debt.5",
+      "domain": "debt",
+      "stage": "building",
+      "question": "my account is paid up, how do I prove it"
+    },
+    {
+      "id": "h.debt.6",
+      "domain": "debt",
+      "stage": "stretching",
+      "question": "what happens if I ignore a letter of demand"
+    },
+    {
+      "id": "h.cushion.1",
+      "domain": "cushion",
+      "stage": "surviving",
+      "question": "I keep using my savings for food"
+    },
+    {
+      "id": "h.cushion.2",
+      "domain": "cushion",
+      "stage": "stretching",
+      "question": "how do I open a savings pocket in my banking app"
+    },
+    {
+      "id": "h.cushion.3",
+      "domain": "cushion",
+      "stage": "steady",
+      "question": "how do I check the stokvel is registered"
+    },
+    {
+      "id": "h.cushion.4",
+      "domain": "cushion",
+      "stage": "building",
+      "question": "how much can I put in a tax-free savings account a year"
+    },
+    {
+      "id": "h.cushion.5",
+      "domain": "cushion",
+      "stage": "steady",
+      "question": "what is the penalty for taking out retirement money early"
+    },
+    {
+      "id": "h.credit_record.1",
+      "domain": "credit_record",
+      "stage": "stretching",
+      "question": "which credit bureau should I check first"
+    },
+    {
+      "id": "h.credit_record.2",
+      "domain": "credit_record",
+      "stage": "steady",
+      "question": "how do I dispute a wrong account on my credit report"
+    },
+    {
+      "id": "h.credit_record.3",
+      "domain": "credit_record",
+      "stage": "building",
+      "question": "how long until my credit score goes up after I pay"
+    },
+    {
+      "id": "h.credit_record.4",
+      "domain": "credit_record",
+      "stage": "surviving",
+      "question": "somebody opened an account in my name"
+    },
+    {
+      "id": "h.credit_record.5",
+      "domain": "credit_record",
+      "stage": "stretching",
+      "question": "what does being under debt review do to my credit record"
+    },
+    {
+      "id": "h.protection.1",
+      "domain": "protection",
+      "stage": "surviving",
+      "question": "my policy lapsed, can I get it back"
+    },
+    {
+      "id": "h.protection.2",
+      "domain": "protection",
+      "stage": "stretching",
+      "question": "we are paying two funeral policies for the same people"
+    },
+    {
+      "id": "h.protection.3",
+      "domain": "protection",
+      "stage": "steady",
+      "question": "how do I claim on a funeral policy"
+    },
+    {
+      "id": "h.protection.4",
+      "domain": "protection",
+      "stage": "building",
+      "question": "who should I name to get my savings when I die"
+    },
+    {
+      "id": "h.protection.5",
+      "domain": "protection",
+      "stage": "stretching",
+      "question": "the insurance company is refusing to pay, who can I complain to"
+    },
+    {
+      "id": "h.family_money.1",
+      "domain": "family_money",
+      "stage": "surviving",
+      "question": "my children's father doesn't pay maintenance"
+    },
+    {
+      "id": "h.family_money.2",
+      "domain": "family_money",
+      "stage": "stretching",
+      "question": "how do I set a fixed amount for family every month"
+    },
+    {
+      "id": "h.family_money.3",
+      "domain": "family_money",
+      "stage": "steady",
+      "question": "should we have one joint account"
+    },
+    {
+      "id": "h.family_money.4",
+      "domain": "family_money",
+      "stage": "building",
+      "question": "how do I teach my kids about money"
+    },
+    {
+      "id": "h.family_money.5",
+      "domain": "family_money",
+      "stage": "stretching",
+      "question": "black tax is killing me"
+    },
+    {
+      "id": "h.goals.1",
+      "domain": "goals",
+      "stage": "stretching",
+      "question": "I want to put R1,000 away by December"
+    },
+    {
+      "id": "h.goals.2",
+      "domain": "goals",
+      "stage": "steady",
+      "question": "what is the first home subsidy and do I qualify"
+    },
+    {
+      "id": "h.goals.3",
+      "domain": "goals",
+      "stage": "building",
+      "question": "where do I put R500 a month for 5 years"
+    },
+    {
+      "id": "h.goals.4",
+      "domain": "goals",
+      "stage": "surviving",
+      "question": "I got an SMS saying I won money, do I pay the fee"
+    },
+    {
+      "id": "h.goals.5",
+      "domain": "goals",
+      "stage": "building",
+      "question": "how do I start investing with small money"
+    },
+    {
+      "id": "h.income.6",
+      "domain": "income",
+      "stage": "stretching",
+      "question": "can I claim for a child who is not mine but lives with me"
+    },
+    {
+      "id": "h.spending.6",
+      "domain": "spending",
+      "stage": "surviving",
+      "question": "the electricity is cut and I have no money for units"
+    }
+  ]
+}

@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fin — a WhatsApp number that knows your money</title>
+<meta name="description" content="Fin is a WhatsApp number that learns your money once, builds a 90-day plan from moves that are proven to work, and sends you one step at a time. One recommendation, never a menu, never a loan. South Africa. No cohort has run yet.">
+<meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="/">
+
+<!--
+  The WhatsApp number. Every "Message Fin" button links to /wa?m=<preset>,
+  never to wa.me directly. /wa (api/plan.ts, action=whatsapp) redirects to
+  wa.me/<number> at click time: WHATSAPP_PUBLIC_NUMBER if set, otherwise the
+  bot's own number as Meta reports it (api/_lib/wanumber.ts, cached). No build
+  step, works with JavaScript off, and the button is never conditional on a
+  fetch in the browser. If no number can be found, /wa shows an honest
+  "not switched on yet" page instead of opening a chat with nobody.
+  The presets (start, plan, programme, ask) are WA_PRESETS in api/plan.ts.
+
+  This page has no JavaScript at all. Everything drawn on it is inline SVG.
+  The palette is the plan document's (api/_lib/plandoc.ts) so the site and
+  the document a person prints read as one thing.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Crect x='9' y='8' width='14' height='3' fill='%23fff'/%3E%3Crect x='9' y='15' width='10' height='3' fill='%23fff'/%3E%3Crect x='9' y='22' width='3' height='3' fill='%23fff'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    --ink:#14181d;
+    --ink2:#3a4149;
+    --mute:#6b737c;
+    --line:#dfe3e8;
+    --leaf:#0f766e;
+    --leafd:#0b5a54;
+    --mist:#f1f5f4;
+    --paper:#ffffff;
+    --red:#b3261e;
+    --amber:#b45309;
+    --wrap:1120px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;overflow-x:hidden;overflow-x:clip}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  h1,h2,h3,.serif{
+    font-family:"Instrument Serif",Georgia,"Times New Roman",serif;
+    font-weight:400;letter-spacing:-.012em;line-height:1;margin:0;
+  }
+  h1{font-size:clamp(3rem,11.5vw,7.4rem);line-height:.94}
+  h2{font-size:clamp(2.3rem,6.4vw,4.4rem);line-height:.98;max-width:18ch}
+  h3{font-size:clamp(1.55rem,3vw,2.1rem);line-height:1.05}
+  em,.it{font-style:italic}
+  h1 em,h2 em,h3 em,.serif em{color:var(--leaf);font-style:italic}
+  p{margin:0 0 1rem}
+  p:last-child{margin-bottom:0}
+  a{color:var(--leaf);text-decoration-thickness:1px;text-underline-offset:3px}
+  a:hover{color:var(--leafd)}
+  ::selection{background:var(--leaf);color:#fff}
+  .wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 16px}
+  @media (min-width:720px){.wrap{padding:0 28px}}
+  section{padding:88px 0;scroll-margin-top:70px}
+  @media (max-width:640px){section{padding:60px 0}}
+  .mist{background:var(--mist)}
+  .kicker{
+    display:flex;align-items:baseline;gap:12px;margin:0 0 28px;
+    font-size:.74rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
+  }
+  .kicker b{color:var(--leaf);font-weight:600}
+  .kicker::after{content:"";flex:1;height:1px;background:var(--line);transform:translateY(-4px)}
+  .lede{font-size:clamp(1.08rem,2.1vw,1.3rem);color:var(--ink2);max-width:58ch;line-height:1.55}
+  .small{font-size:.9rem;color:var(--mute)}
+  .src{font-size:.84rem;color:var(--mute);line-height:1.5}
+  .src b{color:var(--ink2);font-weight:500}
+
+  /* header */
+  .head{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .head-in{display:flex;align-items:center;gap:6px;min-height:62px}
+  .mark{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink)}
+  .mark .serif{font-size:1.75rem;line-height:1}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+  .nav a{color:var(--ink2);text-decoration:none;font-size:.9rem;font-weight:500;padding:8px 11px;border-radius:8px}
+  .nav a:hover{background:var(--mist);color:var(--ink)}
+  .nav .btn{padding:9px 15px;font-size:.88rem;margin-left:6px}
+  @media (max-width:760px){.nav a:not(.btn){display:none}}
+
+  /* buttons */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;
+    padding:15px 24px;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:600;line-height:1.2;
+    text-decoration:none;border:1px solid transparent;cursor:pointer;transition:background .15s ease,transform .15s ease;
+  }
+  .btn-primary{background:var(--leaf);color:#fff}
+  .btn-primary:hover{background:var(--leafd);color:#fff;transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+  .btn-ghost:hover{background:var(--ink);color:#fff}
+  .btn svg{flex:none}
+  a:focus-visible,button:focus-visible{outline:3px solid var(--leaf);outline-offset:3px;border-radius:8px}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+  .cta-note{margin-top:16px;font-size:.88rem;color:var(--mute);max-width:52ch}
+
+  /* hero */
+  .hero{padding:72px 0 0}
+  @media (max-width:640px){.hero{padding:44px 0 0}}
+  .hero .kicker{max-width:60ch}
+  .hero h1{max-width:12ch}
+  .hero .lede{margin-top:30px}
+  .strip{margin:72px 0 0;padding-bottom:0}
+  @media (max-width:640px){.strip{margin-top:48px}}
+  .strip svg{display:block;width:100%;height:auto}
+  .strip-cap{display:flex;flex-wrap:wrap;gap:6px 28px;margin:14px 0 0;font-size:.82rem;color:var(--mute)}
+  .strip-cap span{display:inline-flex;align-items:center;gap:8px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:2px;border:1px solid var(--line);background:var(--mist)}
+  .sw-done{background:var(--leaf);border-color:var(--leaf)}
+  .sw-today{background:#fff;border:2px solid var(--ink)}
+  .sw-step{position:relative;background:var(--mist)}
+  .sw-step::after{content:"";position:absolute;left:3px;top:3px;width:4px;height:4px;border-radius:50%;background:var(--leaf)}
+
+  /* in your words */
+  .words{display:grid;gap:40px 48px;grid-template-columns:1fr 1fr;margin-top:8px}
+  @media (max-width:760px){.words{grid-template-columns:1fr;gap:34px}}
+  .word h3{margin-bottom:12px}
+  .word p{color:var(--ink2);max-width:40ch}
+  .word svg{display:block;margin-bottom:18px}
+  .rule{margin:64px 0 0;padding:34px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+  .rule .serif{font-size:clamp(1.7rem,4.6vw,3.2rem);line-height:1.08;font-style:italic}
+  .rule .small{margin-top:14px}
+
+  /* the argument */
+  .claims{display:grid;gap:2px;margin-top:8px;border-top:1px solid var(--line)}
+  .claim{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px 48px;padding:34px 0;border-bottom:1px solid var(--line)}
+  @media (max-width:760px){.claim{grid-template-columns:1fr;gap:14px;padding:28px 0}}
+  .claim h3{max-width:14ch}
+  .claim p{color:var(--ink2);max-width:58ch}
+  .therefore{margin-top:56px}
+  .therefore .serif{font-size:clamp(2.2rem,6.4vw,4.6rem);line-height:1;max-width:18ch}
+  .pull{margin-top:64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 48px;align-items:start}
+  @media (max-width:760px){.pull{grid-template-columns:1fr}}
+  .pull .serif{font-size:clamp(1.9rem,4.4vw,3rem);line-height:1.04}
+
+  /* journey */
+  .journey{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px 64px;align-items:start;margin-top:8px}
+  @media (max-width:860px){.journey{grid-template-columns:1fr}}
+  .thread{max-width:420px;margin:0 auto}
+  .thread svg{display:block;width:100%;height:auto}
+  .steps{list-style:none;margin:0;padding:0;counter-reset:s}
+  .steps li{display:grid;grid-template-columns:44px 1fr;gap:14px;padding:20px 0;border-top:1px solid var(--line);counter-increment:s}
+  .steps li::before{content:counter(s,decimal-leading-zero);font-family:"Instrument Serif",Georgia,serif;font-size:1.6rem;line-height:1;color:var(--leaf);padding-top:2px}
+  .steps b{display:block;font-weight:600;margin-bottom:4px}
+  .steps p{color:var(--ink2);font-size:.98rem;max-width:48ch}
+  .steps li.hard{background:var(--mist);margin:0 -16px;padding:20px 16px;border-radius:12px;border-top:0}
+  @media (min-width:720px){.steps li.hard{margin:0 -16px;padding:20px 16px}}
+
+  /* map */
+  .map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:8px}
+  @media (max-width:860px){.map{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 16px 20px}
+  .tile svg{display:block}
+  .tile b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:1.45rem;line-height:1;margin:16px 0 8px}
+  .tile p{font-size:.86rem;color:var(--ink2);line-height:1.45}
+  .map-note{margin-top:22px;font-size:.92rem;color:var(--mute);max-width:64ch}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;font-size:.84rem;color:var(--mute)}
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  /* numbers */
+  .nums{list-style:none;margin:8px 0 0;padding:0;border-top:1px solid var(--ink)}
+  .nums li{display:grid;grid-template-columns:minmax(0,.55fr) minmax(0,1fr) minmax(0,1fr);gap:8px 40px;padding:26px 0;border-bottom:1px solid var(--line);align-items:start}
+  @media (max-width:860px){.nums li{grid-template-columns:1fr;gap:6px;padding:22px 0}}
+  .nums .fig{font-family:"Instrument Serif",Georgia,serif;font-size:clamp(2.4rem,5vw,3.6rem);line-height:.95;color:var(--ink);word-break:break-word}
+  .nums .fact{color:var(--ink2);font-size:1rem;line-height:1.5;margin:0}
+  .nums .src{margin:0}
+  .nums .src i{font-style:normal;display:block;color:var(--amber);margin-top:4px}
+  @media (max-width:860px){.nums .fig{margin-bottom:4px}}
+
+  /* promises */
+  .promises{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 48px;counter-reset:p;border-top:1px solid var(--ink)}
+  @media (max-width:760px){.promises{grid-template-columns:1fr}}
+  .promises li{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);counter-increment:p}
+  .promises li::before{content:counter(p,decimal-leading-zero);font-family:"Instrument Serif",Georgia,serif;font-size:1.45rem;line-height:1.2;color:var(--leaf)}
+  .promises b{display:block;font-weight:600;line-height:1.35}
+  .promises p{color:var(--ink2);font-size:.95rem;margin-top:4px}
+
+  /* status */
+  .status{padding:96px 0;background:var(--ink);color:#fff}
+  @media (max-width:640px){.status{padding:64px 0}}
+  .status h2{color:#fff;max-width:14ch}
+  .status h2 em{color:#8fd6cf}
+  .status .lede{color:#c9ced4;margin-top:26px}
+  .status .kicker{color:#9aa3ac}
+  .status .kicker b{color:#8fd6cf}
+  .status .kicker::after{background:#3a4149}
+  .have{display:grid;grid-template-columns:1fr 1fr;gap:28px 48px;margin-top:40px}
+  @media (max-width:760px){.have{grid-template-columns:1fr}}
+  .have h3{color:#fff;font-size:1.3rem;margin-bottom:10px}
+  .have ul{margin:0;padding-left:18px;color:#c9ced4;font-size:.98rem}
+  .have li{margin:6px 0}
+
+  /* bank */
+  .bank{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px 64px;margin-top:8px;align-items:start}
+  @media (max-width:860px){.bank{grid-template-columns:1fr}}
+  .bank h3{margin:0 0 10px}
+  .bank .pt{padding:22px 0;border-top:1px solid var(--line)}
+  .bank .pt p{color:var(--ink2);font-size:1rem;max-width:52ch}
+  .asks{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px}
+  .asks h3{font-size:1.5rem;margin-bottom:14px}
+  .asks ul{margin:0 0 20px;padding-left:20px;color:var(--ink2)}
+  .asks li{margin:6px 0}
+  .asks .not{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+
+  /* end */
+  .end{text-align:center;padding:110px 0}
+  @media (max-width:640px){.end{padding:72px 0}}
+  .end h2{margin:0 auto;max-width:14ch}
+  .end .lede{margin:22px auto 0}
+  .end .cta-row{justify-content:center}
+  .end .cta-note{margin:18px auto 0}
+
+  /* footer */
+  .foot{border-top:1px solid var(--line);padding:44px 0 56px;font-size:.92rem;color:var(--ink2)}
+  .foot-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:28px 48px}
+  @media (max-width:760px){.foot-grid{grid-template-columns:1fr}}
+  .foot h3{font-size:1.35rem;margin-bottom:12px}
+  .help{list-style:none;margin:0;padding:0}
+  .help li{padding:9px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,.6fr) minmax(0,1fr);gap:4px 16px}
+  @media (max-width:480px){.help li{grid-template-columns:1fr}}
+  .help b{font-weight:600;color:var(--ink)}
+  .foot-links{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0 0 18px}
+  .foot-links a{text-decoration:none;font-weight:500}
+  .foot-links a:hover{text-decoration:underline}
+  .loan{margin-top:26px;padding-top:18px;border-top:1px solid var(--ink);color:var(--ink);font-weight:600}
+  .skip{position:absolute;left:-9999px;top:0;background:var(--leaf);color:#fff;padding:10px 16px;font-weight:600;z-index:50}
+  .skip:focus{left:0}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="head">
+  <div class="wrap head-in">
+    <a class="mark" href="/" aria-label="Fin — home">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#0f766e"/><rect x="9" y="8" width="14" height="3" fill="#fff"/><rect x="9" y="15" width="10" height="3" fill="#fff"/><rect x="9" y="22" width="3" height="3" fill="#fff"/></svg>
+      <span class="serif">Fin</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#words">What it is</a>
+      <a href="#why">Why</a>
+      <a href="#promises">The rules</a>
+      <a href="#bank">For the bank</a>
+      <a href="/plan">Your plan</a>
+      <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=start">Message Fin</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- hero -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker"><b>South Africa</b><span>On the WhatsApp you already have</span></p>
+      <h1>A WhatsApp number that knows <em>your money.</em></h1>
+      <p class="lede">
+        Tell Fin about your money once. It builds a 90-day plan from moves that are
+        proven to work, then sends you one step at a time and comes back to ask whether
+        it worked. You pick the goal. You pick the one rule you will live by.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=start">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.13c-.25.69-1.44 1.32-1.99 1.37-.53.05-1.02.24-3.44-.72-2.9-1.14-4.74-4.1-4.88-4.29-.14-.19-1.16-1.55-1.16-2.95s.73-2.09 1-2.38c.26-.29.57-.36.76-.36l.55.01c.18 0 .42-.07.65.5.25.6.84 2.06.91 2.21.07.15.12.32.02.51-.1.19-.15.31-.29.48-.14.17-.3.38-.43.51-.14.14-.29.29-.13.57.17.29.74 1.22 1.59 1.98 1.09.97 2.01 1.27 2.3 1.42.29.14.45.12.62-.07.17-.19.71-.83.9-1.12.19-.29.38-.24.64-.14.26.09 1.65.78 1.93.92.29.14.48.22.55.34.07.12.07.69-.18 1.38Z"/></svg>
+          Message Fin on WhatsApp
+        </a>
+        <a class="btn btn-ghost" href="/plan">Read your plan</a>
+      </div>
+      <p class="cta-note">
+        A test number for now. Free. No app to install. Fin never asks for your ID number,
+        account number, card, PIN, OTP or password, and says so in its first message.
+      </p>
+
+      <figure class="strip" aria-labelledby="stripcap">
+        <!-- The 90 days: three rows of thirty. Teal is a day the person said a step happened on.
+             The outlined square is today. Dotted squares are days a step is due. -->
+        <svg viewBox="0 0 900 96" role="img" aria-label="Ninety small squares in three rows of thirty. The first nine are filled in; the tenth is outlined as today; a few later squares carry a dot where a step is due.">
+          <defs>
+            <pattern id="day" width="30" height="32" patternUnits="userSpaceOnUse">
+              <rect width="24" height="24" rx="3" fill="#f1f5f4" stroke="#dfe3e8"/>
+            </pattern>
+          </defs>
+          <rect width="900" height="96" fill="url(#day)"/>
+          <g fill="#0f766e">
+            <rect width="24" height="24" rx="3"/><rect x="30" width="24" height="24" rx="3"/><rect x="60" width="24" height="24" rx="3"/>
+            <rect x="90" width="24" height="24" rx="3"/><rect x="120" width="24" height="24" rx="3"/><rect x="150" width="24" height="24" rx="3"/>
+            <rect x="180" width="24" height="24" rx="3"/><rect x="210" width="24" height="24" rx="3"/><rect x="240" width="24" height="24" rx="3"/>
+          </g>
+          <rect x="271" y="1" width="22" height="22" rx="3" fill="#fff" stroke="#14181d" stroke-width="2.5"/>
+          <g fill="#0f766e">
+            <circle cx="402" cy="12" r="3.5"/><circle cx="612" cy="12" r="3.5"/><circle cx="882" cy="12" r="3.5"/>
+            <circle cx="282" cy="44" r="3.5"/><circle cx="582" cy="44" r="3.5"/><circle cx="882" cy="44" r="3.5"/>
+            <circle cx="282" cy="76" r="3.5"/><circle cx="582" cy="76" r="3.5"/><circle cx="882" cy="76" r="3.5"/>
+          </g>
+        </svg>
+        <figcaption class="strip-cap" id="stripcap">
+          <span><i class="sw sw-done"></i>A day a step got done</span>
+          <span><i class="sw sw-today"></i>Today</span>
+          <span><i class="sw sw-step"></i>A step is due</span>
+          <span>Three rows of thirty. Nothing is filled in until you say it happened.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- in your words -->
+  <section id="words">
+    <div class="wrap">
+      <p class="kicker"><b>01</b><span>What it is, in your words</span></p>
+      <div class="words">
+        <div class="word">
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#14181d" stroke-width="1.5"/><rect x="12" y="13" width="20" height="3" fill="#0f766e"/><rect x="12" y="20.5" width="14" height="3" fill="#0f766e"/><rect x="12" y="28" width="8" height="3" fill="#0f766e"/></svg>
+          <h3>It knows <em>my</em> money.</h3>
+          <p>Twelve questions, about five minutes, in your own words or a voice note. Fin reads your money back to you in one line and you say if it is right before anything is built on it.</p>
+        </div>
+        <div class="word">
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#14181d" stroke-width="1.5"/><rect x="11" y="11" width="6" height="6" rx="1" fill="#0f766e"/><rect x="19" y="11" width="6" height="6" rx="1" fill="#0f766e"/><rect x="27" y="11" width="6" height="6" rx="1" fill="#0f766e"/><rect x="11" y="19" width="6" height="6" rx="1" fill="#0f766e"/><rect x="19" y="19" width="6" height="6" rx="1" fill="#dfe3e8"/><rect x="27" y="19" width="6" height="6" rx="1" fill="#dfe3e8"/><rect x="11" y="27" width="6" height="6" rx="1" fill="#dfe3e8"/><rect x="19" y="27" width="6" height="6" rx="1" fill="#dfe3e8"/><rect x="27" y="27" width="6" height="6" rx="1" fill="#dfe3e8"/></svg>
+          <h3>A 90-day plan from moves that <em>work.</em></h3>
+          <p>Thirteen fixed moves, each with the evidence for it. Fin picks the ones your answers earned and puts your numbers in. It cannot invent a step, a fee or a deadline.</p>
+        </div>
+        <div class="word">
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#14181d" stroke-width="1.5"/><circle cx="22" cy="22" r="7" fill="#0f766e"/><path d="M18.5 22l2.5 2.5 4.5-5" fill="none" stroke="#fff" stroke-width="2"/></svg>
+          <h3>One step at a <em>time.</em></h3>
+          <p>WhatsApp sends the next step, how to do it, and a “Done” button. A few days later it asks whether it helped. The plan only moves when you say it moved.</p>
+        </div>
+        <div class="word">
+          <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="2" width="40" height="40" rx="10" fill="none" stroke="#14181d" stroke-width="1.5"/><rect x="11" y="20.5" width="22" height="3" fill="#0f766e"/></svg>
+          <h3>One rule I <em>live by.</em></h3>
+          <p>Not a course. One sentence you would say to yourself, chosen by you from three, against what people in your situation usually do instead.</p>
+        </div>
+      </div>
+
+      <div class="rule" role="figure" aria-label="An example of a money rule">
+        <p class="serif">“The mashonisa gets paid first. Nothing new gets borrowed.”</p>
+        <p class="small">One rule a person might choose. It is theirs, in their words, and Fin holds them to it for ninety days.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- why -->
+  <section id="why" class="mist">
+    <div class="wrap">
+      <p class="kicker"><b>02</b><span>Why Fin is built this way</span></p>
+      <h2 style="max-width:none">Tips don’t work. <em>Rules do.</em></h2>
+      <p class="lede" style="margin-top:26px">
+        South Africa has had a national financial-education policy, a Financial Literacy Month
+        and every bank’s money tips for a decade. The score has not moved. Three findings
+        decide what Fin is.
+      </p>
+
+      <div class="claims" style="margin-top:48px">
+        <div class="claim">
+          <h3>Tips don’t work.</h3>
+          <div>
+            <p>TymeBank itself launched a financial-literacy SMS service with Juntos in 2020 — budgeting, saving and credit tips — and an education app, TymeCoach, with a chatbot. The national literacy score did not move: the FSCA’s baseline puts about half of adults as financially literate, and it has been flat for years. People do not lack the knowledge that a mashonisa is expensive. They lack the next step, in their numbers, this week, and someone who asks on Friday whether it happened.</p>
+            <p class="src"><b>FSCA baseline ~51%:</b> FSCA / Treasury draft National Consumer Financial Education Policy (2026), via secondary reporting.</p>
+          </div>
+        </div>
+        <div class="claim">
+          <h3>Rules of thumb beat lessons.</h3>
+          <div>
+            <p>A randomised trial in the Dominican Republic compared standard accounting training with a simple rule-of-thumb course: separate the money physically, one rule at a time. The rules improved financial practices and revenues where the training did nothing, and the gains were largest for the people with the weakest starting practices.</p>
+            <p class="src"><b>Drexler, Fischer &amp; Schoar,</b> <i>Keeping It Simple</i>, American Economic Journal: Applied Economics, 2014.</p>
+          </div>
+        </div>
+        <div class="claim">
+          <h3>Menus hurt the weakest.</h3>
+          <div>
+            <p>A Harvard Business School field experiment gave 640 Kenyan entrepreneurs an AI mentor on WhatsApp that offered three to five suggestions per question. No average effect. Underneath the average, the strongest gained 15–20% and the weakest did about 10% worse, because they could not tell which suggestion fitted them. The usual chatbot makes the people who need it most worse off.</p>
+            <p class="src"><b>Otis, Clarke, Delecourt, Holtz &amp; Koning,</b> HBS Working Paper 24-042.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="therefore">
+        <p class="serif">So Fin gives one recommendation. <em>Never a menu. Never a loan.</em></p>
+      </div>
+
+      <div class="pull">
+        <p class="serif">The customer is not illiterate. <em>She is overwhelmed.</em></p>
+        <div>
+          <p>Picture a nurse’s aide on R7,800 with two children, a mother to support, a clothing account, a bank loan and a mashonisa. She does not need a course. She needs one rule — the mashonisa gets paid first, nothing new gets borrowed — and a plan that fits her payday. That is the unit Fin works in: one household, one rule, one step this week.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- journey -->
+  <section id="how">
+    <div class="wrap">
+      <p class="kicker"><b>03</b><span>How it goes</span></p>
+      <h2>Five minutes of questions. <em>Ninety days of steps.</em></h2>
+      <div class="journey" style="margin-top:44px">
+        <figure class="thread">
+          <!-- A WhatsApp thread drawn as shapes: Fin asks, the person answers, Fin reads back,
+               the person picks 1, 2 or 3, Fin sends one step with a Done button. -->
+          <svg viewBox="0 0 360 500" role="img" aria-label="A WhatsApp conversation drawn as shapes: a grey bubble from Fin, a teal reply from the person, a longer grey read-back, a grey bubble listing three numbered choices, a teal reply with the number 2, and a grey step with a Done button.">
+            <rect x="0" y="0" width="360" height="500" rx="26" fill="#f1f5f4"/>
+            <!-- Fin asks -->
+            <rect x="18" y="22" width="214" height="54" rx="14" fill="#fff" stroke="#dfe3e8"/>
+            <rect x="34" y="38" width="150" height="7" rx="3.5" fill="#3a4149"/>
+            <rect x="34" y="53" width="96" height="7" rx="3.5" fill="#dfe3e8"/>
+            <!-- person answers -->
+            <rect x="150" y="90" width="192" height="40" rx="14" fill="#0f766e"/>
+            <rect x="166" y="106" width="140" height="7" rx="3.5" fill="#fff" opacity=".85"/>
+            <!-- Fin reads back -->
+            <rect x="18" y="144" width="250" height="84" rx="14" fill="#fff" stroke="#dfe3e8"/>
+            <rect x="34" y="160" width="190" height="7" rx="3.5" fill="#3a4149"/>
+            <rect x="34" y="175" width="214" height="7" rx="3.5" fill="#dfe3e8"/>
+            <rect x="34" y="190" width="160" height="7" rx="3.5" fill="#dfe3e8"/>
+            <rect x="34" y="205" width="60" height="7" rx="3.5" fill="#0f766e"/>
+            <!-- three choices -->
+            <rect x="18" y="242" width="266" height="112" rx="14" fill="#fff" stroke="#dfe3e8"/>
+            <circle cx="42" cy="266" r="9" fill="none" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="42" y="270" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="600" fill="#0f766e">1</text>
+            <rect x="60" y="262" width="150" height="7" rx="3.5" fill="#3a4149"/>
+            <circle cx="42" cy="298" r="9" fill="#0f766e"/>
+            <text x="42" y="302" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="600" fill="#fff">2</text>
+            <rect x="60" y="294" width="190" height="7" rx="3.5" fill="#3a4149"/>
+            <circle cx="42" cy="330" r="9" fill="none" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="42" y="334" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="600" fill="#0f766e">3</text>
+            <rect x="60" y="326" width="120" height="7" rx="3.5" fill="#3a4149"/>
+            <!-- person picks 2 -->
+            <rect x="282" y="368" width="60" height="40" rx="14" fill="#0f766e"/>
+            <text x="312" y="394" text-anchor="middle" font-family="Instrument Serif,Georgia,serif" font-size="22" fill="#fff">2</text>
+            <!-- one step, with Done -->
+            <rect x="18" y="422" width="250" height="60" rx="14" fill="#fff" stroke="#dfe3e8"/>
+            <rect x="34" y="438" width="180" height="7" rx="3.5" fill="#3a4149"/>
+            <rect x="34" y="453" width="110" height="7" rx="3.5" fill="#dfe3e8"/>
+            <rect x="190" y="446" width="62" height="24" rx="12" fill="none" stroke="#0f766e" stroke-width="1.5"/>
+            <text x="221" y="462" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="600" fill="#0f766e">Done</text>
+          </svg>
+        </figure>
+
+        <ol class="steps">
+          <li class="hard">
+            <div><b>First, a hardship check — before anything else.</b>
+            <p>If you cannot cover food, rent or transport, or you are borrowing to eat, Fin does not plan. It gives three moves — borrow nothing more, write down every rand owed, make one free call — names the free help, and pauses with a way back.</p></div>
+          </li>
+          <li>
+            <div><b>Twelve questions, about five minutes.</b>
+            <p>What to call you, how money comes in, what you are trying to fix, what is in the way, who depends on you, roughly what comes in, who you owe, what you could reach tomorrow, what cover you have, how you keep track.</p></div>
+          </li>
+          <li>
+            <div><b>Fin reads your money back. You confirm it.</b>
+            <p>One line about your money life, established once and reused — never re-read from a voice note that might have misheard you.</p></div>
+          </li>
+          <li>
+            <div><b>You choose the goal.</b>
+            <p>Three genuinely different 90-day goals your answers support, each with what it is worth in your own numbers and what you could do this week. Fin recommends one and says why.</p></div>
+          </li>
+          <li>
+            <div><b>You choose the rule.</b>
+            <p>Three one-sentence rules of thumb, shown next to what usually happens instead — borrow again, skip a payment, ask family — so the rule is chosen against reality.</p></div>
+          </li>
+          <li>
+            <div><b>The plan, as one document.</b>
+            <p>Where your money stands. The strategy. The next 90 days in order. It prints, it downloads, and it only ever says what you actually told Fin.</p></div>
+          </li>
+          <li>
+            <div><b>Then one step at a time.</b>
+            <p>Send. Do. Done. Did it help? Fin follows up on each step and the plan changes when your month does — within bounds, never freestyled.</p></div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- the money map -->
+  <section id="map" class="mist">
+    <div class="wrap">
+      <p class="kicker"><b>04</b><span>The Money Map</span></p>
+      <h2>Eight areas. What <em>sorted</em> means in each.</h2>
+      <p class="lede" style="margin-top:26px">Every household is read the same way, against the same ruler. An area only moves when you show Fin it moved.</p>
+      <div class="map" style="margin-top:40px">
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M4 22 L13 13 L18 18 L26 8" fill="none" stroke="#0f766e" stroke-width="2.2"/><path d="M20 8h6v6" fill="none" stroke="#0f766e" stroke-width="2.2"/></svg>
+          <b>Money in</b>
+          <p>You know what comes in and the day it lands, and every grant or benefit you qualify for is claimed.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="4" y="6" width="22" height="18" rx="3" fill="none" stroke="#0f766e" stroke-width="2"/><rect x="4" y="11" width="22" height="3" fill="#0f766e"/></svg>
+          <b>Money out</b>
+          <p>A month plan exists that fits the money, and bills are paid on the day money lands.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="5" y="8" width="20" height="4" rx="2" fill="#0f766e"/><rect x="5" y="15" width="14" height="4" rx="2" fill="#0f766e" opacity=".6"/><rect x="5" y="22" width="8" height="4" rx="2" fill="#0f766e" opacity=".3"/></svg>
+          <b>What you owe</b>
+          <p>Every rand owed is listed, the costliest is being paid first, nothing new borrowed, no mashonisa.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="10" fill="none" stroke="#0f766e" stroke-width="2"/><circle cx="15" cy="15" r="4" fill="#0f766e"/></svg>
+          <b>Emergency money</b>
+          <p>A named amount you can reach without borrowing, kept apart, growing on payday.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="5" y="5" width="20" height="20" rx="3" fill="none" stroke="#0f766e" stroke-width="2"/><path d="M10 15.5l3.5 3.5 6.5-7" fill="none" stroke="#0f766e" stroke-width="2.2"/></svg>
+          <b>Credit record</b>
+          <p>Report checked in the last year, errors disputed, every account paid on time for three months.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 4l9 4v7c0 6-4 9.5-9 11-5-1.5-9-5-9-11V8z" fill="none" stroke="#0f766e" stroke-width="2"/></svg>
+          <b>Cover</b>
+          <p>One funeral policy that fits, no duplicates, beneficiaries named; the people who depend on you are covered.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="10" cy="11" r="4" fill="none" stroke="#0f766e" stroke-width="2"/><circle cx="21" cy="11" r="4" fill="none" stroke="#0f766e" stroke-width="2"/><path d="M3 25c1-5 4-7 7-7s6 2 7 7M14 25c1-5 4-7 7-7s6 2 7 7" fill="none" stroke="#0f766e" stroke-width="2"/></svg>
+          <b>Family money</b>
+          <p>Support to family is a fixed line everyone knows; the stokvel or burial society is one you can verify.</p>
+        </div>
+        <div class="tile">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M15 26V6" fill="none" stroke="#0f766e" stroke-width="2"/><path d="M15 6l8 5-8 5z" fill="#0f766e"/></svg>
+          <b>The future</b>
+          <p>A written 90-day goal with a number on it, and a longer one with a vehicle you have started.</p>
+        </div>
+      </div>
+      <p class="map-note">Four money stages, read from the same answers: surviving (cannot make the month), stretching (makes the month, nothing kept), steady (a small cushion, debts under control), building (saving toward a goal).</p>
+    </div>
+  </section>
+
+  <!-- numbers -->
+  <section id="numbers">
+    <div class="wrap">
+      <p class="kicker"><b>05</b><span>The numbers, with their caveats</span></p>
+      <h2>What is public about <em>their money.</em></h2>
+      <p class="lede" style="margin-top:26px">Every figure here names its source and its weakness in the same breath. That is also how every figure inside Fin works.</p>
+      <ol class="nums" style="margin-top:40px">
+        <li>
+          <span class="fig">10.5m</span>
+          <p class="fact">credit-active South Africans have accounts in arrears, defaults or other negative records — more than a third of everyone with credit.</p>
+          <p class="src"><b>National Credit Regulator,</b> June 2025.<i>Regulator figure; counts people who already have credit.</i></p>
+        </li>
+        <li>
+          <span class="fig">72%</span>
+          <p class="fact">of surveyed South Africans report money stress, and 90% of those with unsustainable debt do not use debt counselling.</p>
+          <p class="src"><b>DebtBusters Money-Stress Tracker,</b> 2026.<i>A commercial survey, not nationally representative.</i></p>
+        </li>
+        <li>
+          <span class="fig">32%</span>
+          <p class="fact">of surveyed borrowers used a mashonisa in the last year, double the year before; 85% because their credit score was too low. Mashonisas commonly charge 30–50% a month and are unregistered, so the debt is unenforceable.</p>
+          <p class="src"><b>Wonga survey,</b> 2026; NCR statements.<i>A lender’s own survey, not a national measure.</i></p>
+        </li>
+        <li>
+          <span class="fig">R2.41bn</span>
+          <p class="fact">lost to digital banking crime in 2025, 89% of cases through banking apps, almost all of it social engineering.</p>
+          <p class="src"><b>SABRIC Annual Crime Statistics,</b> 2025.<i>The industry body’s own statistics.</i></p>
+        </li>
+        <li>
+          <span class="fig">11m+</span>
+          <p class="fact">South Africans belong to a stokvel.</p>
+          <p class="src"><b>NASASA,</b> August 2025.<i>The association’s own estimate.</i></p>
+        </li>
+        <li>
+          <span class="fig">R370</span>
+          <p class="fact">a month is the SRD grant, held at that amount to March 2027. Other 2026 grant amounts circulate on third-party sites and must be confirmed on sassa.gov.za.</p>
+          <p class="src"><b>Treasury 2026 Budget;</b> third-party reporting.<i>Fin’s library hedges every grant figure to “confirm with SASSA”.</i></p>
+        </li>
+        <li>
+          <span class="fig">~51%</span>
+          <p class="fact">of adults are classed as financially literate on the FSCA’s baseline, a score that has been flat for years.</p>
+          <p class="src"><b>FSCA / Treasury draft National Consumer Financial Education Policy,</b> 2026.<i>Via secondary reporting.</i></p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- promises -->
+  <section id="promises" class="mist">
+    <div class="wrap">
+      <p class="kicker"><b>06</b><span>Twelve promises</span></p>
+      <h2>The rules Fin <em>keeps.</em></h2>
+      <p class="lede" style="margin-top:26px">Each one came from a real failure in the product Fin is built from. They are written into the code and tested, not into a policy.</p>
+      <ol class="promises" style="margin-top:40px">
+        <li><div><b>The plan comes from a fixed library, never freestyled.</b><p>Thirteen moves with the evidence for them. Fin chooses which you earned and puts your numbers in. It cannot invent a step.</p></div></li>
+        <li><div><b>It never claims you said something you did not.</b><p>No “the problem you mentioned” unless you mentioned it.</p></div></li>
+        <li><div><b>One recommendation, never a menu.</b><p>Fin picks, and says what would change the pick.</p></div></li>
+        <li><div><b>You choose the goal and the rule.</b><p>From three genuinely different options each, with what usually happens instead printed next to them.</p></div></li>
+        <li><div><b>Your money is read back once and confirmed.</b><p>Then that confirmed version is what every later step uses.</p></div></li>
+        <li><div><b>Every figure comes from a verified, dated source.</b><p>A fee, a rule, a grant amount, a deadline. Past 90 days, it is hedged to “confirm first”. Where sources disagree, Fin says so.</p></div></li>
+        <li><div><b>Free and reversible before anything that costs.</b><p>In every recommendation.</p></div></li>
+        <li><div><b>Hardship mode.</b><p>If you cannot cover food, rent or transport, Fin stops planning, protects cash, and points to free help.</p></div></li>
+        <li><div><b>It never recommends credit.</b><p>No loan, no buy-now-pay-later, no cash advance, however cheap. If you are considering one, Fin works through your numbers and says the downside first.</p></div></li>
+        <li><div><b>It never asks for an ID number, account number, card number, PIN, OTP or password.</b><p>And says so in the first message. Fin reads no statement and no app; it knows what you tell it.</p></div></li>
+        <li><div><b>“Forget my money” deletes everything.</b><p>One message, any time.</p></div></li>
+        <li><div><b>Your own AI can connect.</b><p>ChatGPT or Claude can read the same plan and memory through a connector, and anything it suggests changing is confirmed with you on WhatsApp first.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- status -->
+  <section id="status" class="status">
+    <div class="wrap">
+      <p class="kicker"><b>07</b><span>Where it stands</span></p>
+      <h2>No cohort has <em>run yet.</em></h2>
+      <p class="lede">
+        There are no testimonials because there are no users. No logos, no “trusted by”, no
+        pilot results. What is on this page is the method and the evidence it is built on;
+        what is not on it is a single real person’s ninety days.
+      </p>
+      <div class="have">
+        <div>
+          <h3>What exists</h3>
+          <ul>
+            <li>The whole journey, on a WhatsApp test number: hello to diagnostic to read-back to goal to rule to plan to first step.</li>
+            <li>A South African library of rights, rules and places to go, each row with the date it was checked.</li>
+            <li>The plan as a printable document, and a page to read it on the web.</li>
+            <li>A connector for the person’s own AI.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What does not, on purpose</h3>
+          <ul>
+            <li>Reading bank statements or the bank’s data. Fin knows what it is told.</li>
+            <li>A second market’s library. Nobody has verified another country’s rules yet.</li>
+            <li>A recommendation to take credit, ever.</li>
+            <li>Testimonials, user counts, pilot results.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- for the bank -->
+  <section id="bank">
+    <div class="wrap">
+      <p class="kicker"><b>08</b><span>For the bank</span></p>
+      <h2>Why put this on a bank’s <em>WhatsApp number.</em></h2>
+      <div class="bank" style="margin-top:44px">
+        <div>
+          <div class="pt">
+            <h3>You already tried content.</h3>
+            <p>The Juntos SMS tips and the TymeCoach app were the right instinct with the wrong unit: the message, not the household. Fin is a plan with follow-through — a step, a how-to, a “done”, a “did it help” — for one household at a time, on the number your customers already have.</p>
+          </div>
+          <div class="pt">
+            <h3>The rails already exist.</h3>
+            <p>A plan step for a GoTyme customer is not advice. “Move R50 to GoalSave on grant day” is a thing the bank’s own app does, for free. Fin sits on top of what you have built and turns it into habits. It names a free, reversible product of yours where it fits; it never pushes a loan.</p>
+          </div>
+          <div class="pt">
+            <h3>A stabilised customer can later be lent to responsibly.</h3>
+            <p>Arrears cleared, a cushion that grows on payday, a bank-visible record of behaviour: that is a customer who could not be underwritten yesterday. Fin promises no outcome. The measure we would propose is the bank’s own — the share of customers who become credit-worthy — and the Kenya evidence says the first thing to prove is that the weakest do no worse.</p>
+          </div>
+          <div class="pt">
+            <h3>Doing no harm is the feature.</h3>
+            <p>Hardship mode pushes no product, names the free debt counsellor and the ombud, and pauses the plan. That is what earns the trust a lending relationship needs.</p>
+          </div>
+          <div class="pt">
+            <h3>Your data could feed it later. That is your call.</h3>
+            <p>The same door a person’s own AI uses is a door the bank’s systems could use. Nothing is read from the bank today. It is the obvious next step, and it is deliberately not built until you decide it should be.</p>
+          </div>
+        </div>
+        <div class="asks">
+          <h3>What a pilot needs from the bank</h3>
+          <ul>
+            <li>A WhatsApp number on the bank’s business account.</li>
+            <li>A pilot cohort, invited by the bank.</li>
+            <li>Nothing from the core systems at first. Fin knows only what each person tells it.</li>
+          </ul>
+          <div class="not">
+            <b>Not on this page</b>
+            <p class="small" style="margin-top:6px">Pricing, outcome targets, and anything Fin has not done yet. The pilot would set the measures before anyone talks about scale.</p>
+          </div>
+          <div class="cta-row" style="margin-top:22px">
+            <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=programme">Talk about a pilot</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- end -->
+  <section class="end mist">
+    <div class="wrap">
+      <h2>Say hi. That is the <em>whole sign-up.</em></h2>
+      <p class="lede">No form, no app, no password. Fin lives on the WhatsApp you already have.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=start">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.13c-.25.69-1.44 1.32-1.99 1.37-.53.05-1.02.24-3.44-.72-2.9-1.14-4.74-4.1-4.88-4.29-.14-.19-1.16-1.55-1.16-2.95s.73-2.09 1-2.38c.26-.29.57-.36.76-.36l.55.01c.18 0 .42-.07.65.5.25.6.84 2.06.91 2.21.07.15.12.32.02.51-.1.19-.15.31-.29.48-.14.17-.3.38-.43.51-.14.14-.29.29-.13.57.17.29.74 1.22 1.59 1.98 1.09.97 2.01 1.27 2.3 1.42.29.14.45.12.62-.07.17-.19.71-.83.9-1.12.19-.29.38-.24.64-.14.26.09 1.65.78 1.93.92.29.14.48.22.55.34.07.12.07.69-.18 1.38Z"/></svg>
+          Message Fin on WhatsApp
+        </a>
+      </div>
+      <p class="cta-note">A test number for now. South Africa only.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h3>Free help, if you need a person</h3>
+        <ul class="help">
+          <li><b>National Credit Regulator</b><span>Consumer line 0860 627 627, ncr.org.za. Finds you a registered debt counsellor; the first conversation is free and nobody is selling anything.</span></li>
+          <li><b>National Financial Ombud</b><span>nfosa.co.za. Free, for any dispute with a bank, lender or insurer.</span></li>
+          <li><b>SASSA</b><span>sassa.gov.za. Grants, reviews and the SRD grant.</span></li>
+          <li><b>SARS</b><span>sars.gov.za. Tax, refunds and auto-assessment.</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="foot-links">
+          <a href="#words">What it is</a>
+          <a href="#why">Why</a>
+          <a href="#numbers">The numbers</a>
+          <a href="#promises">The rules</a>
+          <a href="#bank">For the bank</a>
+          <a href="/plan">Read your plan</a>
+          <a href="/ask.html">Ask Fin</a>
+        </div>
+        <p>Fin works in South Africa. Every fee, rule and grant amount in a plan carries the date it was checked; anything older than 90 days says so and tells you to confirm it first. Send “forget my money” and everything Fin holds about you is deleted.</p>
+        <p class="loan">Nothing here is a loan recommendation.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
