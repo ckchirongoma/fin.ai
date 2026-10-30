@@ -7,6 +7,10 @@ as many times as you like: every statement is `IF NOT EXISTS`, a keyed
 upsert, or guarded by a check, and it was applied three times in a row on a
 clean Postgres 16 before this was written, with the same result each time.
 
+> **Already set up through db/0037?** Don't re-run the whole script: paste
+> the one prompt in `docs/SUPABASE-PROMPT.md` (migrations 0038 to 0040) and
+> check its success table.
+
 ## 1. Before you paste (two clicks)
 
 1. Supabase → **New project**. Any name; pick the region closest to

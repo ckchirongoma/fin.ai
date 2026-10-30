@@ -5069,6 +5069,10 @@ BEGIN
   ALTER TABLE public.cards ADD CONSTRAINT cards_kind_check CHECK (kind IN ('month', 'debt', 'map', 'statement', 'goal', 'memory'));
 END $$;
 
+-- Belt and braces, as owner_notes (db/0032): no grant for the public keys at all.
+REVOKE ALL ON public.kg_nodes FROM anon, authenticated;
+REVOKE ALL ON public.kg_edges FROM anon, authenticated;
+
 
 -- ============================================================================
 -- 0039_graph_actions.sql
@@ -5109,6 +5113,8 @@ CREATE INDEX IF NOT EXISTS kg_triggers_business_idx ON public.kg_triggers (busin
 ALTER TABLE public.kg_triggers ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE public.kg_triggers IS 'The actions the household knowledge graph has triggered, once each (api/_lib/graphactions.ts). Service role only; deleted with the household.';
+
+REVOKE ALL ON public.kg_triggers FROM anon, authenticated;
 
 
 -- ============================================================================
@@ -5184,3 +5190,7 @@ ALTER TABLE public.household_invites ENABLE ROW LEVEL SECURITY;
 COMMENT ON TABLE public.households IS 'A household of several WhatsApp numbers (api/_lib/household.ts). Service role only.';
 COMMENT ON TABLE public.household_members IS 'Who is in a household, with two-sided consent and per-person debt sharing. Service role only; a member leaves silently.';
 COMMENT ON TABLE public.household_invites IS 'Single-use household codes, hashed, 48 hours. Service role only.';
+
+REVOKE ALL ON public.households FROM anon, authenticated;
+REVOKE ALL ON public.household_members FROM anon, authenticated;
+REVOKE ALL ON public.household_invites FROM anon, authenticated;

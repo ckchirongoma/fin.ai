@@ -339,7 +339,7 @@ describe("web: /api/ask", () => {
   });
 
   test("learning from the turn does not hold the answer", async () => {
-    const { token } = await planned("27809930052");
+    const { token } = await planned("27809930091");
     memoryDelayMs = 400;
     const doneBefore = memoryCallsDone;
     const t0 = Date.now();
@@ -567,7 +567,7 @@ describe("review regressions", () => {
   });
 
   test("web: 'forget my money' says to do it on WhatsApp and deletes nothing", async () => {
-    const { token, biz } = await planned("27809930043");
+    const { token, biz } = await planned("27809930092");
     routerIntent = "forget_me";
     const body = await (await post(token, "please forget my money and delete everything")).json();
     assert.match(body.reply.message, /on WhatsApp/);
@@ -653,13 +653,13 @@ describe("a sign-in code never leaves the messages table", () => {
   }
 
   test("the conversation memory skips the code rows and keeps everything else, at full length", async () => {
-    const { biz } = await withCodes("27809930060");
+    const { biz } = await withCodes("27809930093");
     const memory = await dbmod.recentMessages(biz.id, 3);
     assert.deepEqual(memory.map((m) => m.text), ["how do I take deposits?", "Ask for 30% when they book.", "123456"]);
   });
 
   test("WhatsApp: the next model call's prompt carries the conversation, without any code", async () => {
-    const { biz } = await withCodes("27809930061");
+    const { biz } = await withCodes("27809930094");
     net.modelCalls.length = 0;
     await engine.handleInbound(textFrom(biz.wa_id, "can I offer layaway?"));
     const core = net.modelCalls.find((c) => /RECENT CONVERSATION/.test(c.prompt));
@@ -669,7 +669,7 @@ describe("a sign-in code never leaves the messages table", () => {
   });
 
   test("web: the answer's prompt is just as clean, and the page's own record has no code in it", async () => {
-    const { biz, token } = await withCodes("27809930062");
+    const { biz, token } = await withCodes("27809930095");
     net.modelCalls.length = 0;
     const body = await (await post(token, "can I offer layaway?")).json();
     assert.equal(body.ok, true);
@@ -682,7 +682,7 @@ describe("a sign-in code never leaves the messages table", () => {
   });
 
   test("the owner's own AI (MCP get_household_context) gets the conversation without any code", async () => {
-    const { biz } = await withCodes("27809930063");
+    const { biz } = await withCodes("27809930096");
     const connector = await import("../api/_lib/connector.ts");
     const r = await connector.callTool((await dbmod.findBusiness(biz.wa_id))!, "get_household_context", {});
     const recent = (r.structured as { recent_whatsapp: string[] }).recent_whatsapp;

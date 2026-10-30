@@ -142,6 +142,10 @@ export function makeFakeDb(seed: Record<string, Row[]> = {}): FakeDb {
           if (name === "wa_inbound" && rows.some((x) => x.wa_message_id === withId.wa_message_id)) {
             return { data: [], error: { code: "23505", message: "duplicate key" } };
           }
+          // db/0040: one household per person, one row per code.
+          if ((name === "household_members" && rows.some((x) => x.business_id === withId.business_id)) || (name === "household_invites" && rows.some((x) => x.code_hash === withId.code_hash))) {
+            return { data: [], error: { code: "23505", message: "duplicate key" } };
+          }
           rows.push(withId);
           inserted.push(withId);
         }
@@ -260,6 +264,8 @@ export function makeFakeDb(seed: Record<string, Row[]> = {}): FakeDb {
         const r = settle();
         if (r.error) return Promise.resolve({ data: null, error: r.error });
         const rows = (r.data as Row[]) ?? [];
+        // As supabase-js: more than one row is an error, not the first row.
+        if (rows.length > 1 && !pending) return Promise.resolve({ data: null, error: { code: "PGRST116", message: "multiple rows returned" } });
         return Promise.resolve({ data: rows[0] ?? null, error: null });
       },
       single() {

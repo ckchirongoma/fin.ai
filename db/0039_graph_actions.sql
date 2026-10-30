@@ -33,3 +33,5 @@ CREATE INDEX IF NOT EXISTS kg_triggers_business_idx ON public.kg_triggers (busin
 ALTER TABLE public.kg_triggers ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE public.kg_triggers IS 'The actions the household knowledge graph has triggered, once each (api/_lib/graphactions.ts). Service role only; deleted with the household.';
+
+REVOKE ALL ON public.kg_triggers FROM anon, authenticated;

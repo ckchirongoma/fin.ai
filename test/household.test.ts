@@ -199,3 +199,58 @@ test("the typed commands are recognised whole, and real questions are not swallo
     assert.ok(!hh.INVITE_ASK.test(s) && !hh.JOIN_ASK.test(s) && !hh.LEAVE_ASK.test(s), s);
   }
 });
+
+test("two people sending one code at the same moment: exactly one gets in line", async () => {
+  const [A, B, C] = ["27809930084", "27809930085", "27809930086"];
+  await planned(A, "Ayanda", {});
+  await planned(B, "Bongani", {});
+  await planned(C, "Kagiso", {});
+  const r = await hh.createInvite(biz(A) as never);
+  const c = (r as { code: string }).code;
+  const [x, y] = await Promise.all([hh.requestToJoin(biz(B) as never, c), hh.requestToJoin(biz(C) as never, c)]);
+  assert.equal([x, y].filter((v) => "member" in v).length, 1);
+  assert.ok([x, y].some((v) => "refused" in v && v.refused === "used"));
+});
+
+test("only the person who made the code lets someone in; once they've gone, whoever holds the household does", async () => {
+  const [A, B, C] = ["27809930084", "27809930085", "27809930086"];
+  // From the race above: one of Bongani and Kagiso is waiting; Ayanda lets them in.
+  const waiting = db.tables.household_members!.find((m) => m.status === "pending_owner" && [biz(B).id, biz(C).id].includes(m.business_id))!;
+  assert.ok(await hh.decideJoin(biz(A) as never, waiting.id, true));
+  const joiner = db.tables.businesses!.find((b) => b.id === waiting.business_id)!;
+  const outsider = [biz(B), biz(C)].find((b) => b.id !== joiner.id)!;
+  // The joiner makes a code for the other one.
+  const r = await hh.createInvite(joiner as never);
+  const req = await hh.requestToJoin(outsider as never, (r as { code: string }).code);
+  const id = (req as { member: { id: string } }).member.id;
+  assert.equal(await hh.decideJoin(biz(A) as never, id, true), null, "Ayanda did not make this code");
+  // The person who made it leaves: the request is not stranded.
+  await hh.leaveHousehold(joiner.id as string);
+  const ok = await hh.decideJoin(biz(A) as never, id, true);
+  assert.ok(ok && !ok.full);
+  assert.equal(db.tables.household_members!.find((m) => m.id === id)!.status, "active");
+});
+
+test("a household that filled up while someone waited lets them go, and both are told why", async () => {
+  const owner = "27809930087";
+  await planned(owner, "Palesa", {});
+  const waits: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const wa = `2780993009${i}`;
+    await dbmod.createBusiness(wa, "ZA");
+    await dbmod.updateBusiness(biz(wa).id, { identity: { name: `P${"abcdef"[i]}`, earns: "x", one_liner: "x", unsure: null } } as never);
+    const r = await hh.createInvite(biz(owner) as never);
+    if (!("code" in r)) break;
+    const req = await hh.requestToJoin(biz(wa) as never, r.code);
+    waits.push((req as { member: { id: string } }).member.id);
+  }
+  // Five let in (six with the owner); the sixth request is still waiting.
+  for (const id of waits.slice(0, 5)) await hh.decideJoin(biz(owner) as never, id, true);
+  net.sent.length = 0;
+  const last = waits.at(-1)!;
+  const lastWa = db.tables.businesses!.find((b) => b.id === db.tables.household_members!.find((m) => m.id === last)!.business_id)!.wa_id as string;
+  await engine.handleInbound(tapFrom(owner, `a.hh.ok:${last}`, "Let them in"));
+  assert.match(textTo(owner), /That household is full/);
+  assert.match(textTo(lastWa), /That household is full.*You can still use Charles on your own/s);
+  assert.ok(!db.tables.household_members!.some((m) => m.id === last), "not left waiting for ever");
+});

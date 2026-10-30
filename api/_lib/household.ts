@@ -100,7 +100,12 @@ export async function createInvite(biz: Business): Promise<InviteResult> {
         .insert({ household_id: (h as { id: string }).id, business_id: biz.id, role: "owner", status: "active", share_debts: false, joined_at: new Date().toISOString() })
         .select("*")
         .single();
-      if (mErr || !m) return { refused: "failed" };
+      if (mErr || !m) {
+        // Lost a race with their own second request (business_id is unique
+        // in household_members): never leave an empty household behind.
+        await db().from("households").delete().eq("id", (h as { id: string }).id);
+        return { refused: "failed" };
+      }
       me = m as MemberRow;
       track("household_created", { category: "funnel" });
     }
@@ -153,8 +158,17 @@ export async function requestToJoin(biz: Business, code: string): Promise<{ owne
   const { data: invData } = await db().from("household_invites").select("*").eq("code_hash", hashSecret(code.toUpperCase())).maybeSingle();
   const inv = invData as { id: string; created_by: string } | null;
   if (!inv) return { refused: "unknown" };
-  const { error: useErr } = await db().from("household_invites").update({ used_at: new Date().toISOString(), used_by: biz.id }).eq("id", inv.id).is("used_at", null);
+  // Single use under a race: only the request whose update actually claimed
+  // the still-unused row goes on. Two people sending the same code at the
+  // same moment cannot both get in.
+  const { data: claimed, error: useErr } = await db()
+    .from("household_invites")
+    .update({ used_at: new Date().toISOString(), used_by: biz.id })
+    .eq("id", inv.id)
+    .is("used_at", null)
+    .select("id");
   if (useErr) return { refused: "failed" };
+  if (!Array.isArray(claimed) || claimed.length !== 1) return { refused: "used" };
   const { data: m, error } = await db()
     .from("household_members")
     .insert({ household_id: check.householdId, business_id: biz.id, role: "member", status: "pending_owner", share_debts: false })
@@ -167,16 +181,31 @@ export async function requestToJoin(biz: Business, code: string): Promise<{ owne
   return { owner, member: m as MemberRow };
 }
 
-/** The inviter's answer. Only the person who made the code may answer for it. */
-export async function decideJoin(owner: Business, memberId: string, yes: boolean): Promise<{ joiner: Business | null; householdId: string } | null> {
+/**
+ * The inviter's answer. Only the person who made the code may answer for it;
+ * if they have since left, whoever now holds the household answers instead,
+ * so a request is never stranded. A full household refuses and lets the
+ * person waiting go, rather than leaving them pending for ever.
+ */
+export async function decideJoin(owner: Business, memberId: string, yes: boolean): Promise<{ joiner: Business | null; householdId: string; full?: true } | null> {
   const { data } = await db().from("household_members").select("*").eq("id", memberId).maybeSingle();
   const m = data as MemberRow | null;
   if (!m || m.status !== "pending_owner") return null;
   const mine = await memberRow(owner.id);
   if (!mine || mine.household_id !== m.household_id || mine.status !== "active") return null;
+  // The code they used most recently: someone who left and came back has used more than one.
+  const { data: invData } = await db().from("household_invites").select("created_by, used_at").eq("household_id", m.household_id).eq("used_by", m.business_id).order("used_at", { ascending: false }).limit(1);
+  const inviter = ((invData as { created_by: string }[] | null) ?? [])[0]?.created_by ?? null;
+  const active = await activeMembers(m.household_id);
+  const inviterHere = inviter !== null && active.some((a) => a.business_id === inviter);
+  if (inviterHere ? inviter !== owner.id : mine.role !== "owner") return null;
   const joiner = await findBusinessById(m.business_id);
+  if (yes && active.length >= MAX_MEMBERS) {
+    await db().from("household_members").delete().eq("id", m.id);
+    track("household_join_declined", { category: "funnel", props: { full: true } });
+    return { joiner, householdId: m.household_id, full: true };
+  }
   if (yes) {
-    if ((await activeMembers(m.household_id)).length >= MAX_MEMBERS) return null;
     await db().from("household_members").update({ status: "active", joined_at: new Date().toISOString() }).eq("id", m.id);
     track("household_joined", { category: "funnel" });
   } else {

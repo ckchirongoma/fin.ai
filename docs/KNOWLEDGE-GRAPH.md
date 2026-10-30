@@ -165,6 +165,46 @@ controlling relationship must never have Charles announce it. "Forget my
 money" takes the person out first; if they started the household, the
 longest-standing member takes it over, and an emptied household goes.
 
+Only the person who made a code can let someone in with it; if they have
+since left, whoever holds the household answers instead, so nobody waits
+for ever. A household that fills up while someone waits lets them go, and
+both are told why. Two people sending one code at the same moment cannot
+both get in: the code is claimed by a conditional update, and only the
+request that claimed it goes on.
+
+### Households, fuzzed
+
+`scripts/householdfuzz.ts` runs random people through random sequences:
+inviting, joining with real, used, expired, lowercased and made-up codes,
+two people racing for one code, being let in or turned away by the right
+person and on purpose by the wrong one, leaving, sharing and unsharing
+debts, being forgotten, codes expiring. Every third run is crowded, so
+households fill to six and past it. After every step it checks: one
+household per person; every household has one active owner, at most six
+people and three open codes; nobody waiting is stranded; a person waiting
+or outside sees nothing; nobody sees their own line as someone else's, a
+line from outside their household, or a debt or income line that was not
+shared; every shared line is attributed to the right person (each person's
+figures are unique, so a figure says whose it is); a code lets one person
+in; only the right person can answer; "forget my money" leaves nothing
+behind; no phone number reaches a prompt block. It runs on the fake
+database, which enforces db/0040's unique columns and, like supabase-js,
+refuses `maybeSingle` on more than one row.
+
+| Run | Households | Steps | Broken |
+|---|---|---|---|
+| Every test run (`test/household-fuzz.test.ts`) | 150 | 12,000 | 0 |
+
+Each fix was checked by putting the bug back: the fuzzer finds the two-at-
+once code, a fellow member answering a request that was not theirs, and a
+private debt shown to the household, within the first runs.
+
+What it found and fixed: one code could let two people in when they sent it
+at the same moment; a household that filled while someone waited told the
+inviter "already settled" and left the person waiting for ever; any member,
+not only the inviter, could answer a request; a lost race on a person's own
+second invite could leave an empty household behind.
+
 ## Growth
 
 A household's graph is capped at 250 lines (`MAX_EDGES`). When a write that
@@ -194,7 +234,7 @@ pointing at credit, with valid buttons.
 |---|---|---|---|
 | Every test run (`test/knowledge-graph-fuzz.test.ts`) | 3,000, plus 200 growing to 300 turns, plus 80 households through the real engine | about 96,000 | 0 |
 | `scripts/fuzz-graph.ts 50000 3` | 50,000 | 600,000 | 0 |
-| `scripts/fuzz-graph.ts 1000000 4` | 1,000,000 | 12,000,000 | see the commit that adds this table |
+| `scripts/fuzz-graph.ts 1000000 4` | 1,000,000 | 12,000,000 (3,339,675 facts kept, 134 µs a turn, largest graph 53 edges, largest prompt block 1,507 characters) | 0 |
 
 What the fuzzer found and fixed on the way: one shared generic word backing
 a different thing ("Hollard funeral plan" backed "Avbob funeral policy"); the

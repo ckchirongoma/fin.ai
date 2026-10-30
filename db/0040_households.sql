@@ -67,3 +67,7 @@ ALTER TABLE public.household_invites ENABLE ROW LEVEL SECURITY;
 COMMENT ON TABLE public.households IS 'A household of several WhatsApp numbers (api/_lib/household.ts). Service role only.';
 COMMENT ON TABLE public.household_members IS 'Who is in a household, with two-sided consent and per-person debt sharing. Service role only; a member leaves silently.';
 COMMENT ON TABLE public.household_invites IS 'Single-use household codes, hashed, 48 hours. Service role only.';
+
+REVOKE ALL ON public.households FROM anon, authenticated;
+REVOKE ALL ON public.household_members FROM anon, authenticated;
+REVOKE ALL ON public.household_invites FROM anon, authenticated;

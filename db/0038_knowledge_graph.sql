@@ -90,3 +90,7 @@ BEGIN
   END IF;
   ALTER TABLE public.cards ADD CONSTRAINT cards_kind_check CHECK (kind IN ('month', 'debt', 'map', 'statement', 'goal', 'memory'));
 END $$;
+
+-- Belt and braces, as owner_notes (db/0032): no grant for the public keys at all.
+REVOKE ALL ON public.kg_nodes FROM anon, authenticated;
+REVOKE ALL ON public.kg_edges FROM anon, authenticated;

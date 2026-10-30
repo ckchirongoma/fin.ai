@@ -66,6 +66,11 @@ export async function householdTap(biz: Business, actionId: string): Promise<boo
       return true;
     }
     const joinerName = firstName(r.joiner);
+    if (r.full) {
+      await sendText(biz.wa_id, REFUSED_TEXT.full!, biz.id);
+      if (r.joiner) await sendText(r.joiner.wa_id, `${REFUSED_TEXT.full} You can still use Charles on your own.`, r.joiner.id);
+      return true;
+    }
     if (yes) {
       await sendText(biz.wa_id, `Done: ${joinerName ?? "they're"} ${joinerName ? "is " : ""}in your household.`, biz.id);
       if (r.joiner) await sendText(r.joiner.wa_id, `You're in ${firstName(biz) ?? "the"}${firstName(biz) ? "'s" : ""} household. Send "who is in my household" any time, and "leave household" to leave.`, r.joiner.id);

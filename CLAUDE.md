@@ -86,7 +86,11 @@ distress → hardship, "forget my business" → "forget my money").
   they support, bills, cover, stokvel, savings, goal) reach every answer
   with their first name, never "you told me". Debts and income stay private
   until a person says "share my debts with my household". Anyone can
-  "leave household" and nobody is told. `test/household.test.ts`.
+  "leave household" and nobody is told. `test/household.test.ts`; fuzzed
+  by `scripts/householdfuzz.ts` (`test/household-fuzz.test.ts`), with every
+  invariant checked after every step.
+- Supabase changes for the founder come as one paste-ready prompt with a
+  success-criteria table (`docs/SUPABASE-PROMPT.md`, BEHAVIOR-MATRIX rule 21).
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.
