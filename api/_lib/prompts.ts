@@ -576,6 +576,11 @@ export function nudgePrompt(args: {
   prefs: string;
   templates: string;
   nextStep: string;
+  /** What Charles knows about their money (graph.ts graphSheet), each line with its source. */
+  memoryGraph?: string;
+  /** The days money lands and goes, from the graph (graph.ts moneyDays). */
+  moneyLands?: string;
+  moneyGoes?: string;
 }): string {
   return `${base(args.countryCode)}
 
@@ -590,14 +595,14 @@ Open commitments: ${args.openCommitments}
 Already sent in the last 7 days: ${args.recentNudges}
 Their preferences: ${args.prefs}
 The next step in their plan: ${args.nextStep || "(none pending)"}
-
+${args.moneyLands ? `Money lands around: ${args.moneyLands}\n` : ""}${args.moneyGoes ? `Money goes out around: ${args.moneyGoes}\n` : ""}${args.memoryGraph ? `What you know about their money (each line says where it came from; use it to make a variable specific, never to state something they did not say):\n${args.memoryGraph}\n` : ""}
 Approved templates (you may use ONLY these, and you must fill every variable):
 ${args.templates}
 
 Pick at most one, in this order of priority:
 1. A commitment that is due or overdue and has not been nudged about.
 2. The monthly check-in, if it is the 1st to 3rd and not yet sent this month.
-3. Payday money, if it is within two days of the day they said money lands and the month or the debt area is not green.
+3. Payday money, if it is within two days of a day money lands (above, or the day they said) and the month or the debt area is not green. Name what lands and the one thing to do with it first.
 4. The weekly focus, if today is their nudge day: the single most useful next step for this person, building on what has already happened, never repeating a recent nudge.
 5. Re-engage, if they have been silent 14+ days and this has not been sent in the last 30.
 

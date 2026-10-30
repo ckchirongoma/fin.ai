@@ -12,6 +12,7 @@
 import { askJSON } from "./models.js";
 import { gateNudge } from "./judgement.js";
 import { nudgePrompt } from "./prompts.js";
+import { graphSheet, householdGraph, moneyDays } from "./graph.js";
 import { fitLabel, sendTemplate, sendText, withinServiceWindow } from "./wa.js";
 import { db, findBusinessById, openCommitments, planFor, recordMessage } from "./db.js";
 import { firstOpenStep } from "./engine/context.js";
@@ -108,7 +109,8 @@ export async function decideNudge(biz: Business): Promise<NudgeDecision> {
     return { send: false, templateId: null, variables: {}, reason: "we spoke in the last two days" };
   }
 
-  const [templates, commitments, plan] = await Promise.all([approvedTemplates(), openCommitments(biz.id), planFor(biz.id)]);
+  const [templates, commitments, plan, g] = await Promise.all([approvedTemplates(), openCommitments(biz.id), planFor(biz.id), householdGraph(biz)]);
+  const days = moneyDays(g);
   const usable = templates.filter((t) => t.status === "approved" && t.meta_name);
   if (!usable.length) {
     nudgeSkipped("no_templates", { templates: templates.length });
@@ -132,6 +134,9 @@ export async function decideNudge(biz: Business): Promise<NudgeDecision> {
         prefs: JSON.stringify(prefs),
         templates: usable.map((t) => `${t.id}: "${t.body}" variables: ${t.variables.join(", ") || "none"}`).join("\n"),
         nextStep: next ? `${next.title} — ${next.push ?? ""}`.slice(0, 300) : "",
+        memoryGraph: graphSheet(g, 10, 900),
+        moneyLands: days.lands,
+        moneyGoes: days.goes,
       }),
       // 400 -> 900: wa_reply with "low" reasoning (db/0009), same missed-
       // audit as every other call site fixed in the 2026-09-20 incident.

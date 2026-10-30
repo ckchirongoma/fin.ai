@@ -114,6 +114,9 @@ budget and six weeks of one person's messages.
 - "What do you know about me?" draws it as the memory card: the person in the
   middle, everything their money touches around them, each with its source.
 - Their own AI reads it in `get_household_context` as `memory_graph`.
+- Check-ins (`nudges.ts`) get the graph and, from it in plain code, the days
+  money lands and goes (`moneyDays()`: "the 3rd (SASSA child support grant),
+  the 25th (wages)"), so a payday nudge names the right day and what lands.
 
 ### Checking it in Supabase
 

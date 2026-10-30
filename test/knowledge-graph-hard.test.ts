@@ -283,3 +283,24 @@ test("six weeks of one person's messages: the graph ends true, and the next answ
   assert.ok(checker, "the reply checker was given what they told Charles before");
   assert.match(checker!.prompt, /my mom: R700 a month/);
 });
+
+// ── Check-ins ────────────────────────────────────────────────────
+
+test("a check-in knows the days money lands and goes, from the graph, in plain code", async () => {
+  const read = stmt.parseStatement({
+    doc: "bank_statement", source: "Capitec", period: "Oct 2026",
+    money_in: [{ label: "SASSA child support grant", amount: 1060, day: 3 }, { label: "EFT from an employer", amount: 3600, day: 25 }],
+    money_out: [{ label: "Edgars account", amount: 250, kind: "store_account", day: 1 }, { label: "Old Mutual funeral cover", amount: 120, kind: "insurance", day: 7 }],
+    totals: { in: 4660 },
+  }, "2026-11-01") as import("../api/_lib/statement.ts").StatementRead;
+  const g = { name: "Nomsa", edges: graph.merge(graph.derive({ answers: {}, statement: read, created_at: "2026-10-01" } as never), []) };
+  const days = graph.moneyDays(g);
+  assert.equal(days.lands, "the 3rd (SASSA child support grant), the 25th (EFT from an employer)");
+  assert.equal(days.goes, "the 1st (Edgars account), the 7th (Old Mutual funeral cover)");
+
+  const { nudgePrompt } = await import("../api/_lib/prompts.ts");
+  const p = nudgePrompt({ countryCode: "ZA", ctx: {}, today: "2026-11-02", weekday: "Monday", lastActive: "x", openCommitments: "none", recentNudges: "none", prefs: "{}", templates: "t", nextStep: "", memoryGraph: graph.graphSheet(g, 10, 900), moneyLands: days.lands, moneyGoes: days.goes });
+  assert.match(p, /Money lands around: the 3rd \(SASSA child support grant\), the 25th/);
+  assert.match(p, /Money goes out around: the 1st \(Edgars account\)/);
+  assert.match(p, /never to state something they did not say/);
+});

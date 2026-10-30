@@ -568,6 +568,18 @@ export function saidSheet(g: HouseholdGraph, maxChars = 1200): string {
   return lines.filter((l) => (used += l.length + 1) <= maxChars).join("\n");
 }
 
+/**
+ * The days money lands and the days money goes, from the graph: "the 3rd
+ * (SASSA child support grant), the 25th (EFT from an employer)". Plain code,
+ * so a check-in can name payday without a model guessing it.
+ */
+export function moneyDays(g: HouseholdGraph): { lands: string; goes: string } {
+  const th = (d: number) => `${d}${d % 10 === 1 && d !== 11 ? "st" : d % 10 === 2 && d !== 12 ? "nd" : d % 10 === 3 && d !== 13 ? "rd" : "th"}`;
+  const list = (es: Edge[]) => [...es].sort((a, b) => (a.day ?? 0) - (b.day ?? 0)).slice(0, 5).map((e) => `the ${th(e.day!)} (${e.label})`).join(", ");
+  const open = g.edges.filter((e) => !e.closed && e.day);
+  return { lands: list(open.filter((e) => e.rel === "earns_from")), goes: list(open.filter((e) => e.rel === "owes" || e.rel === "pays" || e.rel === "covered_by" || e.rel === "member_of")) };
+}
+
 /** Words for the library rows about this person's own money: a tie-break, never a match on its own. */
 export function graphTerms(g: HouseholdGraph): string {
   return [...new Set(g.edges.filter((e) => !e.closed && ["owes", "earns_from", "covered_by", "member_of", "supports"].includes(e.rel)).map((e) => e.key))].slice(0, 10).join(" ");
