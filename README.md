@@ -38,6 +38,16 @@ recommendation, grounded in this household's own figures, free and reversible
 first, never a loan, with a follow-up on whether it actually worked.** Every
 guardrail in this repo exists to keep that true under pressure.
 
+## Deploying to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fckchirongoma%2Ffin.ai&project-name=charles&repository-name=charles&env=SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,OPENROUTER_API_KEY,WHATSAPP_APP_SECRET,WORKER_SECRET,SESSION_SECRET,CRON_SECRET,WHATSAPP_VERIFY_TOKEN&envDescription=The%20six%20Charles%20cannot%20run%20without%2C%20plus%20the%20two%20secrets%20the%20website%20and%20the%20crons%20need.%20Every%20other%20variable%20is%20in%20.env.vercel.&envLink=https%3A%2F%2Fgithub.com%2Fckchirongoma%2Ffin.ai%2Fblob%2Fmain%2F.env.vercel)
+
+The button asks for the required variables as it imports. For the full set,
+paste **`.env.vercel`** into the Environment Variables box (click the Key
+field, paste the whole file, and Vercel makes one row per variable), fill the
+blanks in the dashboard, deploy. `HANDOFF-DEPLOY.md` section 3 says where
+each value comes from. Nothing secret is ever in the repo.
+
 ## What's in here
 
 | Path | What it is |

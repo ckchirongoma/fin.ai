@@ -49,7 +49,7 @@ Without SQL, the library can also be loaded from `seed/` through the REST API: t
 
 ## Section 3 — set the environment variables
 
-Vercel → Project → Settings → Environment Variables, then **redeploy** (a change does not reach a running deployment). `.env.example` lists every variable with what it is for; the names below are the ones that matter in order.
+The fast way: open `.env.vercel` in the repo, copy the whole file, and in Vercel → Project → Settings → Environment Variables click the Key box and paste. Vercel splits it into one row per variable, with the safe defaults already filled. Fill the blanks from the tables below, save, then **redeploy** (a change does not reach a running deployment). The deploy button in `README.md` does the same for the required ones at import time. `.env.example` is the same list with longer notes, for local work.
 
 ### Required. Charles will not run without these.
 
