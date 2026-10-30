@@ -21,7 +21,10 @@
 > under the income question and in the answer to "can you read my
 > statement?". One model call extracts totals and payees with identifiers
 > left out; everything said back, the three-pot budget included, is built in
-> code from those figures; the file is never stored.
+> code from those figures; the file is never stored. And cards
+> (`docs/superpowers/specs/2026-10-30-cards-design.md`): five small pages a
+> person opens from a WhatsApp link, each sent with its picture, built in
+> code from their own figures.
 
 
 *The design of everything an owner touches, in the order they touch it, and the

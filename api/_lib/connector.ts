@@ -300,6 +300,16 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({}),
   },
   {
+    name: "get_card",
+    title: "A picture of their money, as a page",
+    description:
+      "A small page built from the person's own figures that they can open on their phone and play with: 'month' (their month in three pots, from the statement they sent), 'debt' (when what they owe is gone, at what they pay a week), 'map' (the Money Map, eight areas), 'statement' (what their statement says), 'goal' (how much per payday gets to a number). Returns the link; set send_to_whatsapp to also send it, with its picture, to their phone. Never a number the person did not give.",
+    inputSchema: obj({
+      kind: { type: "string", enum: ["month", "debt", "map", "statement", "goal"], description: "Which card." },
+      send_to_whatsapp: { type: "boolean", description: "Also send the card, as a picture with the link, on WhatsApp." },
+    }, ["kind"]),
+  },
+  {
     name: "remember",
     title: "Remember something about the person",
     description:
@@ -698,6 +708,21 @@ export async function callTool(biz: Business, name: string, args: Record<string,
 
     case "send_plan_pdf":
       return sendPlanPdfFor(biz);
+
+    case "get_card": {
+      const kind = String(args.kind ?? "") as "month" | "debt" | "map" | "statement" | "goal";
+      if (!["month", "debt", "map", "statement", "goal"].includes(kind)) return { text: "get_card needs 'kind': month, debt, map, statement or goal.", isError: true, code: "bad_kind" };
+      const { buildCard, cardLink, sendCard } = await import("./engine/cards.js");
+      const built = await buildCard(biz, kind);
+      if ("needs" in built) return { text: built.needs, code: "unavailable" };
+      if (args.send_to_whatsapp === true) {
+        const sent = await sendCard(biz, kind);
+        return { text: sent ? `Sent to their WhatsApp: the ${kind} card as a picture with its link.` : "The card could not be sent just now.", code: sent ? "sent" : "send_failed" };
+      }
+      const link = await cardLink(biz, kind);
+      if (!link) return { text: "No link can be made right now (no public address is configured).", isError: true, code: "no_link" };
+      return { text: `${link.title}: ${link.url} (works for sixty days; built from their own figures only)`, structured: { kind, url: link.url, title: link.title }, code: "linked" };
+    }
 
     case "remember":
       return remember(biz, String(args.note ?? ""), String(args.about ?? "other"));

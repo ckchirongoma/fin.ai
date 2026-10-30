@@ -156,6 +156,7 @@ export async function forgetBusiness(id: string): Promise<void> {
     "plan_sessions",
     "proposed_changes",
     "owner_notes",
+    "cards",
     "jobs",
   ]) {
     const { error } = await client.from(table).delete().eq("business_id", id);

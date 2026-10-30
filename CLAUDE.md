@@ -53,6 +53,14 @@ distress → hardship, "forget my business" → "forget my money").
   answers the income question from it, names its payees under "who do you
   owe", lays the month out as three pots, and carries its figures into the
   plan. `test/statement.test.ts` pins all of it, identifiers included.
+- Cards (`api/_lib/cards.ts`, `api/card.ts`, `engine/cards.ts`): five small
+  pages a person opens from a WhatsApp link and plays with on their phone,
+  each sent with its picture: the month in three pots, when a debt is gone,
+  the Money Map, what the statement says, getting to a number. Built in code
+  from their own figures, no model, no identifier, a hashed link for sixty
+  days (`db/0037`), deleted with the household. "Show me my month" draws
+  one; a statement, a budget, a progress question and the hand-over send
+  one; the connector has `get_card`. `test/cards.test.ts`.
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.
@@ -108,7 +116,7 @@ small (`message`, `artifact`, `next_tap`, `quick_replies`, `tool_id`,
   `get_current_step`, `complete_step`, `skip_step`, `report_outcome`,
   `request_plan_change`, `send_plan_pdf`, `remember`, `forget_note`,
   `flag_hardship`, `find_knowledge`, `log_decision`, `add_commitment`,
-  `propose_change`. A change to a critical fact never silently updates the
+  `propose_change`, `get_card`. A change to a critical fact never silently updates the
   plan: WhatsApp asks first.
 
 ## Definition of done for a first pilot-ready version

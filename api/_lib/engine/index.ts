@@ -40,6 +40,9 @@ import { CANT_HEAR, LOW_CONFIDENCE, transcribe, voiceConfigured } from "../trans
 import { attachmentKind, CANT_READ_THAT, MAX_ATTACHMENT_BYTES, NOT_YET_FILES, readAttachment, type AttachmentRead } from "../attachments.js";
 import { downloadMedia } from "../wa.js";
 import { budgetMessage, DOC_LABEL, explainBack, HOW_TO_SEND, rand as statementRand, readMoneyDocument, STATEMENT_ASK, summaryLine, type StatementRead } from "../statement.js";
+import { cardKindAsked } from "../cards.js";
+import { sendCard } from "./cards.js";
+import { isPlainProgressQuestion } from "./qa.js";
 import { readDiagReply, resolveSelection, saysMoneyTrouble } from "../safety.js";
 import { DIAG, DIAG_COUNT, matchOptions, parseDiagAction, parseMultiReply, recordAnswer, replyTouchesOptions, shapeQuestion } from "../diagnostic.js";
 import { sendList, type ListRow } from "../wa.js";
@@ -967,8 +970,11 @@ async function handleStatement(biz: Business, read: StatementRead, inbound: Inbo
     );
   } else {
     await sendText(biz.wa_id, text, biz.id);
-    if (biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
   }
+  // The same figures as a picture, with a link to the page. Built from the
+  // row as just written, so the card sees the statement.
+  await sendCard({ ...biz, statement: read, answers }, "statement");
+  if (read.doc === "credit_report" && biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
   track("statement_read", {
     category: "funnel",
     props: { doc: read.doc, stage: biz.stage, lines_in: read.money_in.length, lines_out: read.money_out.length, has_totals: read.totals.in !== null && read.totals.out !== null, flags: read.flags.length, unclear: Boolean(read.unclear) },
@@ -1012,6 +1018,7 @@ async function statementTap(biz: Business, actionId: string): Promise<void> {
     }
     await sendText(biz.wa_id, text, biz.id);
     track("statement_budget", { category: "behaviour", props: { doc: read.doc, stage: biz.stage } });
+    await sendCard(biz, "month");
     if (biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
     return;
   }
@@ -1046,6 +1053,22 @@ async function runStage(biz: Business, said: string, lowConfidence: boolean, att
   if (!attachment && STATEMENT_ASK.test(said)) {
     await sendText(biz.wa_id, HOW_TO_SEND, biz.id);
     track("statement_asked", { category: "behaviour", props: { stage: biz.stage } });
+    return;
+  }
+  // "Show me my month", "a picture of what I owe", "my map": a card, drawn
+  // from their own figures (engine/cards.ts), at any stage. Whole message
+  // only, so a real question still reaches the answer engine.
+  const asked = attachment ? null : cardKindAsked(said);
+  if (asked) {
+    track("card_asked", { category: "behaviour", props: { kind: asked, stage: biz.stage } });
+    await sendCard(biz, asked);
+    return;
+  }
+  // "How am I doing?" with a plan: the answer, then the map as a picture.
+  const planStage = biz.stage === "plan_ready" || biz.stage === "step_pushed";
+  if (planStage && !attachment && !biz.pending_action && isPlainProgressQuestion(said) && biz.map?.length) {
+    await answer(biz, said, attachment);
+    await sendCard(biz, "map");
     return;
   }
   switch (biz.stage) {

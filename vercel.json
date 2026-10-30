@@ -50,6 +50,10 @@
     "api/admin.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/card.ts": {
+      "maxDuration": 15,
+      "memory": 512
     }
   },
   "crons": [
@@ -67,6 +71,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/c/:token",
+      "destination": "/api/card?t=:token"
+    },
+    {
+      "source": "/c",
+      "destination": "/api/card"
+    },
     {
       "source": "/mcp",
       "destination": "/api/mcp"

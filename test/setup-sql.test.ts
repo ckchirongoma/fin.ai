@@ -31,7 +31,7 @@ test("every migration in db/ is in the script, and nothing in the script is miss
 test("the script starts with the base tables and ends with the library and the templates", () => {
   assert.equal(ORDER[0], "0000_base_tables.sql");
   assert.equal(ORDER[1], "0001_rls_lockdown.sql");
-  assert.deepEqual(ORDER.slice(-4), ["0033_charles_schema.sql", "0034_charles_za_library.sql", "0035_charles_templates.sql", "0036_statement.sql"]);
+  assert.deepEqual(ORDER.slice(-5), ["0033_charles_schema.sql", "0034_charles_za_library.sql", "0035_charles_templates.sql", "0036_statement.sql", "0037_cards.sql"]);
 });
 
 test("the script never asks for a secret and never carries a real phone number", () => {

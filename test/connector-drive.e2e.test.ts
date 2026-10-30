@@ -171,11 +171,11 @@ const allSent = () => net.sent.map((m) => m.body).join("\n---\n");
 // ── 1. The whole surface ─────────────────────────────────────────
 
 const ALL_TOOLS = [
-  "add_commitment", "complete_step", "find_knowledge", "flag_hardship", "forget_note", "get_current_step", "get_household_context", "get_money_map",
+  "add_commitment", "complete_step", "find_knowledge", "flag_hardship", "forget_note", "get_card", "get_current_step", "get_household_context", "get_money_map",
   "get_plan", "log_decision", "propose_change", "remember", "report_outcome", "request_plan_change", "send_plan_pdf", "skip_step",
 ];
 
-test("the person's AI can do everything WhatsApp can: sixteen tools, each with an object schema and a description it can act on", async () => {
+test("the person's AI can do everything WhatsApp can: seventeen tools, each with an object schema and a description it can act on", async () => {
   const mcp = await import("../api/mcp.ts");
   for (const modern of [false, true]) {
     const res = await mcp.POST(new Request(`https://charles.test/api/mcp?k=${token}`, {

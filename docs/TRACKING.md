@@ -139,6 +139,12 @@ Written at the place they happen (owner journey and dead ends):
 | `statement_asked` | behaviour | Someone asked whether Charles can read a statement; they were told how to send one. `props.stage`. |
 | `statement_month` | behaviour | "Normal month" or "Not a normal month" under a statement read-back. `props.normal`, `doc`, `stage`. |
 | `statement_budget` | behaviour | "Plan my budget": the three-pot month built in code from their own statement lines. `props.doc`, `stage`. |
+| `card_minted` / `card_failed` | behaviour / failure | A card link was made (`api/_lib/cards.ts mintCard`): a snapshot of one picture of the person's money, behind a hashed token, sixty days. `props.kind` (month, debt, map, statement, goal). `card_failed.props.phase`. |
+| `card_sent` | behaviour | The link went out on WhatsApp (`engine/cards.ts`), `props.image` true when the picture went with it. `props.kind`, `stage`, `named`. |
+| `card_image_failed` | failure | The link went out but the picture could not: `props.phase` render, upload or send. Not a loss for the person; a Chromium or upload problem to look at. |
+| `card_unavailable` | unmet_request (no email) | A card was asked for that cannot be built yet (no statement, no map); the person was told what would make it possible. `props.kind`. |
+| `card_asked` | behaviour | "Show me my month", "a picture of what I owe": a card was asked for in words. `props.kind`, `stage`. |
+| `card_opened` | behaviour | A card page was opened (`api/card.ts`). `props.kind`, `props.demo`. On the person's channel for a real card; nothing about who. |
 | `readback_shown` | funnel | The read-back of their business, sent with "That's right / Not quite". `ms` is the owner's wait; `props.correction`, `props.unsure_asked`. |
 | `identity_confirmed` / `identity_corrected` | funnel | The read-back. `identity_corrected.props.market_moved` when the correction put the business in another market (see `market_reasked`). |
 | `market_set` | funnel | Round 24: the market a business is in, decided from where it is (`location.ts`), not its phone number. Once at the location question, and again whenever it moves. `props.from` (the number's guess, or the old market), `to`, `changed`, `via` (location: read from the answer; chosen / typed: picked from the country question; identity_fix; location_check: a diagnostic already past the location question when this shipped), `by` (country: the owner named it; place: a city or area only that market has). How often `changed` is true is how often the number and the business disagree. |

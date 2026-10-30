@@ -38,7 +38,7 @@ The rules Charles keeps, written into the code and tested:
 11. "Forget my money" deletes everything.
 12. Anything the person's own AI suggests changing is confirmed with them on WhatsApp first.
 
-The plan is one document — where your money stands, the strategy, the next 90 days — that prints, downloads, and is readable on the web. Underneath it is a Money Map: eight areas (money in, money out, what you owe, emergency money, credit record, cover, family money, the future), each scored against the same fixed rubric for every household, so a bank or a programme can compare cohorts with one ruler. An area only moves when the person shows it moved.
+The plan is one document — where your money stands, the strategy, the next 90 days — that prints, downloads, and is readable on the web. Ask for a picture and Charles draws one from the person's own figures and sends it into the chat with a link to a small page they can play with on their phone: the month in three pots with a slider for what goes to savings, when a debt is gone at what they pay a week, the Money Map, what the statement says, getting to a number by a date. No model writes a card, so no figure on one is guessed. Underneath it is a Money Map: eight areas (money in, money out, what you owe, emergency money, credit record, cover, family money, the future), each scored against the same fixed rubric for every household, so a bank or a programme can compare cohorts with one ruler. An area only moves when the person shows it moved.
 
 ## Why a bank, and why this bank
 
@@ -64,6 +64,7 @@ No cohort has run. There are no testimonials because there are no users, and the
 ## See it before a pilot
 
 Three pages run on invented data and say so on the page: the WhatsApp-style chat on an example household (`/ask.html?demo=1`), a full 90-day plan document as it prints (`/example-plan.html`), and the cohort console a bank reads (`/sponsor.html?demo=1`), with the do-no-harm check that a real pilot would turn on.
+- The cards, on a phone: `/c?demo=month`, `/c?demo=debt`, `/c?demo=map`, `/c?demo=statement`, `/c?demo=goal`. Every number on them is invented and the page says so.
 
 ## What Charles is, legally
 

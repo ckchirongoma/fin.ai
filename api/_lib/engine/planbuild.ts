@@ -1151,6 +1151,15 @@ export async function runPdfStage(biz: Business): Promise<void> {
           : ""),
     biz.id,
   );
+  // The Money Map as a page they can open and tap (engine/cards.ts): the
+  // link only, since the hand-over has already spent its time on the PDF.
+  try {
+    const { cardLink } = await import("./cards.js");
+    const map = await cardLink({ ...biz, map: pb.map ?? biz.map ?? null }, "map");
+    if (map) await sendText(biz.wa_id, `Your Money Map, as a page you can tap through: ${map.url}`, biz.id);
+  } catch (err) {
+    console.warn("hand-over: map card not sent", err);
+  }
   await sendButtons(
     biz.wa_id,
     "Ready when you are:\n\n" +

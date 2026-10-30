@@ -29,6 +29,36 @@ export function __setRenderRetryMs(ms: number): void {
 /** Whether a PDF can be rendered at all: without these a retry would fail the same way. */
 export const pdfConfigured = (): boolean => Boolean(env.PUBLIC_BASE_URL && env.WORKER_SECRET);
 
+/**
+ * A card as a PNG, through the same function (format: "png"). One try, a
+ * short timeout and a plain null on failure: the person always has the link,
+ * the picture is the nicety.
+ */
+export async function renderPng(html: string, width = 420): Promise<Uint8Array | null> {
+  if (!env.PUBLIC_BASE_URL || !env.WORKER_SECRET) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45_000);
+  try {
+    const res = await fetch(`${env.PUBLIC_BASE_URL.replace(/\/$/, "")}/api/render-pdf?hop=${nextHop()}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.WORKER_SECRET}` },
+      body: JSON.stringify({ html, format: "png", width }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.log(`renderPng ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
+      return null;
+    }
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    return bytes.byteLength ? bytes : null;
+  } catch (err) {
+    console.log("renderPng failed", err);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Renders via the dedicated function. Returns null on any failure. */
 export async function renderPdf(html: string, kind?: PdfKind): Promise<Uint8Array | null> {
   const started = Date.now();

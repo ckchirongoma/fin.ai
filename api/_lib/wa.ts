@@ -458,6 +458,13 @@ export async function sendTemplate(
   return r;
 }
 
+/** A picture in the chat (a card, cards.ts), with its caption carrying the link. */
+export async function sendImage(to: string, mediaId: string, caption: string, businessId?: string | null): Promise<SendResult> {
+  const r = await post({ to, type: "image", image: { id: mediaId, caption: fit(caption, 1024, "image caption") } });
+  await recordMessage(businessId ?? null, "out", `[image] ${caption}`, { kind: "image", waMessageId: r.waMessageId, meta: sendMeta(r) });
+  return r;
+}
+
 export async function sendDocument(
   to: string,
   mediaId: string,

@@ -698,6 +698,7 @@ function readableBody(payload: Record<string, any>): string {
   if (payload.type === "text") return payload.text?.body ?? "";
   if (payload.type === "interactive") return payload.interactive?.body?.text ?? "";
   if (payload.type === "document") return payload.document?.caption ?? "";
+  if (payload.type === "image") return payload.image?.caption ?? "";
   if (payload.type === "template") return `[template ${payload.template?.name}]`;
   return "";
 }

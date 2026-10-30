@@ -131,6 +131,37 @@ export async function htmlToPdf(html: string): Promise<Uint8Array> {
 }
 
 /**
+ * A card (cards.ts) as a picture for WhatsApp: the page at phone width, with
+ * its script allowed to run so the numbers are filled in, then the full
+ * height of it. Webfonts are given a moment to arrive and not waited for.
+ */
+export async function htmlToPng(html: string, width = 420): Promise<Uint8Array> {
+  const executablePath = await sharedExecutablePath();
+  installExtraFonts();
+  const browser = await launchWithRetry(() =>
+    puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { ...VIEWPORT, width, height: 800, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: false },
+      executablePath,
+      headless: true,
+    }),
+  );
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "load", timeout: 20_000 }).catch(async () => page.setContent(html, { waitUntil: "domcontentloaded" }));
+    // Webfonts and the page's own script get a moment, not a wait.
+    await Promise.race([
+      page.evaluate(() => (document as unknown as { fonts?: { ready: Promise<unknown> } }).fonts?.ready).catch(() => undefined),
+      new Promise((r) => setTimeout(r, 3_000)),
+    ]);
+    const png = await page.screenshot({ type: "png", fullPage: true });
+    return new Uint8Array(png);
+  } finally {
+    await closeQuietly(browser as never);
+  }
+}
+
+/**
  * Closing the browser can hang while pages are still open, and a hang inside a
  * serverless function is a full-duration timeout rather than an error. Close
  * every page first.

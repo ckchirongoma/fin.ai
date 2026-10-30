@@ -185,6 +185,21 @@
   .area p{font-size:.84rem;color:var(--ink2);line-height:1.4}
   .area svg{display:block;margin-bottom:12px}
 
+  /* cards */
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:36px}
+  @media (max-width:860px){.cards{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){.cards{grid-template-columns:1fr}}
+  .cardlink{display:block;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease}
+  .cardlink:hover{transform:translateY(-3px);box-shadow:0 24px 40px -28px rgba(20,24,29,.35);color:var(--ink)}
+  .cardlink .shot{display:block;background:var(--mist);border-bottom:1px solid var(--line);aspect-ratio:390/560;overflow:hidden}
+  .cardlink .shot img{display:block;width:100%;height:auto}
+  .cardlink .cap{padding:16px 18px 18px}
+  .cardlink .cap b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:1.35rem;line-height:1.1;margin-bottom:6px}
+  .cardlink .cap p{color:var(--ink2);font-size:.92rem;margin:0}
+  .cardlink .cap span{display:inline-block;margin-top:10px;color:var(--leaf);font-weight:600;font-size:.9rem}
+  .cards-more{margin-top:18px;font-size:.92rem;color:var(--mute);max-width:64ch}
+  .cards-more a{font-weight:500}
+
   /* why */
   .why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:40px}
   @media (max-width:860px){.why{grid-template-columns:1fr}}
@@ -421,6 +436,21 @@
     </div>
   </section>
 
+  <!-- cards -->
+  <section id="cards">
+    <div class="wrap">
+      <p class="kicker">Pictures of your money</p>
+      <h2>Ask, and Charles <em>draws it.</em></h2>
+      <p class="lede" style="margin-top:22px">“Show me my month.” “When is the mashonisa gone?” “My map.” Charles sends a picture into the chat and a link to a small page you can play with on your phone. Every number on it is yours; none is guessed.</p>
+      <div class="cards">
+        <a class="cardlink" href="/c?demo=month"><span class="shot"><img src="/img/card-month.png" alt="A phone page: Lerato's month in three pots, with a slider for what could be put away on payday" loading="lazy" width="585" height="1140"></span><span class="cap"><b>Your month in three pots</b><p>From a statement you send. Slide what goes to savings, untick a line, see what 90 days adds up to.</p><span>Play with the demo →</span></span></a>
+        <a class="cardlink" href="/c?demo=debt"><span class="shot"><img src="/img/card-debt.png" alt="A phone page: the mashonisa, when is it gone, with what you owe and what you pay a week editable and a falling line" loading="lazy" width="585" height="1140"></span><span class="cap"><b>When is it gone?</b><p>Change what you pay a week and the week moves. Interest is left blank: Charles never guesses a rate.</p><span>Play with the demo →</span></span></a>
+        <a class="cardlink" href="/c?demo=map"><span class="shot"><img src="/img/card-map.png" alt="A phone page: Lerato's Money Map, eight areas red, amber or green, steps done, the ninety days" loading="lazy" width="585" height="1140"></span><span class="cap"><b>Your Money Map</b><p>Eight areas, red to green, each with what sorted would mean. Steps done, and the day of the ninety you are on.</p><span>Play with the demo →</span></span></a>
+      </div>
+      <p class="cards-more">Also: <a href="/c?demo=statement">what your statement says</a> and <a href="/c?demo=goal">getting to a number by a date</a>. The demos run on Lerato's invented figures and say so. Your own AI can ask for the same pages through the connector.</p>
+    </div>
+  </section>
+
   <!-- why it works -->
   <section id="why">
     <div class="wrap">
@@ -498,6 +528,7 @@
             <li><a href="/ask.html?demo=1">The chat, on an invented household <span>Open →</span></a></li>
             <li><a href="/example-plan.html">A full 90-day plan document <span>Open →</span></a></li>
             <li><a href="/sponsor.html?demo=1">The cohort report a bank would read <span>Open →</span></a></li>
+            <li><a href="/c?demo=month">A card: the month in three pots, on a phone <span>Open →</span></a></li>
           </ul>
           <p class="small" style="margin:14px 0 20px">All three run on made-up data and say so on the page.</p>
           <h3 style="font-size:1.25rem">What a pilot needs</h3>
@@ -558,6 +589,7 @@
       <div>
         <div class="foot-links">
           <a href="#how">How it works</a>
+          <a href="#cards">Pictures</a>
           <a href="#why">Why it works</a>
           <a href="#promises">The promises</a>
           <a href="#bank">For the bank</a>

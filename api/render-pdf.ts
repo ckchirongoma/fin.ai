@@ -8,7 +8,7 @@
 //
 // Internal only: authenticated with WORKER_SECRET, never exposed to people.
 
-import { htmlToPdf } from "./_lib/pdf.js";
+import { htmlToPdf, htmlToPng } from "./_lib/pdf.js";
 import { authorised } from "./worker.js";
 import { noteRequestFailure, tracked } from "./_lib/track.js";
 
@@ -18,15 +18,26 @@ async function handler(req: Request): Promise<Response> {
   if (!authorised(req)) return new Response("Forbidden", { status: 403 });
 
   let html: string;
+  let format: "pdf" | "png" = "pdf";
+  let width = 420;
   try {
-    const body = (await req.json()) as { html?: string };
+    const body = (await req.json()) as { html?: string; format?: string; width?: number };
     html = String(body.html ?? "");
+    if (body.format === "png") format = "png";
+    if (typeof body.width === "number" && body.width >= 320 && body.width <= 800) width = Math.round(body.width);
   } catch {
     return new Response("Bad request", { status: 400 });
   }
   if (!html.trim()) return new Response("No html", { status: 400 });
 
   try {
+    if (format === "png") {
+      const png = await htmlToPng(html, width);
+      return new Response(png as unknown as BodyInit, {
+        status: 200,
+        headers: { "Content-Type": "image/png", "Content-Length": String(png.byteLength) },
+      });
+    }
     const pdf = await htmlToPdf(html);
     return new Response(pdf as unknown as BodyInit, {
       status: 200,

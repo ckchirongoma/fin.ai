@@ -8,7 +8,10 @@ they will live by, and gets a 90-day money plan as one document. WhatsApp then
 pushes them through it one step at a time and comes back to ask whether each
 step worked. Their own AI (ChatGPT, Claude) can connect to the same memory.
 If they want, they send a bank statement and Charles reads their money back
-from the page instead, keeping the totals and never the account number.
+from the page instead, keeping the totals and never the account number. Ask
+for a picture ("show me my month", "when is the mashonisa gone?", "my map")
+and Charles sends one into the chat, with a link to a small page to play with
+on the phone, every number on it their own.
 
 South Africa first, built so the next market (the Philippines, where the same
 bank has 11 million customers) is a data migration, not a rewrite. Built to
