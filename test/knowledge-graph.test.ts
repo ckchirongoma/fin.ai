@@ -132,7 +132,8 @@ test("derive() reads the setup answers, the statement and the plan, each with it
   // The generic "clothing or furniture account" answer gives way to the statement's Edgars line.
   assert.ok(by("owes", "edgars"));
   assert.ok(!edges.some((e) => /clothing or furniture/i.test(e.label)));
-  assert.equal(by("covered_by", "funeral policy")!.label, "Old Mutual funeral cover", "a funeral policy, named as the statement names it");
+  assert.ok(by("covered_by", "old mutual funeral cover"), "the named policy is its own line");
+  assert.ok(!by("covered_by", "funeral policy"), "and the generic setup answer gives way to it");
   assert.ok(by("supports", "children"));
   assert.ok(by("banks_with", "capitec"));
   assert.ok(by("working_towards", "r1 000 by christmas"));

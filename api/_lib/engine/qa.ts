@@ -1081,6 +1081,7 @@ async function composeInner(
       checkReply(reply.message, [cb.toolsSheet, cb.knowledgeCosts].filter(Boolean).join("\n"), contextSummary(biz), {
         businessId: biz.id,
         knownFacts: businessKnownFacts(biz),
+        ...(cb.memorySaid ? { toldBefore: cb.memorySaid } : {}),
         ownerMessage: [said, attachment?.text ?? "", forwarded].join("\n"),
         ownerEarlier: await ownerTurnsBefore(coreData),
         country: biz.country,

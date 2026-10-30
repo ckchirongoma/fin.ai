@@ -64,15 +64,49 @@ The memory model proposes facts; `graphUpdates()` keeps one only when:
 - every figure on it is a figure they typed (an amount they did not type is dropped, the fact kept);
 - "paid off" is only kept when they used a word for paying off, cancelling or stopping;
 - for who they support, it is a role ("my mother"), never a person's name;
-- nothing on it is shaped like an ID, account, card or reference number.
+- nothing on it is shaped like an ID, account, card or reference number;
+- the clause it comes from is not negated ("I never borrowed from a
+  mashonisa"), not supposed ("if I took a Capfin loan", "thinking of joining
+  a stokvel") and not about someone else's money ("my sister owes the
+  mashonisa").
 
 A refused fact is counted (`memory_fact_refused`) and never stored. A tap or
 a forwarded page never teaches the graph.
+
+### One node per thing, two nodes for two things
+
+"The mashonisa", "a loan shark" and "Mashonisa (cash send)" are one node, and
+"SASSA child support grant" is the same node as the setup answer "A SASSA
+grant". But a name that says WHICH one keeps it apart: "Old Mutual funeral
+cover" and "Avbob funeral policy" are two policies, two lines (the double
+cover the plan wants to see), and the setup answer "A funeral policy" gives
+way to them. `keyOf()` and `classOf()` decide this in code.
+
+### Fast, and bounded
+
+- Reading the graph is two database reads, run alongside the other reads an
+  answer already makes; building and rendering it costs well under 5 ms even
+  for a statement with forty payees and thirty learned facts.
+- Writing any number of facts is three round trips (all nodes, the existing
+  edges, all edges), after the reply has gone.
+- The prompt block is capped at 18 lines and 1,800 characters: at most six
+  bills, the rest summed in one line, so a long statement never pushes the
+  library out of the prompt.
+- The library graph is built once per library version and served from memory
+  after that (well under a millisecond).
+
+`test/knowledge-graph-hard.test.ts` holds all of this, including a speed
+budget and six weeks of one person's messages.
 
 ### What it changes in a conversation
 
 - Every answer's prompt carries the lines (`graphSheet()`), and the rule that
   "you told me" is only for lines marked "they said" or "setup answer".
+- The reply checker is given the same "they said" and setup-answer lines
+  (`saidSheet()`), so a true "you told me you send your mother R700" is not
+  cut just because it was said three weeks ago and has scrolled out of the
+  recent conversation. Statement and their-AI lines are never evidence for
+  "you told me".
 - The person's own creditors, grants and cover tip the shortlist toward the
   library rows about them (`graphTerms()`): a tie-break, never a match alone.
 - A changed amount keeps the old one ("was R200 a week until 2 Nov"), so

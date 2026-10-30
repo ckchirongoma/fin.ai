@@ -107,10 +107,44 @@ const ALIASES: [RegExp, string][] = [
 
 const STRIP = /^(?:(?:a|an|the|my|our|her|his|their)\s+)+/i;
 
-export function keyOf(label: string, kind: NodeKind): string {
+/**
+ * The words that only say WHAT KIND of thing it is. "SASSA child support
+ * grant" is all of them, so it is the same node as "a SASSA grant". "Old
+ * Mutual funeral cover" is not ("old mutual" names a provider), so it stays
+ * its own node, and a second policy from another insurer is a second node:
+ * two funeral policies are two lines, never merged into one (and that is
+ * exactly the double cover the plan wants to see).
+ */
+const CLASS_WORDS: Record<string, Set<string>> = {
+  mashonisa: new Set(["mashonisa", "machonisa", "loan", "shark", "sharks", "machine", "cash", "send", "informal", "lender"]),
+  "sassa grant": new Set(["sassa", "child", "children", "support", "grant", "grants", "old", "age", "srd", "social", "pension", "payment", "r370"]),
+  "burial society": new Set(["burial", "society"]),
+  "funeral policy": new Set(["funeral", "policy", "cover", "plan", "insurance", "premium"]),
+  "medical aid": new Set(["medical", "aid"]),
+  stokvel: new Set(["stokvel", "savings", "club", "group", "society", "contribution"]),
+  children: new Set(["children", "kids", "child", "son", "sons", "daughter", "daughters", "two", "three", "four", "five", "school"]),
+  parents: new Set(["mother", "mom", "mum", "mama", "father", "dad", "parents", "parent", "gogo", "granny", "elders", "elder", "or"]),
+  partner: new Set(["partner", "husband", "wife", "boyfriend", "girlfriend"]),
+};
+const FILLER = new Set(["a", "an", "the", "my", "our", "her", "his", "their", "and", "of", "for", "to", "from", "at", "on", "in", "account", "acc", "payment", "payments", "debit", "order", "monthly", "weekly"]);
+
+const words = (label: string): string[] =>
+  label.toLowerCase().replace(/\(.*?\)/g, " ").replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).filter(Boolean);
+
+/** What kind of thing it is, when it is one of the kinds Charles knows by many names. */
+export function classOf(label: string): string | null {
   for (const [re, key] of ALIASES) if (re.test(label)) return key;
-  const k = label.toLowerCase().replace(STRIP, "").replace(/\(.*?\)/g, " ").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+(?:account|acc|store\s+card)$/, "");
-  return k || kind;
+  return null;
+}
+
+export function keyOf(label: string, kind: NodeKind): string {
+  const cls = classOf(label);
+  if (cls) {
+    const extra = words(label).filter((w) => !FILLER.has(w) && !CLASS_WORDS[cls]!.has(w) && !/^\d+$/.test(w));
+    if (!extra.length) return cls;
+  }
+  const k = words(label).filter((w, i, all) => !(i === 0 && FILLER.has(w)) && !(i === all.length - 1 && (w === "account" || w === "acc"))).join(" ").replace(/^(?:(?:a|an|the|my|our)\s+)+/, "").trim();
+  return k.slice(0, 60) || kind;
 }
 
 /** A generic setup-answer node ("A clothing or furniture account") a statement line names more exactly. */
@@ -205,6 +239,13 @@ export function derive(biz: Pick<Business, "answers" | "identity" | "statement" 
 const CLOSING = /\b(?:paid\s+(?:it\s+|them\s+|that\s+)?(?:all\s+)?(?:off|back|up)|finished\s+paying|settled|cleared|cancel+ed|closed|stopped(?:\s+paying)?|no\s+longer|don'?t\s+owe|left\s+the)\b/i;
 const IDENTIFIER = /\b(?:\d[\s-]?){6,}\b|\b(?:pin|otp|password|cvv|id\s+number|account\s+number|card\s+number)\b/i;
 /** A capitalised word that is not a place, brand or role at the start of a dependant label is probably a person's name. */
+/** "I never borrowed from a mashonisa", "I don't have a funeral policy". */
+const NEGATED = /\b(?:never|not|no|don'?t|do\s+not|didn'?t|did\s+not|haven'?t|have\s+not|hasn'?t|isn'?t|wasn'?t|nothing|none|without)\b/i;
+/** "If I took a loan from Capfin", "I'm thinking of joining a stokvel", "should I". */
+const HYPOTHETICAL = /\b(?:if|maybe|might|thinking\s+(?:of|about)|considering|planning\s+to|want(?:s|ed)?\s+to|would|could|should|wish|hope\s+to|going\s+to\s+(?:try|ask|apply))\b/i;
+/** "My sister owes the mashonisa", "my brother pays Edgars": someone else's money, not theirs. */
+const SOMEONE_ELSE = /\b(?:my|her|his|our)\s+(?:sister|brother|mother|mom|mum|father|dad|friend|cousin|aunt|uncle|neighbou?r|husband|wife|partner|boyfriend|girlfriend|son|daughter|colleague)\s+(?:owes|borrowed|pays|took|has|is\s+paying|gets|earns)\b|\b(?:she|he|they)\s+(?:owes?|borrowed|pays?|took)\b/i;
+
 const ROLE_ONLY = /^(?:my\s+)?(?:mother|mom|mum|mama|father|dad|parents?|gogo|granny|grandmother|grandfather|sister|brother|sisters|brothers|son|daughter|children|kids|child|partner|husband|wife|aunt|uncle|cousin|nephew|niece|family|extended\s+family|in-?laws?)\b/i;
 
 /**
@@ -220,8 +261,8 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
   const theirFigures = figuresFrom(said);
   const stem = (w: string) => w.toLowerCase().replace(/[^a-z]/g, "").slice(0, 5);
   const LITTLE = new Set(["the", "my", "our", "and", "from", "for", "now", "with", "his", "her", "their", "was", "this", "that", "who", "all", "new", "old"]);
-  const words = (t: string) => (t.toLowerCase().match(/[a-z']{3,}/g) ?? []).filter((w) => !LITTLE.has(w)).map(stem);
-  const theirWords = new Set(words(said));
+  const ownWords = (t: string) => (t.toLowerCase().match(/[a-z']{3,}/g) ?? []).filter((w) => !LITTLE.has(w)).map(stem);
+  const theirWords = new Set(ownWords(said));
   for (const item of Array.isArray(raw) ? raw.slice(0, 8) : []) {
     if (!item || typeof item !== "object") continue;
     const r = item as Record<string, unknown>;
@@ -240,7 +281,25 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
       refused.push({ label, reason: "not_a_role" });
       continue;
     }
-    const labelWords = words(label);
+    const labelWords = ownWords(label);
+    // The clause the fact sits in, by the label's own words: what is negated,
+    // supposed or about someone else is not a fact about their money.
+    const clause = clauseFor(said, labelWords, stem);
+    if (clause) {
+      const closing = r.closed === true && CLOSING.test(clause);
+      if (!closing && NEGATED.test(clause) && !CLOSING.test(clause)) {
+        refused.push({ label, reason: "negated" });
+        continue;
+      }
+      if (HYPOTHETICAL.test(clause) && !closing) {
+        refused.push({ label, reason: "hypothetical" });
+        continue;
+      }
+      if (rel !== "supports" && SOMEONE_ELSE.test(clause)) {
+        refused.push({ label, reason: "someone_else" });
+        continue;
+      }
+    }
     if (!labelWords.some((w) => theirWords.has(w)) && !(keyOf(label, REL_KIND[rel]) !== REL_KIND[rel] && ALIASES.some(([re]) => re.test(label) && re.test(said)))) {
       refused.push({ label, reason: "not_said" });
       continue;
@@ -257,6 +316,16 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
     kept.push({ rel, label, amount, per: amount !== null ? per : null, balance, day, note, closed, source, on: today });
   }
   return { kept, refused };
+}
+
+/** The sentence or clause of what they said that carries the label's words; null if none does. */
+function clauseFor(said: string, labelWords: string[], stem: (w: string) => string): string | null {
+  const clauses = said.split(/(?<=[.!?;])\s+|\n+|,\s*(?=(?:but|and|so|because)\b)/i).map((c) => c.trim()).filter(Boolean);
+  const hit = clauses.find((c) => {
+    const cw = new Set((c.toLowerCase().match(/[a-z']{3,}/g) ?? []).map(stem));
+    return labelWords.some((w) => cw.has(w));
+  });
+  return hit ?? null;
 }
 
 // ── Storage ──────────────────────────────────────────────────────
@@ -284,32 +353,43 @@ interface EdgeRow {
 /** Writes facts learned from conversation or the connector. Never throws. Returns how many changed something. */
 export async function recordFacts(businessId: string, facts: Fact[]): Promise<number> {
   let changed = 0;
+  if (!facts.length) return 0;
   try {
-    for (const f of facts) {
+    // Three round trips however many facts: every node at once, every edge
+    // that already exists for them at once, every edge written at once. The
+    // memory step runs after the reply has gone, but a slow write still holds
+    // the person's queue, and the next message waits on it.
+    const now = new Date().toISOString();
+    const nodeRows = [...new Map(facts.map((f) => {
       const kind = REL_KIND[f.rel];
       const key = keyOf(f.label, kind);
-      const { data: nodeData, error: nodeErr } = await db()
-        .from("kg_nodes")
-        .upsert({ business_id: businessId, kind, key, label: f.label, updated_at: new Date().toISOString() }, { onConflict: "business_id,kind,key" })
-        .select("id");
-      if (nodeErr) throw nodeErr;
-      const node = (Array.isArray(nodeData) ? nodeData[0] : nodeData) as { id: string } | undefined;
-      if (!node?.id) continue;
-      const { data: existingData } = await db().from("kg_edges").select("*").eq("business_id", businessId).eq("dst_id", node.id).eq("rel", f.rel).maybeSingle();
-      const was = existingData as EdgeRow | null;
+      return [`${kind}|${key}`, { business_id: businessId, kind, key, label: f.label.slice(0, 60), updated_at: now }];
+    })).values()];
+    const { data: nodeData, error: nodeErr } = await db().from("kg_nodes").upsert(nodeRows, { onConflict: "business_id,kind,key" }).select("id, kind, key");
+    if (nodeErr) throw nodeErr;
+    const nodes = ((nodeData as { id: string; kind: NodeKind; key: string }[]) ?? []);
+    const nodeId = (f: Fact) => nodes.find((n) => n.kind === REL_KIND[f.rel] && n.key === keyOf(f.label, REL_KIND[f.rel]))?.id;
+    const ids = [...new Set(facts.map(nodeId).filter((x): x is string => Boolean(x)))];
+    const { data: existingData } = ids.length ? await db().from("kg_edges").select("*").eq("business_id", businessId).in("dst_id", ids) : { data: [] };
+    const existing = (existingData as EdgeRow[]) ?? [];
+    const rows: Record<string, unknown>[] = [];
+    for (const f of facts) {
+      const id = nodeId(f);
+      if (!id) continue;
+      const was = (rows.find((r) => r.dst_id === id && r.rel === f.rel) as unknown as EdgeRow | undefined) ?? existing.find((e) => e.dst_id === id && e.rel === f.rel) ?? null;
       const moved = was && ((f.amount ?? null) !== null && f.amount !== was.amount || (f.balance ?? null) !== null && f.balance !== was.balance);
       const history = [...(was?.history ?? [])];
       if (was && moved) history.push({ amount: was.amount, per: was.per, balance: was.balance, on: String(was.last_seen).slice(0, 10), source: was.source });
       const row = {
         business_id: businessId,
-        dst_id: node.id,
+        dst_id: id,
         rel: f.rel,
         amount: f.amount ?? was?.amount ?? null,
         per: f.amount != null ? (f.per ?? null) : (was?.per ?? null),
         balance: f.balance ?? was?.balance ?? null,
         day: f.day ?? was?.day ?? null,
         note: f.note ?? was?.note ?? null,
-        status: f.closed ? "closed" : was?.status === "closed" && !f.amount ? "closed" : "active",
+        status: f.closed ? "closed" : was?.status === "closed" && f.amount == null && f.balance == null ? "closed" : "active",
         source: f.source,
         sources: [...new Set([...(was?.sources ?? []), f.source])],
         history: history.slice(-6),
@@ -317,9 +397,14 @@ export async function recordFacts(businessId: string, facts: Fact[]): Promise<nu
         last_seen: new Date().toISOString(),
         closed_at: f.closed ? new Date().toISOString() : (was?.closed_at ?? null),
       };
-      const { error } = await db().from("kg_edges").upsert(row, { onConflict: "business_id,dst_id,rel" });
-      if (error) throw error;
+      const at = rows.findIndex((r) => r.dst_id === id && r.rel === f.rel);
+      if (at >= 0) rows[at] = row;
+      else rows.push(row);
       if (!was || moved || Boolean(f.closed) !== (was.status === "closed")) changed++;
+    }
+    if (rows.length) {
+      const { error } = await db().from("kg_edges").upsert(rows, { onConflict: "business_id,dst_id,rel" });
+      if (error) throw error;
     }
     if (changed) track("memory_fact_recorded", { category: "behaviour", props: { facts: facts.length, changed, sources: [...new Set(facts.map((f) => f.source))] } });
   } catch (err) {
@@ -389,9 +474,15 @@ export function merge(derived: Fact[], stored: Edge[]): Edge[] {
   // A generic setup answer the statement names exactly: the statement's line stands for it.
   const edges = [...out.values()];
   return edges.filter((e) => {
-    if (e.source !== "answer" || e.rel !== "owes") return true;
+    if (!e.sources.every((s) => s === "answer")) return true;
+    // A setup answer's class node ("A funeral policy") once a named one of the
+    // same class exists ("Old Mutual funeral cover"), from anywhere.
+    const cls = classOf(e.label);
+    if (cls && e.key === cls && edges.some((o) => o !== e && o.rel === e.rel && o.key !== e.key && classOf(o.label) === cls)) return false;
+    // A setup answer's broad category ("A clothing or furniture account") once
+    // the statement or the person names one ("Edgars account").
     const generic = Object.entries(GENERIC).find(([g]) => e.label.toLowerCase().includes(g));
-    return !generic || !edges.some((o) => o !== e && o.rel === "owes" && o.source === "statement" && generic[1].test(o.label));
+    return !generic || !edges.some((o) => o !== e && o.rel === e.rel && !o.sources.every((s) => s === "answer") && generic[1].test(o.label));
   });
 }
 
@@ -435,10 +526,46 @@ export function edgeLine(e: Edge): string {
   return `${head}${bits.length ? `: ${bits.join(", ")}` : ""} (${where}${e.source === "said" || e.source === "connector" || e.closed ? `, ${e.on}` : ""})`;
 }
 
-/** The lines every answer's prompt carries, most useful first, capped. */
-export function graphSheet(g: HouseholdGraph, max = 18): string {
-  const sorted = [...g.edges].sort((a, b) => Number(a.closed) - Number(b.closed) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? 0) - (a.amount ?? 0));
-  return sorted.slice(0, max).map((e) => `- ${edgeLine(e)}`).join("\n");
+/** Most useful first: what is still true before history, debts before bills, big before small. */
+function ranked(g: HouseholdGraph): Edge[] {
+  return [...g.edges].sort((a, b) => Number(a.closed) - Number(b.closed) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? b.balance ?? 0) - (a.amount ?? a.balance ?? 0) || a.key.localeCompare(b.key));
+}
+
+/**
+ * The lines every answer's prompt carries. Capped twice, by lines and by
+ * characters, so a statement with forty debit orders cannot crowd the
+ * library out of the prompt: at most six bills, the rest summed in one line.
+ */
+export function graphSheet(g: HouseholdGraph, max = 18, maxChars = 1800): string {
+  const all = ranked(g);
+  const bills = all.filter((e) => e.rel === "pays" && !e.closed);
+  const keep = all.filter((e) => e.rel !== "pays" || e.closed || bills.indexOf(e) < 6);
+  const lines = keep.slice(0, max).map((e) => `- ${edgeLine(e)}`);
+  const rest = bills.slice(6);
+  if (rest.length) lines.push(`- Pays ${rest.length} other bill${rest.length === 1 ? "" : "s"} too${rest.some((e) => e.amount != null) ? `, about ${rand(rest.reduce((a, e) => a + (e.amount ?? 0), 0))} a month together` : ""} (their statement)`);
+  const out: string[] = [];
+  let used = 0;
+  for (const l of lines) {
+    if (used + l.length + 1 > maxChars) break;
+    out.push(l);
+    used += l.length + 1;
+  }
+  return out.join("\n");
+}
+
+/**
+ * What the person themselves told Charles, at any time: the lines a "you
+ * told me" may stand on. The reply checker sees these, so a fact said three
+ * weeks ago is not cut as a false attribution just because it has scrolled
+ * out of the recent conversation. Statement, plan and their-AI lines are
+ * not here: "you told me" is never true of those.
+ */
+export function saidSheet(g: HouseholdGraph, maxChars = 1200): string {
+  const lines = ranked(g)
+    .filter((e) => e.sources.includes("said") || e.sources.includes("answer"))
+    .map((e) => `- ${edgeLine({ ...e, sources: e.sources.filter((s) => s === "said" || s === "answer") })}`);
+  let used = 0;
+  return lines.filter((l) => (used += l.length + 1) <= maxChars).join("\n");
 }
 
 /** Words for the library rows about this person's own money: a tie-break, never a match on its own. */

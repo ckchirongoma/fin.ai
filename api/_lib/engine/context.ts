@@ -6,7 +6,7 @@
 // library.
 
 import { core } from "../prompts.js";
-import { graphSheet, graphTerms, householdGraph } from "../graph.js";
+import { graphSheet, graphTerms, householdGraph, saidSheet } from "../graph.js";
 import { libraryGraph, neighboursFor } from "../libgraph.js";
 import { costLine, shortlist, kSheet, tSheet } from "../retrieval.js";
 import { optionAnswersText } from "../safety.js";
@@ -35,6 +35,8 @@ export interface CoreBlock {
   nextOpen: PlanStepRow | null;
   /** The library had something real on this: a keyword match, or a match by meaning. False means "I don't have verified information on this yet". */
   grounded: boolean;
+  /** What the person told Charles at any time, from the household graph (graph.ts saidSheet): evidence for a "you told me". */
+  memorySaid?: string;
 }
 
 /** A compact view of the plan: enough to answer "where am I?" without the prose. */
@@ -200,6 +202,7 @@ export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Pr
       ownerNotes: notesSheet(notes ?? []),
       memoryGraph: graphSheet(graph),
     }),
+    memorySaid: saidSheet(graph),
     toolsSheet,
     knowledgeCosts,
     priced,
