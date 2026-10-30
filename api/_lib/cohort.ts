@@ -1,4 +1,4 @@
-// Fin — the cohort report, and who may read it.
+// Charles — the cohort report, and who may read it.
 //
 // The report itself (aggregates only, split by baseline tier, with the harm
 // check PRODUCT-DEFINITION 6.1 commits to) used to live inside the endpoint,
@@ -132,7 +132,7 @@ export async function buildReport(sinceDays: number) {
     },
     omitted_on_purpose: [
       "No business ids, phone numbers, names or anything a person wrote. Aggregates only.",
-      "No gender or age split, which PRODUCT-DEFINITION 4.8 asks for: Fin does not collect either, and inferring them would be worse than not reporting them.",
+      "No gender or age split, which PRODUCT-DEFINITION 4.8 asks for: Charles does not collect either, and inferring them would be worse than not reporting them.",
     ],
   };
 }

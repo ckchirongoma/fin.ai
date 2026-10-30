@@ -1,4 +1,4 @@
-// Fin — the queue hands on its leftover work, and waits are stated honestly.
+// Charles — the queue hands on its leftover work, and waits are stated honestly.
 //
 // Founder, 2026-09-24: "it takes forever for a report to come". The plan build
 // is a chain of six jobs; a drain takes at most four, and on a quiet number the
@@ -12,7 +12,7 @@ process.env.SUPABASE_URL = "https://fake.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-service-key";
 process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.WORKER_SECRET = "fake-worker-secret";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 
 import { installFakeNet, makeFakeDb, type FakeDb, type FakeNet } from "./_fakes.ts";
 
@@ -57,7 +57,7 @@ test("a drain that did work and leaves work behind wakes a fresh worker, with th
   const report = await queue.drainQueue({ maxJobs: 1, label: "webhook" });
   assert.equal(report.claimed, 1);
   assert.equal(handOns().length, 1, "handed on once");
-  assert.equal(handOns()[0]!.url, "https://fin.test/api/worker?max=10&async=1&hop=1", "the woken worker knows it is one call deep (chain.ts)");
+  assert.equal(handOns()[0]!.url, "https://charles.test/api/worker?max=10&async=1&hop=1", "the woken worker knows it is one call deep (chain.ts)");
   assert.equal(handOns()[0]!.auth, "Bearer fake-worker-secret");
 });
 
@@ -82,9 +82,9 @@ test("work waiting on a backoff a few seconds out still counts as left behind", 
 
 test("the worker's async mode answers 202 at once", async () => {
   const worker = await import("../api/worker.ts");
-  const res = await worker.POST(new Request("https://fin.test/api/worker?max=10&async=1", { method: "POST", headers: { Authorization: "Bearer fake-worker-secret" } }));
+  const res = await worker.POST(new Request("https://charles.test/api/worker?max=10&async=1", { method: "POST", headers: { Authorization: "Bearer fake-worker-secret" } }));
   assert.equal(res.status, 202);
-  const bad = await worker.POST(new Request("https://fin.test/api/worker?async=1", { method: "POST" }));
+  const bad = await worker.POST(new Request("https://charles.test/api/worker?async=1", { method: "POST" }));
   assert.equal(bad.status, 403, "still fails closed without the secret");
 });
 

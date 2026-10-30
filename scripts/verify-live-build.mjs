@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fin — proof that a real conversation, on a real deployment, actually
+// Charles — proof that a real conversation, on a real deployment, actually
 // finishes: the one thing this repository cannot check on its own (see
 // HANDOFF-DEPLOY.md §5 — "a live Meta number, and a stranger completing the
 // flow on it" are explicitly called out as untickable from inside a repo).
@@ -197,7 +197,7 @@ async function waitForStage(stages, after) {
   return null;
 }
 
-// Fin's twelve questions, answered as a tester would: fixed-option questions
+// Charles's twelve questions, answered as a tester would: fixed-option questions
 // by number (the engine reads digits as picks), the rest in a line. The
 // household is invented; the figures are the tester's own, never the library's.
 const DIAG_ANSWERS_BY_COUNTRY = {

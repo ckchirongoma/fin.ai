@@ -1,4 +1,4 @@
-// Fin — what the person's own AI can see and do.
+// Charles — what the person's own AI can see and do.
 //
 // The point of this is cost as much as capability: deep reasoning runs on the
 // owner's own Claude or ChatGPT subscription, against the same business memory
@@ -13,7 +13,7 @@
 // be rewritten by a chat they had on their laptop, with no record and no
 // consent.
 //
-// Round 27: the person can drive Fin entirely from their own AI. Every
+// Round 27: the person can drive Charles entirely from their own AI. Every
 // tool below writes the same state the WhatsApp side does, through the same
 // functions, so the two doors never disagree about where the person is.
 
@@ -168,7 +168,7 @@ export async function businessForToken(token: string): Promise<Business | null> 
       businessId: row?.business_id ?? null,
       props: { reason },
       fingerprint: `mcp_auth_failed:${reason}`,
-      summary: !row ? "An AI connector used an address Fin does not know" : "A person's AI is still using an address they replaced",
+      summary: !row ? "An AI connector used an address Charles does not know" : "A person's AI is still using an address they replaced",
     });
     return null;
   }
@@ -216,7 +216,7 @@ export const TOOLS: ToolDef[] = [
     name: "get_household_context",
     title: "Household context",
     description:
-      "Everything Fin knows about this one person's money: where it comes from, where they live, their money stage, the goal they chose, the one rule they live by, their 90-day goal, the step they are on (the north star), their progress, what Fin remembers about them, recent decisions, and the house rules for giving them advice. Call this first, before answering anything.",
+      "Everything Charles knows about this one person's money: where it comes from, where they live, their money stage, the goal they chose, the one rule they live by, their 90-day goal, the step they are on (the north star), their progress, what Charles remembers about them, recent decisions, and the house rules for giving them advice. Call this first, before answering anything.",
     inputSchema: obj({}),
   },
   {
@@ -240,7 +240,7 @@ export const TOOLS: ToolDef[] = [
     description:
       "The one step to work on now, in full: what to do, why it matters for this person, when it counts as done, the words already written for them, how to do it, and its tool with the checked cost and set-up steps. Use it whenever they ask what to do next, or have time to work on their money. Set send_to_whatsapp to also send it to their phone.",
     inputSchema: obj({
-      send_to_whatsapp: { type: "boolean", description: "Also send this step to the person on WhatsApp, as Fin's 'Next step' does. Only when they ask for it on their phone." },
+      send_to_whatsapp: { type: "boolean", description: "Also send this step to the person on WhatsApp, as Charles's 'Next step' does. Only when they ask for it on their phone." },
     }),
     _meta: viewToolMeta("Getting the step you're on…", "The step you're on"),
   },
@@ -283,7 +283,7 @@ export const TOOLS: ToolDef[] = [
     name: "request_plan_change",
     title: "Ask to change the plan's steps",
     description:
-      "Pass on a change the person wants to their plan's steps: drop a step that does not apply, swap a step's tool, or move a part earlier. This does NOT change anything: Fin asks the person on WhatsApp, and makes the change only on their yes. Never tell them it has been changed. For a change to a fact about the business (what they sell, their price...), use propose_change instead.",
+      "Pass on a change the person wants to their plan's steps: drop a step that does not apply, swap a step's tool, or move a part earlier. This does NOT change anything: Charles asks the person on WhatsApp, and makes the change only on their yes. Never tell them it has been changed. For a change to a fact about the business (what they sell, their price...), use propose_change instead.",
     inputSchema: obj(
       {
         change: { type: "string", description: "The change, in the person's words, naming the step or part." },
@@ -315,21 +315,21 @@ export const TOOLS: ToolDef[] = [
   {
     name: "forget_note",
     title: "Forget something remembered",
-    description: "Delete one thing Fin remembers about the person, when they ask you to forget it or it is wrong. The ids are in get_household_context, under remembered.",
+    description: "Delete one thing Charles remembers about the person, when they ask you to forget it or it is wrong. The ids are in get_household_context, under remembered.",
     inputSchema: obj({ note_id: { type: "string", description: "The note's id." } }, ["note_id"]),
   },
   {
     name: "flag_hardship",
     title: "Flag real money trouble",
     description:
-      "Call when the person describes real money hardship: they cannot cover food, rent, transport, electricity or school fees, a wage or grant has stopped, debt collectors, a garnishee, a loan shark. Fin checks their words and, if it agrees, pauses the plan on WhatsApp too (stabilising mode: protect cash, nothing paid). Not for a slow week or a worry about growth.",
+      "Call when the person describes real money hardship: they cannot cover food, rent, transport, electricity or school fees, a wage or grant has stopped, debt collectors, a garnishee, a loan shark. Charles checks their words and, if it agrees, pauses the plan on WhatsApp too (stabilising mode: protect cash, nothing paid). Not for a slow week or a worry about growth.",
     inputSchema: obj({ what_they_said: { type: "string", description: "The person's own words about it." } }, ["what_they_said"]),
   },
   {
     name: "find_knowledge",
     title: "Find grounded knowledge and tools",
     description:
-      "Search Fin's verified library of how-to knowledge and named tools for this country. Every cost comes back with its verification date. Use ONLY what this returns for prices, fees, rules and links — never your own knowledge of them.",
+      "Search Charles's verified library of how-to knowledge and named tools for this country. Every cost comes back with its verification date. Use ONLY what this returns for prices, fees, rules and links — never your own knowledge of them.",
     inputSchema: obj(
       {
         query: { type: "string", description: "What the person needs, in their words." },
@@ -359,7 +359,7 @@ export const TOOLS: ToolDef[] = [
     name: "add_commitment",
     title: "Add a commitment",
     description:
-      "Record something the person said they will do. Fin will follow up on WhatsApp and ask whether it happened. Only for things the person committed to, not things you suggested.",
+      "Record something the person said they will do. Charles will follow up on WhatsApp and ask whether it happened. Only for things the person committed to, not things you suggested.",
     inputSchema: obj(
       {
         what: { type: "string", description: "What they will do." },
@@ -376,7 +376,7 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj(
       {
         fact: { type: "string", enum: [...CRITICAL_FACTS], description: "Which fact." },
-        from: { type: "string", description: "What Fin currently believes." },
+        from: { type: "string", description: "What Charles currently believes." },
         to: { type: "string", description: "What it should become." },
         reason: { type: "string", description: "Why, in one line — the person reads this." },
       },
@@ -424,12 +424,12 @@ export async function callTool(biz: Business, name: string, args: Record<string,
         current_step: current ? { id: current.id, title: current.title, part: current.workstream_title, position: positionOf(steps, current), done_when: current.done_when } : null,
         paused_for_hardship: biz.stage === "stabilizing",
         on_whatsapp: WHATSAPP_AT[biz.stage] ?? null,
-        // What Fin remembers about the person as a person (db/0032): from
+        // What Charles remembers about the person as a person (db/0032): from
         // them, here or on WhatsApp. The ids are for forget_note.
         remembered: notes.map((n) => ({ id: n.id, about: n.about, note: n.note, from: n.source === "connector" ? "their AI" : n.source, on: String(n.created_at ?? "").slice(0, 10) })),
         recent_decisions: decisions.map((d) => ({ what: d.what, why: d.why, on: String(d.created_at ?? "").slice(0, 10) })),
         open_commitments: commitments.map((c) => ({ what: c.what, due: c.due })),
-        recent_whatsapp: recent.map((m) => `${m.direction === "in" ? "Person" : "Fin"}: ${m.text}`),
+        recent_whatsapp: recent.map((m) => `${m.direction === "in" ? "Person" : "Charles"}: ${m.text}`),
         read_plan_online: await planLink(),
       };
       return { text: JSON.stringify(structured, null, 2), structured };
@@ -593,11 +593,11 @@ export async function callTool(biz: Business, name: string, args: Record<string,
           severity: "warn",
           props: { tool: "add_commitment", reason: "save_failed" },
           fingerprint: "mcp_tool_failed:add_commitment:save_failed",
-          summary: "A person's AI asked Fin to follow up on a commitment and it could not be saved (the AI was told)",
+          summary: "A person's AI asked Charles to follow up on a commitment and it could not be saved (the AI was told)",
         });
       }
       return row
-        ? { text: `Added. Fin will check in about "${what}" on or after ${due}.` }
+        ? { text: `Added. Charles will check in about "${what}" on or after ${due}.` }
         : { text: "Could not save that commitment.", isError: true, code: "save_failed" };
     }
 
@@ -613,7 +613,7 @@ export async function callTool(biz: Business, name: string, args: Record<string,
       // build takes WhatsApp out of it, and the build never finishes.
       if (BUILDING_STAGES.has(biz.stage)) {
         return {
-          text: `Nothing has changed, and nothing was asked: their plan is being put together on WhatsApp right now (they are ${WHATSAPP_AT[biz.stage] ?? "partway through it"}). They can tell Fin there, in their own words, and it will be used in the plan.`,
+          text: `Nothing has changed, and nothing was asked: their plan is being put together on WhatsApp right now (they are ${WHATSAPP_AT[biz.stage] ?? "partway through it"}). They can tell Charles there, in their own words, and it will be used in the plan.`,
           code: "busy_building",
         };
       }
@@ -706,7 +706,7 @@ export async function callTool(biz: Business, name: string, args: Record<string,
       if (gone === "error") return { text: "Could not forget that just now. Try again in a moment.", isError: true, code: "delete_failed" };
       if (!gone) return { text: "There is no note with that id (it may already be forgotten). get_household_context lists what is remembered.", code: "not_found" };
       track("owner_note_forgotten", { props: { source: "connector" } });
-      return { text: "Forgotten. Fin will not use it again, here or on WhatsApp.", code: "forgotten" };
+      return { text: "Forgotten. Charles will not use it again, here or on WhatsApp.", code: "forgotten" };
     }
 
     case "flag_hardship":
@@ -731,7 +731,7 @@ export async function callTool(biz: Business, name: string, args: Record<string,
 /** What the WhatsApp side is waiting on, in words the person's AI can repeat. */
 /** Every entry reads after "they are …" (round 27: "and they are their plan is being built"). */
 const WHATSAPP_AT: Partial<Record<Stage, string>> = {
-  diag: "answering Fin's setup questions",
+  diag: "answering Charles's setup questions",
   diag_done: "waiting while their plan is built",
   building_rule: "waiting while their plan is built",
   building_plan: "waiting while their plan is built",
@@ -801,7 +801,7 @@ const personName = (biz: Pick<Business, "context" | "identity">): string => biz.
  */
 export function northStar(biz: Pick<Business, "stage">, plan: { plan: Pick<PlanRow, "goal">; steps: PlanStepRow[] } | null): string {
   if (biz.stage === "stabilizing") {
-    return "The plan is paused: the person is in money hardship, so the job right now is keeping food, rent and transport covered: those first, no new borrowing, nothing that costs money, and the free help line for anything a lender or collector is doing. When things steady, they tell Fin on WhatsApp and the plan picks back up.";
+    return "The plan is paused: the person is in money hardship, so the job right now is keeping food, rent and transport covered: those first, no new borrowing, nothing that costs money, and the free help line for anything a lender or collector is doing. When things steady, they tell Charles on WhatsApp and the plan picks back up.";
   }
   if (!plan || !plan.steps.length) {
     return `No plan yet: on WhatsApp they are ${WHATSAPP_AT[biz.stage] ?? "partway through setting up"}. The 90-day plan is built there. Help with what they ask, and point them back to finishing it on WhatsApp.`;
@@ -811,7 +811,7 @@ export function northStar(biz: Pick<Business, "stage">, plan: { plan: Pick<PlanR
   }
   const current = firstOpenStep(plan.steps);
   const goal = plan.plan.goal ? `The 90-day goal: ${plan.plan.goal}. ` : "";
-  if (!current) return `${goal}Every step of this plan is done or skipped. Next: they tell Fin on WhatsApp how the 90 days went, and Fin builds the next plan from where they are now.`;
+  if (!current) return `${goal}Every step of this plan is done or skipped. Next: they tell Charles on WhatsApp how the 90 days went, and Charles builds the next plan from where they are now.`;
   return `${goal}Right now: ${positionOf(plan.steps, current)}, "${current.title}"${current.workstream_title ? ` (${current.workstream_title})` : ""}. Done when: ${current.done_when ?? "it's done"}. Everything else is weighed against getting this done.`;
 }
 
@@ -842,18 +842,18 @@ async function releaseStep(biz: Business, stepId: string): Promise<void> {
 
 /**
  * What the view (appview.ts) shows the OWNER, in their own words, when there
- * is no step to show. The tool's text is for their AI ("they tell Fin");
+ * is no step to show. The tool's text is for their AI ("they tell Charles");
  * the view is read by the person (round 28).
  */
 const VIEW_SAYS = {
   paused: (cc: string) =>
-    `Your plan is paused while money is this tight. Food, rent and transport first; don't borrow to cover the rest; and nothing that costs money. When things steady, tell Fin on WhatsApp and you'll pick the plan back up. Free help with this: ${country(cc).advisor}.`,
+    `Your plan is paused while money is this tight. Food, rent and transport first; don't borrow to cover the rest; and nothing that costs money. When things steady, tell Charles on WhatsApp and you'll pick the plan back up. Free help with this: ${country(cc).advisor}.`,
   noPlan: "Your 90-day plan is put together on WhatsApp. Finish it there, and it will show here.",
-  done: "Every step of this plan is done or skipped. Tell Fin on WhatsApp how the 90 days went, and you'll build the next plan from where you are now.",
+  done: "Every step of this plan is done or skipped. Tell Charles on WhatsApp how the 90 days went, and you'll build the next plan from where you are now.",
 };
 
 const STABILISING_HOLD =
-  "The plan is paused: the person is in money hardship, so no new plan steps for now. Food, rent and transport first, no new borrowing, nothing that costs money. When things steady, they tell Fin on WhatsApp and the plan picks back up.";
+  "The plan is paused: the person is in money hardship, so no new plan steps for now. Food, rent and transport first, no new borrowing, nothing that costs money. When things steady, they tell Charles on WhatsApp and the plan picks back up.";
 
 async function currentStep(biz: Business, toWhatsApp: boolean): Promise<ToolResult> {
   // Rule 9 holds on every door: no growth step while stabilising.
@@ -920,7 +920,7 @@ async function currentStep(biz: Business, toWhatsApp: boolean): Promise<ToolResu
     sent === "sent"
       ? "\n\nSent to their WhatsApp too."
       : sent === "window_closed"
-        ? "\n\nNot sent to WhatsApp: WhatsApp only lets Fin message them within 24 hours of their last message there. If they send Fin any message on WhatsApp, it can be sent."
+        ? "\n\nNot sent to WhatsApp: WhatsApp only lets Charles message them within 24 hours of their last message there. If they send Charles any message on WhatsApp, it can be sent."
         : "";
   return { text: `${JSON.stringify(structured, null, 2)}${note}`, structured, code: sent ?? "shown" };
 }
@@ -970,7 +970,7 @@ async function skipStepFor(biz: Business, stepId: string, reason: string): Promi
   await releaseStep(biz, String(step.id));
   const next = firstOpenStep(steps.map((s) => (s.id === step.id ? { ...s, status: "skipped" as const } : s)));
   return {
-    text: `Skipped: "${step.title}". Fin will bring it back later if it still matters. ${next ? `The next step is "${next.title}".` : "That was the last open step of this plan."}`,
+    text: `Skipped: "${step.title}". Charles will bring it back later if it still matters. ${next ? `The next step is "${next.title}".` : "That was the last open step of this plan."}`,
     structured: { step_id: step.id, next_step: next ? { id: next.id, title: next.title } : null },
     code: "skipped",
   };
@@ -1019,7 +1019,7 @@ async function requestPlanChange(biz: Business, change: string, reason: string):
   if (!withinServiceWindow(biz.last_inbound_at)) {
     trackUnmet("connector_change_refused", { severity: "info", props: { what: "plan_steps", reason: "window_closed" }, fingerprint: "connector_change_refused:window_closed" });
     return {
-      text: "Nothing has changed. Fin can only ask them on WhatsApp within 24 hours of their last message there. Ask them to send Fin any message on WhatsApp (or tap \"Change my plan\" there), then try again.",
+      text: "Nothing has changed. Charles can only ask them on WhatsApp within 24 hours of their last message there. Ask them to send Charles any message on WhatsApp (or tap \"Change my plan\" there), then try again.",
       code: "window_closed",
     };
   }
@@ -1060,7 +1060,7 @@ async function requestPlanChange(biz: Business, change: string, reason: string):
     return { text: "Nothing has changed, and the question did not reach them on WhatsApp just now. Ask them to tap \"Change my plan\" on WhatsApp instead.", code: "ask_not_delivered" };
   }
   return {
-    text: "Nothing has changed yet. Fin has asked them on WhatsApp whether to make this change; it happens only if they say yes there. Tell them to look on WhatsApp.",
+    text: "Nothing has changed yet. Charles has asked them on WhatsApp whether to make this change; it happens only if they say yes there. Tell them to look on WhatsApp.",
     code: "asked",
   };
 }
@@ -1072,7 +1072,7 @@ async function sendPlanPdfFor(biz: Business): Promise<ToolResult> {
   if (!withinServiceWindow(biz.last_inbound_at)) {
     track("connector_pdf_requested", { props: { queued: false, reason: "window_closed" } });
     return {
-      text: `Not sent: WhatsApp only lets Fin send them a document within 24 hours of their last message there. If they send Fin any message on WhatsApp, ask again.${online ? ` The same plan is online at ${online}.` : ""}`,
+      text: `Not sent: WhatsApp only lets Charles send them a document within 24 hours of their last message there. If they send Charles any message on WhatsApp, ask again.${online ? ` The same plan is online at ${online}.` : ""}`,
       code: "window_closed",
     };
   }
@@ -1088,14 +1088,14 @@ async function remember(biz: Business, raw: string, about: string): Promise<Tool
   if (!note) return { text: "remember needs a 'note'.", isError: true, code: "missing_note" };
   if (SECRET_DETAIL.test(note)) {
     trackUnmet("owner_note_refused", { severity: "info", props: { reason: "secret_detail" }, fingerprint: "owner_note_refused:secret_detail" });
-    return { text: "Not kept: it looks like an ID, account, card or phone number, or a password or PIN. Fin never stores those. Keep the note to what it means for their money.", isError: true, code: "secret_detail" };
+    return { text: "Not kept: it looks like an ID, account, card or phone number, or a password or PIN. Charles never stores those. Keep the note to what it means for their money.", isError: true, code: "secret_detail" };
   }
   if (note.length > NOTE_MAX) return { text: `Keep it to one line (at most ${NOTE_MAX} characters).`, isError: true, code: "too_long" };
   const kept = await addOwnerNote(biz.id, about, note, "connector");
   if (!kept) return { text: "Could not save that just now.", isError: true, code: "save_failed" };
   if (!kept.fresh) return { text: "Already remembered.", structured: { id: kept.note.id }, code: "already_kept" };
   track("owner_note_kept", { props: { about: kept.note.about, source: "connector", chars: kept.note.note.length } });
-  return { text: "Remembered. Fin will use it here and on WhatsApp.", structured: { id: kept.note.id, about: kept.note.about }, code: "kept" };
+  return { text: "Remembered. Charles will use it here and on WhatsApp.", structured: { id: kept.note.id, about: kept.note.about }, code: "kept" };
 }
 
 /**
@@ -1122,7 +1122,7 @@ async function flagHardship(biz: Business, said: string): Promise<ToolResult> {
       detail: `their AI flagged hardship; no money or crisis language and the second opinion ${second === false ? "disagreed" : "could not decide"}, so the plan was kept: ${said.slice(0, 200)}`,
     });
     return {
-      text: `Fin's check did not read this as the person being in money hardship, so the plan stays as it is. Still answer carefully: nothing paid, no new debt. If it is serious (food, rent, transport or debts they cannot cover), they can tell Fin on WhatsApp in their own words.`,
+      text: `Charles's check did not read this as the person being in money hardship, so the plan stays as it is. Still answer carefully: nothing paid, no new debt. If it is serious (food, rent, transport or debts they cannot cover), they can tell Charles on WhatsApp in their own words.`,
       structured: { paused_for_hardship: false },
       code: "not_confirmed",
     };
@@ -1149,7 +1149,7 @@ async function flagHardship(biz: Business, said: string): Promise<ToolResult> {
     );
   }
   return {
-    text: `The growth plan is paused, here and on WhatsApp. ${guidance} When things steady, they tell Fin on WhatsApp and the plan picks back up.`,
+    text: `The growth plan is paused, here and on WhatsApp. ${guidance} When things steady, they tell Charles on WhatsApp and the plan picks back up.`,
     structured: { paused_for_hardship: true, advisor: c.advisor },
     code: "paused",
   };

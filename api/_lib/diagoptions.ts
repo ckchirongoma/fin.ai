@@ -1,4 +1,4 @@
-// Fin — the fixed options of the diagnostic questions that the plan needs
+// Charles — the fixed options of the diagnostic questions that the plan needs
 // to recognise again later, on their own.
 //
 // The diagnostic (diagnostic.ts) asks them; the plan's hand-over

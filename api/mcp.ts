@@ -1,4 +1,4 @@
-// Fin — the connector a person points their own Claude or ChatGPT at.
+// Charles — the connector a person points their own Claude or ChatGPT at.
 //
 // Written by hand rather than with the MCP SDK, for a concrete reason: the
 // published TypeScript SDK tops out at protocol 2025-11-25 and rejects the
@@ -32,7 +32,7 @@ import { errorText, normaliseForFingerprint, setTrackContext, track, trackFailur
 import { isInternalNumber } from "./_lib/env.js";
 import { readUiResource, UI_RESOURCES } from "./_lib/appview.js";
 
-const SERVER_INFO = { name: "fin", title: "Fin — your money", version: "1.0.0" };
+const SERVER_INFO = { name: "charles", title: "Charles — your money", version: "1.0.0" };
 const MODERN = "2026-07-28";
 const SUPPORTED = [MODERN, "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 const META_VERSION = "io.modelcontextprotocol/protocolVersion";
@@ -128,7 +128,7 @@ const SPONSOR_TOOL = {
   name: "get_cohort_report",
   title: "Cohort report",
   description:
-    "Aggregate results for the Fin cohort you sponsor: how many people onboarded, finished a plan and stayed active, step and outcome counts, and improvement reported by starting tier (the do-no-harm check). Aggregates only — no names, numbers or anything a person wrote — and groups of fewer than five businesses are withheld.",
+    "Aggregate results for the Charles cohort you sponsor: how many people onboarded, finished a plan and stayed active, step and outcome counts, and improvement reported by starting tier (the do-no-harm check). Aggregates only — no names, numbers or anything a person wrote — and groups of fewer than five businesses are withheld.",
   inputSchema: {
     type: "object",
     properties: { days: { type: "number", description: "Look-back window in days, 1 to 365. Default 30." } },
@@ -137,7 +137,7 @@ const SPONSOR_TOOL = {
 };
 
 const SPONSOR_INSTRUCTIONS =
-  "You are connected to a sponsor's read-only view of a Fin cohort. Use get_cohort_report. Report the numbers as given and state their caveats plainly: if a figure is marked suppressed or says there is not enough data, say so rather than estimating. The harm_monitoring line is the most important sentence in the report; never omit it.";
+  "You are connected to a sponsor's read-only view of a Charles cohort. Use get_cohort_report. Report the numbers as given and state their caveats plainly: if a figure is marked suppressed or says there is not enough data, say so rather than estimating. The harm_monitoring line is the most important sentence in the report; never omit it.";
 
 interface RpcCtx {
   biz: Business | null;
@@ -333,8 +333,8 @@ async function handler(req: Request): Promise<Response> {
   if (!token) {
     // Usually a person who pasted the connector address without its private part.
     track("mcp_auth_failed", { category: "security", severity: "warn", alert: "digest", props: { reason: "no_token" }, fingerprint: "mcp_auth_failed:no_token", summary: "An AI connector called with no address token" });
-    return json({ error: "unauthorized", message: "This connector needs your personal address. Send \"connect\" to Fin on WhatsApp to get one." }, 401, {
-      "WWW-Authenticate": 'Bearer realm="fin"',
+    return json({ error: "unauthorized", message: "This connector needs your personal address. Send \"connect\" to Charles on WhatsApp to get one." }, 401, {
+      "WWW-Authenticate": 'Bearer realm="charles"',
     });
   }
 
@@ -348,7 +348,7 @@ async function handler(req: Request): Promise<Response> {
       if (!sponsor) {
         track("mcp_auth_failed", { category: "security", severity: "warn", alert: "digest", props: { reason: "sponsor_invalid" }, fingerprint: "mcp_auth_failed:sponsor_invalid", summary: "A sponsor key that is not valid (any more) was used" });
         return json({ error: "unauthorized", message: "That sponsor key is not valid any more. Ask the operator for a fresh one." }, 401, {
-          "WWW-Authenticate": 'Bearer realm="fin", error="invalid_token"',
+          "WWW-Authenticate": 'Bearer realm="charles", error="invalid_token"',
         });
       }
     } else {
@@ -359,8 +359,8 @@ async function handler(req: Request): Promise<Response> {
       // which knows why.
       if (biz) setTrackContext({ businessId: biz.id, stage: biz.stage, country: biz.country, internal: isInternalNumber(biz.wa_id) });
       if (!biz) {
-        return json({ error: "unauthorized", message: "That address is not valid any more. Send \"connect\" to Fin on WhatsApp for a fresh one." }, 401, {
-          "WWW-Authenticate": 'Bearer realm="fin", error="invalid_token"',
+        return json({ error: "unauthorized", message: "That address is not valid any more. Send \"connect\" to Charles on WhatsApp for a fresh one." }, 401, {
+          "WWW-Authenticate": 'Bearer realm="charles", error="invalid_token"',
         });
       }
     }

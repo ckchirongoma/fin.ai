@@ -1,4 +1,4 @@
-// Fin — the step-push loop's WhatsApp-facing wording and buttons.
+// Charles — the step-push loop's WhatsApp-facing wording and buttons.
 //
 // Covers, each with a real reproduction of the bug it fixes:
 //   PRIORITY 3   — "See my plan" renders real *bold* headers and a symbol
@@ -8,7 +8,7 @@
 //                  option ("Get this as a PDF") via a list, never by quietly
 //                  dropping one of the three reply buttons that were there.
 //   PRIORITY 5.1 — an artifact still carrying an unfilled "[...]" placeholder
-//                  is never sent verbatim; what Fin actually knows (the
+//                  is never sent verbatim; what Charles actually knows (the
 //                  business's own name) is filled in first.
 //   PRIORITY 5.2 — a stale "Next" tap from a walkthrough message, sent after
 //                  "Later", resumes the walkthrough instead of firing a full
@@ -140,7 +140,7 @@ test("an artifact with an unresolvable placeholder reaches the phone as the mess
   assert.doesNotMatch(bodies, /write that part yourself/i);
 });
 
-test("a placeholder Fin actually knows — the business's own name — is filled in, not withheld", async () => {
+test("a placeholder Charles actually knows — the business's own name — is filled in, not withheld", async () => {
   const { biz } = await bizWithStep("27809950002", { artifact: "Thanks for choosing [Your Name]! Tell your friends." });
   await steps.pushNextStep(biz);
 

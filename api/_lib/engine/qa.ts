@@ -1,11 +1,11 @@
-// Fin — answering whatever the person sends once they have a plan.
+// Charles — answering whatever the person sends once they have a plan.
 //
 // Three paths, chosen by a cheap router: a question about their money, a
 // forwarded link, letter or message ("is this legit? what does this mean for
 // me?"), or something they are telling us that changes what we know. All
 // three end the same way: one recommendation, grounded only in the
 // shortlist, checked before it is sent, and then the memory is updated from
-// what the PERSON said — never from what Fin suggested.
+// what the PERSON said — never from what Charles suggested.
 
 import { askJSON, describeModelCall, traceModelCalls, type ModelCallTrace } from "../models.js";
 import { answerPrompt, contextUpdatePrompt, forwardPrompt, routerPrompt } from "../prompts.js";
@@ -241,7 +241,7 @@ export async function fetchPageText(url: string, seen: PageSeen = {}): Promise<{
       res = await fetch(current, {
         signal: controller.signal,
         redirect: "manual",
-        headers: { "User-Agent": "FinBot/1.0 (+personal money assistant)", Accept: "text/html,text/plain,*/*" },
+        headers: { "User-Agent": "CharlesBot/1.0 (+personal money assistant)", Accept: "text/html,text/plain,*/*" },
       });
       if (res.status >= 300 && res.status < 400) {
         const location = res.headers.get("location");
@@ -308,7 +308,7 @@ function hostOf(u: string): string | null {
  * map and to keep retrieval keyword-only; composeAnswer uses it (through
  * isPlainProgressQuestion, below) to skip the router call.
  */
-export const PROGRESS = /\b(how am i doing|how'?s it going|my progress|how far (am i|have i)|where do i stand|am i on track|my map|how is my money( doing)?)\b/i;
+export const PROGRESS = /\b(how am i doing|how'?s it going|my progress|progress report|my report|send (me )?my report|how far (am i|have i)|where do i stand|where am i( now)?|am i on track|my map|how is my money( doing)?)\b/i;
 
 /**
  * Anything that could be strain. Deliberately broad: a false hit only costs
@@ -321,14 +321,14 @@ const DISTRESS_CUE =
 
 /** Words that may sit around a progress phrase without changing what is asked. */
 const PROGRESS_FILLER = new Set([
-  "hi", "hey", "hello", "fin", "so", "far", "now", "today", "lately", "overall", "generally", "honestly", "really",
+  "hi", "hey", "hello", "charles", "so", "far", "now", "today", "lately", "overall", "generally", "honestly", "really",
   "then", "ok", "okay", "please", "and", "with", "my", "the", "plan", "this", "week", "month", "on", "all", "in", "general",
   "right", "at", "moment", "yet", "tell", "me", "quick", "question", "just", "checking", "wondering", "a", "doing",
 ]);
 
 /**
  * True only for a short message that is nothing but a progress question:
- * "How am I doing?", "Hey Fin, am I on track so far?". Then the intent is
+ * "How am I doing?", "Hey Charles, am I on track so far?". Then the intent is
  * known without a model call. Anything more — a distress cue, an emoji, a
  * second clause, a link — returns false, and the router runs as before.
  * "how am I doing, I can't pay rent" must reach the router: it is the router
@@ -406,7 +406,7 @@ export function timingLine(t: AnswerTiming, extra: Record<string, number> = {}):
 // ── The main answer path ─────────────────────────────────────────
 
 /**
- * What Fin would say to this message — routed, grounded in the library,
+ * What Charles would say to this message — routed, grounded in the library,
  * checked by the guardrails — WITHOUT sending it anywhere. One product, one
  * Business Context: WhatsApp (answer(), below) and the web (api/ask.ts) both
  * call this, so a question gets the same answer, with the same guardrails,
@@ -451,7 +451,7 @@ export const NOTHING_WRITTEN = "I didn't get the words written that time. Send y
 /** "Here it is." / "Here it is, but…" at the start of a reply with no words to send. */
 // Not before a colon: "Here's your message: Hi! …" introduces the words.
 const HERE_IT_IS_LEAD = new RegExp(`^\\s*${LEAD}\\s*(?:[.!]\\s+|,\\s*but\\s+)`, "i");
-/** The person asked Fin to write something: a message, a dispute, a complaint, what to say. */
+/** The person asked Charles to write something: a message, a dispute, a complaint, what to say. */
 /** They asked for the words again: "send it again", "resend the message". */
 const ASKS_AGAIN = /\b(?:again|resend|re-send|once more|one more time)\b|^\s*(?:please\s+)?(?:can you\s+)?send (?:me )?(?:it|that|the (?:message|letter|dispute|complaint|text))\b/i;
 const wordsOf = (t: string): Set<string> => new Set(t.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []);
@@ -476,7 +476,7 @@ const READY_TO_SEND = "Here it is, ready to send:";
 /** "Send it again", "resend it", "send the message again please". */
 const SEND_AGAIN =
   /^\s*(?:please\s+)?(?:(?:can|could|would) you\s+)?(?:re-?send(?: me)?(?: (?:it|that|this|the (?:message|letter|dispute|complaint|text)))?(?: again)?|send (?:me )?(?:it|that|this|the (?:message|letter|dispute|complaint|text)) (?:again|once more))(?: please)?\s*[.!?]*\s*$/i;
-/** The words Fin last wrote for them to send, as they went out (no fill-in note). Null if none, or a PDF went after them. */
+/** The words Charles last wrote for them to send, as they went out (no fill-in note). Null if none, or a PDF went after them. */
 export function lastArtifactSent(recent: { direction: string; text: string; kind?: string | null }[]): string | null {
   for (const m of [...recent].reverse()) {
     if (m.direction !== "out") continue;
@@ -488,7 +488,7 @@ export function lastArtifactSent(recent: { direction: string; text: string; kind
 
 /** Message pieces split at sentence ends, line breaks and a colon before a new sentence; separators at the odd indexes. */
 const splitPieces = (message: string): string[] => message.split(/((?<=[.!?]["'”’)]?)[ \t]+|\n+|:[ \t]+(?=[A-Z"“])|(?<=https?:\/\/\S+)[ \t]+(?=[A-Z]))/);
-/** Fin talking about the person, to the person: "He confirmed the amount." */
+/** Charles talking about the person, to the person: "He confirmed the amount." */
 // Not "they": "They confirmed their slots" is their customers.
 const NARRATES_OWNER = /^\s*(?:he|she|the person|the user)\s+(?:(?:has|just)\s+)*confirmed\b/i;
 /**
@@ -502,7 +502,7 @@ const SECOND_GUESS =
 /** "One line on the same deal: …", "The downside, in one line: …". */
 const PROMPT_ECHO = /^(\s*)(?:one line on [^:.]{0,40}|the downside,? in one line):\s*(\S)/i;
 /** "You didn't…", "You haven't…": what they did, said as fact. */
-// Not what Fin can see in the chat ("you didn't say what you charge"),
+// Not what Charles can see in the chat ("you didn't say what you charge"),
 // nor advice ("you never need to register for that").
 const YOU_DID_NOT =
   /^(\s*(?:but|and|since|because)\s+)?you\s+(didn['’]?t|did not|haven['’]?t|have not|never|weren['’]?t|were not|wasn['’]?t|was not)\b(?!\s+(?:yet\s+)?(?:say|said|mention|mentioned|name|named|share|shared|answer|answered|reply|replied|specify|specified|need|have to|must|should)\b|\s+(?:yet\s+)?(?:tell|told|give|given|gave|send|sent)\s+(?:me|us)\b)/i;
@@ -603,7 +603,7 @@ export async function composeAnswer(
   biz: Business,
   said: string,
   attachment?: AttachmentRead,
-  /** ownerWords: false for a tapped quick reply — Fin's own words, which must never become a knowledge signal. */
+  /** ownerWords: false for a tapped quick reply — Charles's own words, which must never become a knowledge signal. */
   opts: {
     ownerWords?: boolean;
     channel?: "whatsapp" | "web";
@@ -617,9 +617,9 @@ export async function composeAnswer(
      */
     aboutTheirPlan?: boolean;
     /**
-     * Fin's own question the person was answering when they asked this
+     * Charles's own question the person was answering when they asked this
      * (a question kept from the diagnostic, engine/kept.ts). Given to the
-     * router, retrieval and the answer as context, labelled as Fin's
+     * router, retrieval and the answer as context, labelled as Charles's
      * words — so "what does that mean?" has something to mean — and never
      * mixed into `said`, which stays the person's words alone (memory,
      * knowledge signals and the guardrails read it as theirs).
@@ -663,10 +663,10 @@ async function composeInner(
   // judged, never as something the person said.
   const url = attachment ? null : (said.match(URL_RE)?.[0] ?? null);
   // What the models read: the person's words, plus — for a question kept from
-  // the diagnostic — the question of Fin's they were answering, marked
+  // the diagnostic — the question of Charles's they were answering, marked
   // as not theirs. Everything that must be the person's alone keeps `said`.
   const forModel = opts.askedAt
-    ? `${said}\n\n(Context, not the person's words: they asked this during the setup questions, while answering Fin's question "${opts.askedAt.slice(0, 400)}".${opts.answeredWith ? ` They then answered that question: "${opts.answeredWith.slice(0, 200)}".` : ""})`
+    ? `${said}\n\n(Context, not the person's words: they asked this during the setup questions, while answering Charles's question "${opts.askedAt.slice(0, 400)}".${opts.answeredWith ? ` They then answered that question: "${opts.answeredWith.slice(0, 200)}".` : ""})`
     : said;
 
   // Started now, awaited later: none of these depends on what the router
@@ -689,8 +689,8 @@ async function composeInner(
   const routeSeen: RouteSeen = {};
   let r = skipRouter ? progressRoute(said) : await timed("route", route(biz, forModel, attachment ? attachment.kind : url ? "link" : "", routeSeen));
   if (skipRouter) timing.route = 0;
-  // A button Fin offered ("Show me the message") follows on from
-  // Fin's own last answer: never off-topic. Round 25, ZA: the router read
+  // A button Charles offered ("Show me the message") follows on from
+  // Charles's own last answer: never off-topic. Round 25, ZA: the router read
   // the tapped words alone, filed them off_topic_request, and the reply had
   // to ask which message was meant.
   if (!ownerWords && r.intent === "off_topic") r = { ...r, intent: "question" };
@@ -718,7 +718,7 @@ async function composeInner(
   });
   // Nothing routes it anywhere else: the answer model gets it like any
   // question. The request is what is worth seeing.
-  if (r.intent === "off_topic") trackUnmet("off_topic_request", { props: { kind, domain: asLabel(r.domain) }, summary: "A person asked for something Fin does not do" });
+  if (r.intent === "off_topic") trackUnmet("off_topic_request", { props: { kind, domain: asLabel(r.domain) }, summary: "A person asked for something Charles does not do" });
 
   if (r.intent === "forget_me") {
     // Handled by the dispatcher — routed here only if the person phrased it
@@ -924,7 +924,7 @@ async function composeInner(
   // Live test, round 11: "How do I register with CIPC?" came back
   // word-for-word the answer already given to "Do I need to register with
   // CIPC?" two turns earlier — the model answered the conversation, not the
-  // new question. A byte-identical repeat of something Fin already sent
+  // new question. A byte-identical repeat of something Charles already sent
   // is never a real answer to a new message: ask once more, pointing at it.
   let repeat: "none" | "reasked" | "reask_failed" = "none";
   if (!attachment && !url) {
@@ -1034,7 +1034,7 @@ async function composeInner(
       await recordSafetyEvent({ businessId: biz.id, check: "reply_compliance", engine: "none", outcome: "flag", flags: faced.flags, detail: `said to the person: ${faced.flags.join(", ")}` });
     }
   }
-  // A [slot] left in Fin's own advice, not one in the words to send: that
+  // A [slot] left in Charles's own advice, not one in the words to send: that
   // sentence goes; the person never sees a blank.
   {
     const slots = new Set([...(reply.artifact ?? "").matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]!.trim().toLowerCase()));
@@ -1046,7 +1046,7 @@ async function composeInner(
       const message = kept.join("").trim().replace(reply.artifact ? /[,;—–-]\s*$/ : /[:,;—–-]\s*$/, ".");
       if (message || reply.artifact) {
         reply = { ...reply, message: message || READY_TO_SEND };
-        await recordSafetyEvent({ businessId: biz.id, check: "reply_compliance", engine: "none", outcome: "flag", flags: ["unfilled_slot_dropped"], detail: "a [slot] in Fin's own advice, with nothing to fill it: that sentence was taken out" });
+        await recordSafetyEvent({ businessId: biz.id, check: "reply_compliance", engine: "none", outcome: "flag", flags: ["unfilled_slot_dropped"], detail: "a [slot] in Charles's own advice, with nothing to fill it: that sentence was taken out" });
       }
     }
   }
@@ -1063,7 +1063,7 @@ async function composeInner(
     reply.message = slots.text;
     await recordSafetyEvent({ businessId: biz.id, check: "price_grounding", engine: "none", outcome: "flag", flags: ["money_placeholder"], detail: `answer: ${slots.count} money placeholder(s) in the message` });
   }
-  // Check the reply's proper nouns against what Fin already knows exactly
+  // Check the reply's proper nouns against what Charles already knows exactly
   // for this person before anything else touches it.
   //
   // The forward prompt already asks the writer to check for a scam, but a
@@ -1154,7 +1154,7 @@ async function composeInner(
   const own = ownFigures(biz, ownerWords ? said : "");
   // A pasted message's figures are its sender's, not the library's: "Send
   // R150 processing fee" quoted back in a warning is never dated as a fee
-  // Fin checked. And a scam warning gets no date line at all.
+  // Charles checked. And a scam warning gets no date line at all.
   for (const v of moneyIn(forwarded ?? "")) own.money.add(v);
   const about = ownerWords ? figuresAskedAbout(said, own.money, await coreData.then((d) => d.recent.slice(-4)).catch(() => [])) : [];
   const stamp = hardened || attachment || url || warned !== null ? null : stampLibraryFigures(trimmed.message, cb.priced, own.money, { notLibraryRates: own.rates, toolId: trimmed.tool_id, about });
@@ -1247,7 +1247,7 @@ export async function afterTurn(
   // knowledge_signal note at all (live, 2026-09-23).
   try {
     // Notes about the person come only from words they typed: never a tapped
-    // suggestion (Fin's own words) or a forwarded page or photo.
+    // suggestion (Charles's own words) or a forwarded page or photo.
     await updateMemory(biz, said, finSaid, opts.ownerWords && !opts.forwarded ? (opts.source === "web" ? "web" : "whatsapp") : null);
   } catch (err) {
     console.error("afterTurn: updateMemory threw", err);
@@ -1303,7 +1303,7 @@ export async function answer(
   biz: Business,
   said: string,
   attachment?: AttachmentRead,
-  /** False when `said` is not the person's own typing — a tapped quick reply is Fin's own words. */
+  /** False when `said` is not the person's own typing — a tapped quick reply is Charles's own words. */
   opts: { ownerWords?: boolean } = {},
 ): Promise<void> {
   await answerTurn(biz, said, attachment, opts);
@@ -1316,7 +1316,7 @@ export async function answerTurn(
   attachment?: AttachmentRead,
   /**
    * ownerWords: false when `said` is not the person's own typing — a tapped
-   * quick reply is Fin's own words. askedAt: see composeAnswer.
+   * quick reply is Charles's own words. askedAt: see composeAnswer.
    */
   opts: { ownerWords?: boolean; askedAt?: string; answeredWith?: string } = {},
 ): Promise<AnswerOutcome> {

@@ -1,4 +1,4 @@
-// Fin — makes @sparticuz/chromium correctly detect Vercel's Node 22
+// Charles — makes @sparticuz/chromium correctly detect Vercel's Node 22
 // runtime as Amazon-Linux-2023-based, without depending on a Vercel
 // dashboard setting this repo cannot see or control.
 //

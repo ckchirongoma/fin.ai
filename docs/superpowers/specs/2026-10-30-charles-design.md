@@ -1,4 +1,4 @@
-# Fin — design spec
+# Charles — design spec
 
 *2026-10-30. A WhatsApp number that knows your money. Built from Charlie, for
 GoTyme Bank's customers first. This is the document to argue with.*
@@ -7,11 +7,11 @@ GoTyme Bank's customers first. This is the document to argue with.*
 
 ## 0. The one-paragraph version
 
-Fin is a WhatsApp number that learns one household's money once, builds a
+Charles is a WhatsApp number that learns one household's money once, builds a
 90-day money plan from a fixed library of proven moves, and then pushes the
 person through it one step at a time, following up on whether each step
 actually worked. The person picks the goal and the one money rule they will
-live by; Fin never offers a menu, never invents a fee or a rule, never pushes
+live by; Charles never offers a menu, never invents a fee or a rule, never pushes
 credit, and switches to a hardship mode the moment someone cannot cover food,
 rent or transport. Their own AI (ChatGPT, Claude) can connect to the same
 memory. South Africa first; the next market (the Philippines, where Tyme has
@@ -63,7 +63,7 @@ free instant payments.
   the wider literature: programmes that address a concrete problem with a
   specific action outperform general training.
 
-So Fin's spine is Charlie's spine, unchanged: **one recommendation, in the
+So Charles's spine is Charlie's spine, unchanged: **one recommendation, in the
 person's own numbers, free and reversible first, with a follow-up on whether
 it worked** — and a hardship mode that does nothing clever.
 
@@ -79,18 +79,18 @@ it worked** — and a hardship mode that does nothing clever.
    bank loan and a mashonisa does not need a course. She needs one rule
    ("the mashonisa gets paid first, nothing new gets borrowed") and a plan
    that fits her payday.
-3. **Fin is a credit-readiness engine, not a content programme.** Every
-   household Fin steadies is a customer the bank could not underwrite
+3. **Charles is a credit-readiness engine, not a content programme.** Every
+   household Charles steadies is a customer the bank could not underwrite
    yesterday: arrears cleared, a GoalSave balance that grows on payday, a
    bank-visible record of behaviour. The product's success metric is the
    bank's own: the share of customers who become credit-worthy. That is the
    number Mr Jacobs says has not moved in fifteen years.
 4. **The rails already exist.** A plan step for a GoTyme customer is not
    advice. "Move R50 to GoalSave on grant day" is a thing the bank's own app
-   does, for free. Fin sits on top of PayShap, GoalSave and the kiosk network
+   does, for free. Charles sits on top of PayShap, GoalSave and the kiosk network
    and turns them into habits.
 5. **Doing no harm is the feature.** The Kenya evidence says the usual
-   chatbot makes the weakest customers worse. Fin's hardship mode pushes no
+   chatbot makes the weakest customers worse. Charles's hardship mode pushes no
    product, names the free debt counsellor and the ombud, and pauses the
    plan. Counter-intuitively, that is what earns the trust a lending
    relationship needs.
@@ -101,13 +101,13 @@ it worked** — and a hardship mode that does nothing clever.
 ## 3. The journey
 
 Same stages as Charlie (`Stage` in `types.ts`), same machinery, different
-questions and choices. Where Charlie reads a business, Fin reads a household.
+questions and choices. Where Charlie reads a business, Charles reads a household.
 
 ### 3.1 The money diagnostic, 12 questions, about 5 minutes
 
 | # | Key | Question | Shape |
 |---|---|---|---|
-| 1 | `person` | Hi, I'm Fin… What should I call you, and what do you do for money? | open |
+| 1 | `person` | Hi, I'm Charles… What should I call you, and what do you do for money? | open |
 | 2 | `income_kind` | How does money come in? Salary or wage / Piece jobs or hustle / SASSA grant / My own business / Family or partner / A mix, not sure | multi, numbered |
 | 3 | `location` | Where are you based? Area and city is enough | open (decides the market, as in Charlie) |
 | 4 | `objective` | Now the important one. What are you trying to fix or achieve with your money? In your own words | open |
@@ -237,7 +237,7 @@ Two added for money:
     named because it costs nothing and is reversible; MoreTyme and any loan
     may only be explained, never pushed.
 12. **Never ask for or store an ID number, account number, card number, PIN,
-    OTP or password**, and say so in the first message. Fin reads no bank
+    OTP or password**, and say so in the first message. Charles reads no bank
     statement and no app; it knows what the person tells it.
 
 ## 5. The knowledge base
@@ -282,7 +282,7 @@ founder verifies them.
 
 ## 6. What is deliberately not in this version
 
-- Reading bank statements or the bank's data. Fin knows what it is told.
+- Reading bank statements or the bank's data. Charles knows what it is told.
   A bank integration is the obvious next step and it is the bank's call.
 - A second market's library. The code supports it; nobody has verified the
   Philippines' rules yet, and rule 10 forbids guessing.
@@ -296,7 +296,7 @@ founder verifies them.
 - The whole money journey runs end to end in the e2e test: hello →
   diagnostic → read-back → goal → rule → plan → first step → done → outcome.
 - The plan document prints to PDF in Chromium with no banned construct.
-- The landing page says what Fin is in the person's words, carries the
+- The landing page says what Charles is in the person's words, carries the
   evidence with its caveats, and says out loud that no cohort has run.
 - A `db/` folder the founder can paste into a fresh Supabase project in
   order, and a seed the depth script measures.

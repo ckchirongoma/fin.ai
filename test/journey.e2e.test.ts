@@ -1,4 +1,4 @@
-// Fin — the whole conversation, start to finish, with nothing real behind it.
+// Charles — the whole conversation, start to finish, with nothing real behind it.
 //
 // This is the test that would have caught the failures that actually hurt this
 // product: a person stranded on a stage nothing handles, a button dispatching
@@ -24,7 +24,7 @@ process.env.WHATSAPP_PHONE_NUMBER_ID = "1234567890";
 process.env.WHATSAPP_APP_SECRET = "fake-app-secret";
 process.env.WORKER_SECRET = "fake-worker-secret";
 process.env.SESSION_SECRET = "fake-session-secret";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 // Left unset on purpose: with no Jev key the guardrails must fall through to
 // the model backstop, which is the configuration most deployments will run.
 delete process.env.TYPESAFE_API_KEY;
@@ -196,13 +196,13 @@ test("a first message is a greeting, not an answer to a question nobody asked", 
   assert.equal(db.tables.businesses!.length, 1);
   assert.equal(business().stage, "diag");
   assert.equal(business().diag_step, 0);
-  // ONE message, in the order a person says it: hello and who Fin is,
+  // ONE message, in the order a person says it: hello and who Charles is,
   // then the consent line, then question one. The consent line used to go
-  // out first, on its own, before Fin had said hello (founder, 2026-10).
+  // out first, on its own, before Charles had said hello (founder, 2026-10).
   assert.equal(net.sent.length, 1, "one message, not a disclaimer and then a hello");
   const first = net.sent[0]!.body;
-  assert.match(first, /^Hi, I'm Fin\./);
-  assert.ok(first.indexOf("Hi, I'm Fin") < first.indexOf("forget my money"), "hello before the consent line");
+  assert.match(first, /^Hi, I'm Charles\./);
+  assert.ok(first.indexOf("Hi, I'm Charles") < first.indexOf("forget my money"), "hello before the consent line");
   assert.ok(first.indexOf("forget my money") < first.indexOf("what should I call you"), "consent before question one");
   // Rule 12, said out loud before a single answer is given.
   assert.match(first, /never ask for your ID number, account number, card, PIN or password/);
@@ -220,7 +220,7 @@ test("a question asked mid-diagnostic is answered as a question, never stored as
   // CLAUDE.md rule 7. It had no enforcement anywhere before this.
 });
 
-/** Lerato's twelve answers, in the order Fin asks: fixed-option questions by number, the rest in her words. */
+/** Lerato's twelve answers, in the order Charles asks: fixed-option questions by number, the rest in her words. */
 export const LERATO = [
   "Lerato, I do domestic work three days a week and get two child grants",
   "2",

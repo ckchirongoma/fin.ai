@@ -1,4 +1,4 @@
-// Fin — the gate between the model and the plan.
+// Charles — the gate between the model and the plan.
 //
 // CLAUDE.md rule 1, enforced rather than requested: the model may tailor
 // WORDING and nothing else. hydrateWorkstream rebuilds every step from the

@@ -1,4 +1,4 @@
-// Fin — ask your plan a question, on the web, and watch the page answer.
+// Charles — ask your plan a question, on the web, and watch the page answer.
 //
 // The founder's ask: the plan viewer was a static render of the WhatsApp
 // document. This is the interactive half: a person signed in with their

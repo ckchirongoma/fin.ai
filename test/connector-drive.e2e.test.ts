@@ -1,6 +1,6 @@
-// Fin — round 27: the person drives Fin from their own AI.
+// Charles — round 27: the person drives Charles from their own AI.
 //
-// The founder: "Fin can work via MCP… fully be controlled via MCP through
+// The founder: "Charles can work via MCP… fully be controlled via MCP through
 // chat… it now needs to start remembering things about the person… if the
 // person tries to deviate… they get what they're looking for… make sure the
 // quality of information is good… remind them the North Star is the plan…
@@ -25,7 +25,7 @@ process.env.SUPABASE_URL = "https://fake.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-service-key";
 process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.SESSION_SECRET = "fake-session-secret";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 process.env.WHATSAPP_ACCESS_TOKEN = "fake-wa-token";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "1";
 process.env.WORKER_SECRET = "fake-worker-secret";
@@ -152,7 +152,7 @@ async function call(name: string, args: Record<string, unknown> = {}, modern = f
   const mcp = await import("../api/mcp.ts");
   const meta = modern ? { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientInfo": { name: "Test", version: "1" } } } : {};
   const res = await mcp.POST(
-    new Request(`https://fin.test/api/mcp?k=${token}`, {
+    new Request(`https://charles.test/api/mcp?k=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(modern ? { "MCP-Protocol-Version": MODERN } : {}) },
       body: JSON.stringify({ jsonrpc: "2.0", id: ++rpcId, method: "tools/call", params: { name, arguments: args, ...meta } }),
@@ -178,7 +178,7 @@ const ALL_TOOLS = [
 test("the person's AI can do everything WhatsApp can: sixteen tools, each with an object schema and a description it can act on", async () => {
   const mcp = await import("../api/mcp.ts");
   for (const modern of [false, true]) {
-    const res = await mcp.POST(new Request(`https://fin.test/api/mcp?k=${token}`, {
+    const res = await mcp.POST(new Request(`https://charles.test/api/mcp?k=${token}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(modern ? { "MCP-Protocol-Version": MODERN } : {}) },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: modern ? { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN } } : {} }),
@@ -195,7 +195,7 @@ test("the person's AI can do everything WhatsApp can: sixteen tools, each with a
 
 // ── 2. The research-backed rules, in every market (regression) ──
 
-test("every market's AI is told Fin's research-backed rules, the north star, and to bring the person back to the plan", async () => {
+test("every market's AI is told Charles's research-backed rules, the north star, and to bring the person back to the plan", async () => {
   const { connectorInstructions } = await import("../api/_lib/prompts.ts");
   const { COUNTRIES } = await import("../api/_lib/countries.ts");
   assert.deepEqual(Object.keys(COUNTRIES).sort(), ["ZA"], "every market is checked");
@@ -244,8 +244,8 @@ test("every market's AI is told Fin's research-backed rules, the north star, and
 
 test("the instructions reach the host three ways: initialize, server/discover and get_household_context", async () => {
   const mcp = await import("../api/mcp.ts");
-  const legacy = await (await mcp.POST(new Request(`https://fin.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18" } }) }))).json();
-  const modern = await (await mcp.POST(new Request(`https://fin.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json", "MCP-Protocol-Version": MODERN }, body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "server/discover", params: { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN } } }) }))).json();
+  const legacy = await (await mcp.POST(new Request(`https://charles.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18" } }) }))).json();
+  const modern = await (await mcp.POST(new Request(`https://charles.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json", "MCP-Protocol-Version": MODERN }, body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "server/discover", params: { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN } } }) }))).json();
   const ctx = await call("get_household_context");
   for (const t of [legacy.result.instructions, modern.result.instructions, ctx.structured.instructions]) {
     assert.match(t, /THE NORTH STAR IS THE 90-DAY PLAN/);
@@ -264,7 +264,7 @@ test("get_household_context leads with the north star: the goal and the step the
   assert.equal(structured.current_step.id, "s1");
   assert.equal(structured.on_whatsapp, "on a step");
   assert.equal(structured.paused_for_hardship, false);
-  assert.match(structured.read_plan_online, /^https:\/\/fin\.test\/plan \(they sign in with their WhatsApp number\)$/);
+  assert.match(structured.read_plan_online, /^https:\/\/charles\.test\/plan \(they sign in with their WhatsApp number\)$/);
   assert.deepEqual(structured.remembered, []);
 });
 
@@ -348,7 +348,7 @@ test("a tapped suggestion or a forwarded page never becomes a note about the per
   assert.deepEqual((db.tables.owner_notes ?? []).map((n) => [n.note, n.source]), [["Wants step-by-step help", "web"]]);
 });
 
-test("forgetting the household forgets what Fin remembered about the person", async () => {
+test("forgetting the household forgets what Charles remembered about the person", async () => {
   const dbmod = await import("../api/_lib/db.ts");
   await dbmod.addOwnerNote("biz-27", "person", "Prefers voice notes", "connector");
   await dbmod.forgetBusiness("biz-27");
@@ -514,7 +514,7 @@ test("request_plan_change: a 'no' leaves the plan as it was; outside the window 
 test("send_plan_pdf queues the plan document for WhatsApp, once, and gives the online link either way", async () => {
   const out = await call("send_plan_pdf");
   assert.match(out.text, /On its way to their WhatsApp/);
-  assert.match(out.text, /fin\.test\/plan/);
+  assert.match(out.text, /charles\.test\/plan/);
   const jobs = db.tables.jobs!.filter((j) => j.kind === "plan_pdf");
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0]!.payload.mode, "asked");
@@ -526,7 +526,7 @@ test("send_plan_pdf queues the plan document for WhatsApp, once, and gives the o
   db.tables.jobs = [];
   const closed = await call("send_plan_pdf");
   assert.match(closed.text, /Not sent/);
-  assert.match(closed.text, /fin\.test\/plan/);
+  assert.match(closed.text, /charles\.test\/plan/);
   assert.equal(db.tables.jobs.length, 0);
 });
 

@@ -1,4 +1,4 @@
-// Fin — money figures, grounded mechanically.
+// Charles — money figures, grounded mechanically.
 //
 // Bug 2, live 2026-09-22/23, three times on the deployed fix: a person who
 // answered "not sure" (or "1") to "what does a typical customer pay you?"
@@ -7,7 +7,7 @@
 // plain fact. checkTraceability DID run over money_logic, and hedged a
 // different field instead: it is a judgement, and a judgement can miss. A
 // rand figure is not a matter of judgement. Either the person said it (or a
-// verified tool cost says it), or Fin made it up.
+// verified tool cost says it), or Charles made it up.
 //
 // So this is arithmetic, not a model call: pull every money figure out of a
 // generated string, and compare it with the figures the person actually gave

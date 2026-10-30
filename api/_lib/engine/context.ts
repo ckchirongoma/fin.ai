@@ -1,4 +1,4 @@
-// Fin — assembling what the model knows about one person, per message.
+// Charles — assembling what the model knows about one person, per message.
 //
 // Kept small on purpose. The core block is the expensive part of every call, so
 // it carries the business, the map, the choices, a compact view of the plan,
@@ -84,7 +84,7 @@ export interface CoreData {
   tools: Awaited<ReturnType<typeof toolsFor>>;
   recent: Awaited<ReturnType<typeof recentMessages>>;
   plan: Awaited<ReturnType<typeof planFor>>;
-  /** What Fin remembers about the person (owner_notes), newest first. Empty if none or unreadable. */
+  /** What Charles remembers about the person (owner_notes), newest first. Empty if none or unreadable. */
   notes: OwnerNote[];
 }
 
@@ -128,7 +128,7 @@ const ABOUT_A_FEE = /\b(?:cost|costs|fee|fees|price|prices|charge|charges|charge
  * dated), never an amount that is theirs (their price, a loan they want:
  * pricestamp.ts ownFigures), never one in a message that is not about a cost.
  * Or, when the message refers back to a fee without naming it, the amounts
- * Fin's last reply gave. Round 22, live: "is it still KSh 950?"
+ * Charles's last reply gave. Round 22, live: "is it still KSh 950?"
  * retrieved nothing, so its answer could only be dated from the model's
  * memory of the turn before — and once it was not.
  */
@@ -214,7 +214,7 @@ export function knowledgeCostsOf(rows: KnowledgeRow[]): string {
  * What a date, a law or a waiting time in a reply may come from
  * (datecheck.ts): the rows the reply was given, the person's answers and
  * business context, and their own recent messages. (The rows' check dates
- * go separately, as exact dates only: checkDaysOf, pricestamp.ts.) Never Fin's earlier replies:
+ * go separately, as exact dates only: checkDaysOf, pricestamp.ts.) Never Charles's earlier replies:
  * a date one of them invented would vouch for itself.
  */
 export function dateSources(cb: CoreBlock, biz: Pick<Business, "answers" | "context">, extra: string[] = []): string[] {

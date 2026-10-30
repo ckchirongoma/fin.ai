@@ -1,7 +1,7 @@
 # The prompt evaluation harness
 
 `docs/PRODUCT-DEFINITION.md` section 5.12 asks for this. It is the only
-regression test that looks at what Fin actually *says*.
+regression test that looks at what Charles actually *says*.
 
 The rest of `test/` checks wiring: that a button dispatches, that a signature
 verifies, that a plan step exists. None of it can catch the failures that would
@@ -16,7 +16,7 @@ existed every prompt edit was a gamble settled by reading the diff.
 ## Read this before you quote a single number from it
 
 **The 20 questions in `questions.json` are synthetic. I made them up.** They
-were written to exercise the harness for Fin (South Africa, four invented
+were written to exercise the harness for Charles (South Africa, four invented
 households), not gathered from people.
 
 Section 5.12 asks for **100 real questions from people**, collected from WhatsApp
@@ -28,7 +28,7 @@ a question about a cousin's debt asked as if it were their own.
 An eval set of invented questions proves the harness works. It does not prove
 the product works. A green run on these 20 means the checks fire and the
 plumbing holds — nothing more. **Do not let a green run on synthetic questions
-be the evidence that Fin is safe to pilot.** Replace them first.
+be the evidence that Charles is safe to pilot.** Replace them first.
 
 When the real set arrives, keep the same file shape and keep the deliberate
 mix: distress cases, forwarded scams, off-topic messages, and questions whose
@@ -118,7 +118,7 @@ advisors to score a sample.
 
 ---
 
-## Depth: can the person act on what Fin said?
+## Depth: can the person act on what Charles said?
 
 Round 23 added depth as its own measure, because an answer can be safe,
 grounded and short and still leave the person with nothing to do. Four checks

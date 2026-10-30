@@ -1,4 +1,4 @@
-// Fin — telling the team, without anyone having to look.
+// Charles — telling the team, without anyone having to look.
 //
 // Runs every minute inside the worker tick (queue.ts cronTick, vercel.json).
 // Three emails, all rate-limited, none with a phone number in it:
@@ -9,7 +9,7 @@
 //               last one; at most one every 5 minutes, and the same problem
 //               is not re-sent within 30 minutes unless it is still growing.
 //   Hourly      everything else that went wrong (warnings) and every time an
-//               owner tried to do something Fin could not, with what they
+//               owner tried to do something Charles could not, with what they
 //               said — scrubbed of numbers and links (ALERT_EMAIL_EXCERPTS=0
 //               leaves their words out).
 //   Daily       the summary: who came, how far they got, what they asked,
@@ -147,12 +147,12 @@ export async function runImmediate(now: Date): Promise<number> {
   const reported = due.map((r) => ({ fingerprint: r.fingerprint, sent: r.since_email }));
   const shown = due.slice(0, 20);
   const worst = shown.some((r) => r.severity === "critical") ? "CRITICAL" : "Error";
-  const subject = `[Fin] ${worst}: ${shown[0]!.summary.slice(0, 90)}${shown.length > 1 ? ` (+${shown.length - 1} more)` : ""}`;
+  const subject = `[Charles] ${worst}: ${shown[0]!.summary.slice(0, 90)}${shown.length > 1 ? ` (+${shown.length - 1} more)` : ""}`;
   const lines = incidentLines(shown);
   const res = await sendEmail({
     subject,
-    text: `Something went wrong in Fin.\n\n${lines.text}\n\n${due.length > shown.length ? `…and ${due.length - shown.length} more.\n\n` : ""}Dashboard: ${adminLink()}`,
-    html: wrap("Something went wrong in Fin", `${lines.html}${due.length > shown.length ? `<p>…and ${due.length - shown.length} more.</p>` : ""}`),
+    text: `Something went wrong in Charles.\n\n${lines.text}\n\n${due.length > shown.length ? `…and ${due.length - shown.length} more.\n\n` : ""}Dashboard: ${adminLink()}`,
+    html: wrap("Something went wrong in Charles", `${lines.html}${due.length > shown.length ? `<p>…and ${due.length - shown.length} more.</p>` : ""}`),
   });
   if (!res.ok) {
     if (!res.skipped) trackFailure("alert_email_failed", res.error, { category: "ops", alert: "digest", props: { kind: "immediate" } });
@@ -201,21 +201,21 @@ export async function runDigest(now: Date): Promise<number> {
   }
 
   const unmetText = unmet
-    .map((e) => `• ${e.at.slice(11, 16)} UTC ${e.name.replace(/_/g, " ")} — owner ${ownerRef(e.business_id)}${e.country ? ` (${e.country})` : ""}${e.stage ? `, at ${e.stage}` : ""}${e.internal ? ", internal" : ""}${env.ALERT_EMAIL_EXCERPTS && e.excerpt ? `\n  “${e.excerpt}”` : ""}${env.ALERT_EMAIL_EXCERPTS && e.props?.reply ? `\n  Fin said: “${String(e.props.reply).slice(0, 160)}”` : ""}`)
+    .map((e) => `• ${e.at.slice(11, 16)} UTC ${e.name.replace(/_/g, " ")} — owner ${ownerRef(e.business_id)}${e.country ? ` (${e.country})` : ""}${e.stage ? `, at ${e.stage}` : ""}${e.internal ? ", internal" : ""}${env.ALERT_EMAIL_EXCERPTS && e.excerpt ? `\n  “${e.excerpt}”` : ""}${env.ALERT_EMAIL_EXCERPTS && e.props?.reply ? `\n  Charles said: “${String(e.props.reply).slice(0, 160)}”` : ""}`)
     .join("\n") + (more ? `\n…and ${more} more on the dashboard.` : "");
   const unmetHtml = unmet
     .map(
-      (e) => `<tr><td style="padding:7px 10px 7px 0;vertical-align:top;color:#6b756e;white-space:nowrap">${escHtml(e.at.slice(11, 16))}</td><td style="padding:7px 0;vertical-align:top"><b>${escHtml(e.name.replace(/_/g, " "))}</b> · owner ${escHtml(ownerRef(e.business_id))}${e.country ? ` (${escHtml(e.country)})` : ""}${e.stage ? ` · at ${escHtml(e.stage)}` : ""}${e.internal ? " · internal" : ""}${env.ALERT_EMAIL_EXCERPTS && e.excerpt ? `<div style="color:#171f1a">“${escHtml(e.excerpt)}”</div>` : ""}${env.ALERT_EMAIL_EXCERPTS && e.props?.reply ? `<div style="color:#6b756e;font-size:12px">Fin said: “${escHtml(String(e.props.reply).slice(0, 160))}”</div>` : ""}</td></tr>`,
+      (e) => `<tr><td style="padding:7px 10px 7px 0;vertical-align:top;color:#6b756e;white-space:nowrap">${escHtml(e.at.slice(11, 16))}</td><td style="padding:7px 0;vertical-align:top"><b>${escHtml(e.name.replace(/_/g, " "))}</b> · owner ${escHtml(ownerRef(e.business_id))}${e.country ? ` (${escHtml(e.country)})` : ""}${e.stage ? ` · at ${escHtml(e.stage)}` : ""}${e.internal ? " · internal" : ""}${env.ALERT_EMAIL_EXCERPTS && e.excerpt ? `<div style="color:#171f1a">“${escHtml(e.excerpt)}”</div>` : ""}${env.ALERT_EMAIL_EXCERPTS && e.props?.reply ? `<div style="color:#6b756e;font-size:12px">Charles said: “${escHtml(String(e.props.reply).slice(0, 160))}”</div>` : ""}</td></tr>`,
     )
     .join("");
   const lines = incidentLines(incidents);
-  const subject = `[Fin] Hourly: ${unmet.length} thing${unmet.length === 1 ? "" : "s"} people couldn't do, ${incidents.length} warning${incidents.length === 1 ? "" : "s"}`;
+  const subject = `[Charles] Hourly: ${unmet.length} thing${unmet.length === 1 ? "" : "s"} people couldn't do, ${incidents.length} warning${incidents.length === 1 ? "" : "s"}`;
   const res = await sendEmail({
     subject,
     text: `${unmet.length ? `WHAT OWNERS TRIED AND CHARLIE COULDN'T DO (${unmet.length})\n${unmetText}\n\n` : ""}${incidents.length ? `WARNINGS\n${lines.text}\n\n` : ""}Dashboard: ${adminLink()}`,
     html: wrap(
-      "Fin — the last hour",
-      `${unmet.length ? `<h3 style="margin:0 0 6px">What people tried and Fin couldn't do (${unmet.length})</h3><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px">${unmetHtml}</table>${more ? `<p style="color:#6b756e">…and ${more} more on the dashboard.</p>` : ""}` : ""}${incidents.length ? `<h3 style="margin:18px 0 6px">Warnings</h3>${lines.html}` : ""}`,
+      "Charles — the last hour",
+      `${unmet.length ? `<h3 style="margin:0 0 6px">What people tried and Charles couldn't do (${unmet.length})</h3><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px">${unmetHtml}</table>${more ? `<p style="color:#6b756e">…and ${more} more on the dashboard.</p>` : ""}` : ""}${incidents.length ? `<h3 style="margin:18px 0 6px">Warnings</h3>${lines.html}` : ""}`,
     ),
   });
   if (!res.ok) {
@@ -326,7 +326,7 @@ export async function summarise(from: Date, to: Date): Promise<Summary> {
     from: fromIso,
     to: toIso,
     truncated: Boolean(ev.truncated),
-    // People who did something: Fin's own system work (a nudge sweep, a
+    // People who did something: Charles's own system work (a nudge sweep, a
     // build job) on their behalf is not activity of theirs.
     owners_active: people(ev.filter((e) => e.channel !== "system")),
     owners_new: by("business_created").length,
@@ -371,7 +371,7 @@ function summaryEmail(s: Summary): { subject: string; text: string; html: string
   ];
   if (s.truncated) lines.unshift("More events than the summary could read: the numbers below are a lower bound. The dashboard has the full picture.");
   const html = wrap(
-    `Fin — ${day}${quiet ? " (no owner traffic)" : ""}`,
+    `Charles — ${day}${quiet ? " (no owner traffic)" : ""}`,
     `${s.truncated ? `<p style="color:#a8720f">More events than the summary could read: the numbers below are a lower bound. The dashboard has the full picture.</p>` : ""}<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px">
       ${row("People active", `${s.owners_active} (new ${s.owners_new})`)}${row("Messages in", String(s.messages_in))}${row("Questions asked", String(s.questions))}
       ${row("Plans built", `${s.plan_build.built} · median ${secs(s.plan_build.p50)} · p95 ${secs(s.plan_build.p95)} · failed ${s.plan_build.failed}`)}
@@ -386,7 +386,7 @@ function summaryEmail(s: Summary): { subject: string; text: string; html: string
     <h3 style="margin:18px 0 6px">What failed</h3><div style="font-size:14px">${s.failures.map((u) => `${escHtml(u.name.replace(/_/g, " "))} ×${u.count}`).join("<br>") || "Nothing."}</div>
     ${s.incidents_open.length ? `<h3 style="margin:18px 0 6px">Open incidents</h3>${incidentLines(s.incidents_open).html}` : ""}`,
   );
-  return { subject: `[Fin] Daily, ${day}: ${s.owners_active} people, ${s.plan_build.built} plans, ${s.unmet.reduce((a, u) => a + u.count, 0)} couldn't-do, ${s.failures.reduce((a, u) => a + u.count, 0)} failures`, text: lines.join("\n\n") + `\n\nDashboard: ${adminLink()}`, html };
+  return { subject: `[Charles] Daily, ${day}: ${s.owners_active} people, ${s.plan_build.built} plans, ${s.unmet.reduce((a, u) => a + u.count, 0)} couldn't-do, ${s.failures.reduce((a, u) => a + u.count, 0)} failures`, text: lines.join("\n\n") + `\n\nDashboard: ${adminLink()}`, html };
 }
 
 /** Yesterday's counts into event_daily, then old events out. */

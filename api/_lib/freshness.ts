@@ -1,4 +1,4 @@
-// Fin — keeping the library honest.
+// Charles — keeping the library honest.
 //
 // Rule 10 says every cost carries a verification date and anything past 90 days
 // is hedged automatically. The hedging already happens at read time in

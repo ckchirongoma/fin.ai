@@ -1,4 +1,4 @@
-// Fin — the plan document: three parts, in the order a reader needs them.
+// Charles — the plan document: three parts, in the order a reader needs them.
 //
 //   Part I    Where your money stands — the facts as the person gave them,
 //             what those answers add up to, and the eight areas with what
@@ -116,7 +116,7 @@ export function planDocHTML(d: PlanDocData): string {
     sectionNo += 1;
     return `
     <table role="presentation" class="keepnext" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-bottom:2px solid ${INK};margin:0 0 13px"><tr>
-      <td style="padding:0 0 6px;font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:16px;font-weight:700;color:${INK}">${title}</td>
+      <td style="padding:0 0 6px;font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:16px;font-weight:700;color:${INK}">${title}</td>
     </tr></table>`;
   };
 
@@ -124,7 +124,7 @@ export function planDocHTML(d: PlanDocData): string {
     <table role="presentation" class="keepnext${breakBefore ? " pagebreak" : ""}" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:30px 0 20px"><tr>
       <td style="background:${INK};padding:16px 20px">
         <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fd6ae;margin:0 0 4px">Part ${roman}</div>
-        <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:19px;font-weight:700;color:#ffffff">${title}</div>
+        <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:19px;font-weight:700;color:#ffffff">${title}</div>
         <div style="font-size:11px;color:#aeb8b1;margin-top:3px">${sub}</div>
       </td>
     </tr></table>`;
@@ -181,7 +181,7 @@ export function planDocHTML(d: PlanDocData): string {
           .map(
             (m) => `
     <td width="25%" style="padding:10px 10px;vertical-align:top;border:1px solid ${LINE};border-left:4px solid ${RAG[m.status] || MUTE}">
-      <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:12.5px;font-weight:700;color:${INK}">${esc(DOMAIN_LABELS[m.domain] || m.domain)}</div>
+      <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:12.5px;font-weight:700;color:${INK}">${esc(DOMAIN_LABELS[m.domain] || m.domain)}</div>
       <div style="font-size:10px;font-weight:700;color:${RAG[m.status] || MUTE};margin:3px 0 5px">${DOT} ${RAGWORD[m.status] || ""}</div>
       <div style="font-size:10.5px;color:${MUTE};line-height:1.4">${esc(m.note)}</div>
     </td>`,
@@ -233,7 +233,7 @@ export function planDocHTML(d: PlanDocData): string {
       (c) => `
     <table role="presentation" class="keep" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${LINE};margin:0 0 10px">
       <tr><td style="padding:13px 16px">
-        <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:14px;font-weight:700;color:${INK};margin:0 0 7px">${esc(c.label)}</div>
+        <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:14px;font-weight:700;color:${INK};margin:0 0 7px">${esc(c.label)}</div>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:11px;line-height:1.5">
           <tr><td style="padding:2px 10px 2px 0;color:${MUTE};font-weight:700;white-space:nowrap;vertical-align:top">What it is</td><td style="padding:2px 0;color:${INK2}">${esc(c.what)}</td></tr>
           <tr><td style="padding:2px 10px 2px 0;color:${MUTE};font-weight:700;white-space:nowrap;vertical-align:top">Why it fits you</td><td style="padding:2px 0;color:${INK2}">${esc(c.why_you)}</td></tr>
@@ -250,7 +250,7 @@ export function planDocHTML(d: PlanDocData): string {
     .map(
       (x) => `
     <table role="presentation" class="keep" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${MIST};margin:0 0 8px"><tr><td style="padding:14px 17px;border-left:4px solid ${LEAF}">
-      <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:15px;font-weight:700;color:${INK};font-style:italic;margin:0 0 4px">&ldquo;${esc(x.rule)}&rdquo;</div>
+      <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:15px;font-weight:700;color:${INK};font-style:italic;margin:0 0 4px">&ldquo;${esc(x.rule)}&rdquo;</div>
       <div style="font-size:11.5px;color:${MUTE}">${esc(x.why_it_works)}</div>
       ${x.what_it_costs_you ? `<div style="font-size:11px;color:#8a5a10;margin-top:3px">Costs you: ${esc(x.what_it_costs_you)}</div>` : ""}
     </td></tr></table>`,
@@ -461,7 +461,7 @@ export function planDocHTML(d: PlanDocData): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:${i === 0 ? 0 : "24px"} 0 0"><tr><td style="padding:0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px"><tr>
       <td width="76" style="vertical-align:middle;background:${INK};color:#ffffff;font-size:10px;font-weight:700;padding:6px 10px;white-space:nowrap">FOCUS ${i + 1}</td>
-      <td style="vertical-align:middle;padding-left:10px;background:${PAPER}"><div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:14.5px;font-weight:700;color:${INK}">${esc(w.title)}</div></td>
+      <td style="vertical-align:middle;padding-left:10px;background:${PAPER}"><div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:14.5px;font-weight:700;color:${INK}">${esc(w.title)}</div></td>
       <td style="vertical-align:middle;text-align:right;font-size:10px;color:${MUTE};white-space:nowrap">${stepRange(w)}</td>
     </tr></table>
     <div style="font-size:11px;color:${MUTE};margin:0 0 12px">${esc(sentenceCase(w.why_for_you))}</div>
@@ -548,12 +548,12 @@ export function planDocHTML(d: PlanDocData): string {
   </tr></table>`;
 
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(d.ctx.name)} — 90-day money plan</title><style>${printCSS}</style></head>
-<body style="margin:0;padding:0;background:${PAPER};font-family:Helvetica,Arial,'Open Sans','Fin Symbols',sans-serif;color:${INK};font-size:12.5px;line-height:1.55;word-break:break-word;overflow-wrap:anywhere;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+<body style="margin:0;padding:0;background:${PAPER};font-family:Helvetica,Arial,'Open Sans','Charles Symbols',sans-serif;color:${INK};font-size:12.5px;line-height:1.55;word-break:break-word;overflow-wrap:anywhere;-webkit-print-color-adjust:exact;print-color-adjust:exact">
 <div style="max-width:720px;margin:0 auto">
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr><td style="background:${INK};padding:34px 40px 22px">
   <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fd6ae;margin:0 0 9px">Money plan &middot; the next 90 days</div>
-  <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.15;margin:0 0 7px">${esc(d.ctx.name)}</div>
+  <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:28px;font-weight:700;color:#ffffff;line-height:1.15;margin:0 0 7px">${esc(d.ctx.name)}</div>
   <div style="font-size:13px;color:#cdd5cf;margin:0 0 12px;max-width:520px">${esc(d.ctx.one_liner)}</div>
   <div style="font-size:10.5px;color:#8b968f">${esc(d.ctx.location)} &nbsp;&middot;&nbsp; prepared ${dt} by ${esc(d.productName)}</div>
 </td></tr></table>
@@ -569,7 +569,7 @@ export function planDocHTML(d: PlanDocData): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:22px 0 0">
   <tr><td style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${LEAFD};padding:0 0 6px 4px">The problem we're solving</td></tr>
   <tr><td style="background:${MIST};padding:15px 18px;border-left:4px solid ${LEAF}">
-    <div style="font-family:Georgia,'Times New Roman','Open Sans','Fin Symbols',serif;font-size:15px;font-weight:700;color:${INK};line-height:1.35;margin:0 0 4px">${esc(d.objectiveRead || d.ctx.goal)}</div>
+    <div style="font-family:Georgia,'Times New Roman','Open Sans','Charles Symbols',serif;font-size:15px;font-weight:700;color:${INK};line-height:1.35;margin:0 0 4px">${esc(d.objectiveRead || d.ctx.goal)}</div>
     <div style="font-size:11.5px;color:${MUTE}">${
       // "In your words" quotes only what the person said. Round 18 printed
       // the model's goal there, with a "20 packs a day" nobody had said.
@@ -580,7 +580,7 @@ export function planDocHTML(d: PlanDocData): string {
 
 ${contents}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:1px solid ${LINE};margin:14px 0 0"><tr>
-  <td style="padding:10px 0 0;font-size:9.5px;color:${MUTE}">Confirm any credit or debt point with ${esc(co.registrar)}, any grant with ${esc(co.grants)}, and any tax point with ${esc(co.tax)}. Fees and rates were correct when checked and can move. Nothing here is a loan recommendation.</td>
+  <td style="padding:10px 0 0;font-size:9.5px;color:${MUTE}">Confirm any credit or debt point with ${esc(co.registrar)}, any grant with ${esc(co.grants)}, and any tax point with ${esc(co.tax)}. Fees and rates were correct when checked and can move. ${esc(d.productName)} teaches and plans with you; it is financial education, not financial advice, and nothing here is a loan recommendation.</td>
   <td style="padding:10px 0 0;font-size:9.5px;color:${MUTE};text-align:right;white-space:nowrap;vertical-align:top">Prepared by ${esc(d.productName)}</td>
 </tr></table>
 
@@ -636,7 +636,7 @@ ${
     ? `<div style="margin:22px 0 0">
   <table role="presentation" class="keep" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${MIST}"><tr><td style="padding:14px 17px;border-left:4px solid ${LEAF}">
     <div style="font-size:12px;font-weight:700;color:${INK};margin:0 0 4px">The rest of the strategy is still being written</div>
-    <div style="font-size:11.5px;color:${INK2};line-height:1.6">How you win, what you won&rsquo;t do, the money logic, the risks and what success looks like at 30, 60 and 90 days are being written for you now. Fin sends a message on WhatsApp when they are done, and they are added here. Your steps below don&rsquo;t depend on them: start whenever you&rsquo;re ready.</div>
+    <div style="font-size:11.5px;color:${INK2};line-height:1.6">How you win, what you won&rsquo;t do, the money logic, the risks and what success looks like at 30, 60 and 90 days are being written for you now. Charles sends a message on WhatsApp when they are done, and they are added here. Your steps below don&rsquo;t depend on them: start whenever you&rsquo;re ready.</div>
   </td></tr></table>
 </div>`
     : ""
@@ -659,7 +659,7 @@ ${
   <table role="presentation" class="keep" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${MIST}"><tr><td style="padding:14px 17px;border-left:4px solid ${LEAF}">
     <div style="font-size:12px;color:${INK2};line-height:1.6">${esc(st.money_logic)}</div>
   </td></tr></table>
-  <div style="font-size:10px;color:${MUTE};margin-top:6px">${/estimate|my guess|starting guess/i.test(st.money_logic) ? "Your own figures are used wherever you gave them. Anything marked as an estimate is Fin&rsquo;s working, not a fact — check it against your real numbers." : "Every number above is yours or carries a verification date — nothing is estimated on your behalf."}</div>
+  <div style="font-size:10px;color:${MUTE};margin-top:6px">${/estimate|my guess|starting guess/i.test(st.money_logic) ? "Your own figures are used wherever you gave them. Anything marked as an estimate is Charles&rsquo;s working, not a fact — check it against your real numbers." : "Every number above is yours or carries a verification date — nothing is estimated on your behalf."}</div>
 </div>`
     : ""
 }

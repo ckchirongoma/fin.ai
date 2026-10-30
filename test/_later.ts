@@ -1,4 +1,4 @@
-// Fin — which columns a LATER migration updates, for tests that pin an
+// Charles — which columns a LATER migration updates, for tests that pin an
 // earlier migration to the seed.
 //
 // The seed is always the newest state. A test that says "db/0020 and the

@@ -1,4 +1,4 @@
-// Fin — Jev (TypeSafe System One) client. Adapted from the reference
+// Charles — Jev (TypeSafe System One) client. Adapted from the reference
 // client in JEV_INTEGRATION.md, trimmed to what this repo needs.
 //
 // Jev is not a language model: it takes a `state` and a set of typed

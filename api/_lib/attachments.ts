@@ -1,4 +1,4 @@
-// Fin — reading what a person forwards: a photographed supplier quote, a
+// Charles — reading what a person forwards: a photographed supplier quote, a
 // flyer, a screenshot of a grant broadcast, a PDF.
 //
 // People forward things to friends and ask "is this legit? is this for me?"

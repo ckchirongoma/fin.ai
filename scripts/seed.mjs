@@ -1,4 +1,4 @@
-// Fin — load the knowledge base into a fresh environment.
+// Charles — load the knowledge base into a fresh environment.
 //
 // Supabase is the source of truth; seed/*.json is a point-in-time mirror of it,
 // kept so the research is versioned somewhere durable and so a new environment

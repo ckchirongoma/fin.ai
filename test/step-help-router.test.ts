@@ -1,4 +1,4 @@
-// Fin — Jev-as-router, applied to the single highest-volume model call in
+// Charles — Jev-as-router, applied to the single highest-volume model call in
 // the product (Priority 4.4 of the 2026-09-22 fix pass).
 //
 // helpWithStep ("I'm stuck") used to always call a model, even when the owner

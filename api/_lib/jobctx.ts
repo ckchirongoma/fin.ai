@@ -1,4 +1,4 @@
-// Fin — which queue job, and which attempt of it, is running right now.
+// Charles — which queue job, and which attempt of it, is running right now.
 //
 // Live, round 6 (2026-09-24): one "How am I doing?" was answered TWICE, about
 // five minutes apart. Its first attempt waited ~127s on a slow model call; the

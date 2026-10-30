@@ -1,4 +1,4 @@
-// Fin — the diagnostic, and the platform shape each question has to take.
+// Charles — the diagnostic, and the platform shape each question has to take.
 //
 // The property that matters most here is negative: WhatsApp has NO
 // multi-select control. A list message lets the owner pick one row and one row

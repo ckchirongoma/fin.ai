@@ -1,4 +1,4 @@
-// Fin — the shapes every module agrees on.
+// Charles — the shapes every module agrees on.
 
 import type { HydratedWorkstream } from "./playbooks.js";
 import type { FreeType } from "./freetype.js";
@@ -318,7 +318,7 @@ export interface ToolRow {
   needs_verification?: boolean;
   /**
    * Can a person with no payslip and no formal job use this? null means
-   * nobody checked — never read it as "no". (The column keeps Fin's
+   * nobody checked — never read it as "no". (The column keeps Charles's
    * name so the schema is shared.)
    */
   informal_business_supported?: boolean | null;

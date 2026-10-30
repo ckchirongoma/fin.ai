@@ -1,4 +1,4 @@
-// Fin — api/render-pdf.ts, which had zero test coverage before this file.
+// Charles — api/render-pdf.ts, which had zero test coverage before this file.
 //
 // Item D of the founder's incident brief: "decouple and verify the PDF
 // generation path." The generation itself (api/_lib/pdf.ts, real Chromium)
@@ -30,7 +30,7 @@ delete process.env.SUPABASE_URL; // render-pdf.ts touches neither Supabase nor O
 // that sets env vars first does it.
 const renderPdf: typeof import("../api/render-pdf.ts") = await import("../api/render-pdf.ts");
 
-const url = "https://fin.example/api/render-pdf";
+const url = "https://charles.example/api/render-pdf";
 const auth = { Authorization: "Bearer test-worker-secret" };
 
 describe("api/render-pdf.ts", () => {
@@ -70,7 +70,7 @@ describe("api/render-pdf.ts", () => {
 
   test("a real document renders to a real PDF", { skip: linuxOnly }, async () => {
     const html = `<!doctype html><html><body>
-      <table role="presentation" width="100%"><tr><td style="background:#15201c;color:#fff;padding:20px">Fin</td></tr></table>
+      <table role="presentation" width="100%"><tr><td style="background:#15201c;color:#fff;padding:20px">Charles</td></tr></table>
       <p>A plan document, the way rule 8 requires: tables and inline styles, nothing else.</p>
     </body></html>`;
     const res = await renderPdf.POST(new Request(url, { method: "POST", headers: auth, body: JSON.stringify({ html }) }));

@@ -1,4 +1,4 @@
-// Fin — depth of information, per market, as a test.
+// Charles — depth of information, per market, as a test.
 //
 // The founder, round 23: "add another thing to test for: the quality of the
 // responses in terms of depth of information… keep iterating and keep doing

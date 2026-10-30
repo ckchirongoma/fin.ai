@@ -1,4 +1,4 @@
-// Fin — the token floor, and hidden reasoning made visible.
+// Charles — the token floor, and hidden reasoning made visible.
 //
 // Live test, 2026-09-25: the production model reasons even when sent
 // `reasoning: { enabled: false }`, and that reasoning is charged against

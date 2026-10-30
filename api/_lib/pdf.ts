@@ -1,4 +1,4 @@
-// Fin — turning the plan HTML into a real PDF.
+// Charles — turning the plan HTML into a real PDF.
 //
 // This module is imported by EXACTLY ONE function (api/render-pdf.ts), and that
 // is deliberate. Vercel traces dependencies per entrypoint, and
@@ -44,12 +44,12 @@ const VIEWPORT = {
 // The only font @sparticuz/chromium ships is Open Sans, and Open Sans has no
 // naira or cedi sign, no arrow and no status dot: round 17's Nigerian PDF
 // printed 0 of its 96 naira signs and the Ghanaian one 0 of 69. fonts/ holds
-// a small symbols-only cut of DejaVu Sans ("Fin Symbols": currency signs,
+// a small symbols-only cut of DejaVu Sans ("Charles Symbols": currency signs,
 // arrows, bullets, shapes — no letters, so the text itself stays Open Sans
 // exactly as before). Chromium's fontconfig reads /tmp/fonts, so the files are
 // copied there before launch; /var/task/fonts, where Vercel puts the
 // includeFiles copy, is on fontconfig's list too.
-const EXTRA_FONTS = ["FinSymbols.ttf", "FinSymbols-Bold.ttf"];
+const EXTRA_FONTS = ["CharlesSymbols.ttf", "CharlesSymbols-Bold.ttf"];
 export function installExtraFonts(): number {
   const here = dirname(fileURLToPath(import.meta.url));
   const from = [join(process.cwd(), "fonts"), join(here, "..", "..", "fonts")].find((d) => existsSync(join(d, EXTRA_FONTS[0]!)));
@@ -57,7 +57,7 @@ export function installExtraFonts(): number {
     console.error("pdf: fonts/ not found — currency signs and arrows will be missing from the PDF");
     return 0;
   }
-  const to = join(tmpdir(), "fonts", "fin");
+  const to = join(tmpdir(), "fonts", "charles");
   mkdirSync(to, { recursive: true });
   let n = 0;
   for (const f of EXTRA_FONTS) {

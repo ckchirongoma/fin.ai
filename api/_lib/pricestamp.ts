@@ -1,4 +1,4 @@
-// Fin — every library figure in an answer says when it was checked.
+// Charles — every library figure in an answer says when it was checked.
 //
 // CLAUDE.md rule 10: every cost comes from knowledge_entries or tools,
 // carries a verified_on date, and anything past 90 days is hedged to "confirm

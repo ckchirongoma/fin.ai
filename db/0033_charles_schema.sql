@@ -1,13 +1,13 @@
 /*
-# Fin — the money journey's columns (from Charlie's business journey)
+# Charles — the money journey's columns (from Charlie's business journey)
 
 Apply in Supabase → SQL Editor → New query → paste → Run.
 Run AFTER 0032. Safe to run more than once.
 
 1. What this does, in plain terms
-Fin is built from Charlie. The tables keep their names (a `businesses` row is
+Charles is built from Charlie. The tables keep their names (a `businesses` row is
 one household's money; `business_map` is the Money Map; `owner_notes` is what
-Fin remembers about the person), because renaming every table buys nothing
+Charles remembers about the person), because renaming every table buys nothing
 and risks a lot. Four columns change meaning enough to deserve their new
 names, and the code reads the new ones:
 
@@ -24,8 +24,8 @@ changes.
 
 2. Existing rows
 A fresh project has none. On a project that ran Charlie, rows built for a
-business are meaningless to Fin: delete them (or the whole project) before
-pointing Fin at it. This script only renames; it never deletes.
+business are meaningless to Charles: delete them (or the whole project) before
+pointing Charles at it. This script only renames; it never deletes.
 
 3. Security
 Nothing changes: RLS stays on, backend-only, as 0001 set it.
@@ -58,9 +58,33 @@ ALTER TABLE public.businesses
   ADD COLUMN IF NOT EXISTS pending_rule_options jsonb,
   ADD COLUMN IF NOT EXISTS rule jsonb;
 
+-- Running the whole script a second time: 0000 and 0004 add the Charlie
+-- names back (IF NOT EXISTS, and they are gone), next to the new ones. Fold
+-- anything in them into the new columns, then drop them, so the table ends
+-- with one name per fact however many times the script runs.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'businesses' AND column_name = 'customer') THEN
+    UPDATE public.businesses SET goal = customer WHERE goal IS NULL AND customer IS NOT NULL;
+    ALTER TABLE public.businesses DROP COLUMN customer;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'businesses' AND column_name = 'angle') THEN
+    UPDATE public.businesses SET rule = angle WHERE rule IS NULL AND angle IS NOT NULL;
+    ALTER TABLE public.businesses DROP COLUMN angle;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'businesses' AND column_name = 'pending_customer_options') THEN
+    UPDATE public.businesses SET pending_goal_options = pending_customer_options WHERE pending_goal_options IS NULL AND pending_customer_options IS NOT NULL;
+    ALTER TABLE public.businesses DROP COLUMN pending_customer_options;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'businesses' AND column_name = 'pending_angle_options') THEN
+    UPDATE public.businesses SET pending_rule_options = pending_angle_options WHERE pending_rule_options IS NULL AND pending_angle_options IS NOT NULL;
+    ALTER TABLE public.businesses DROP COLUMN pending_angle_options;
+  END IF;
+END $$;
+
 COMMENT ON COLUMN public.businesses.biz_stage IS 'Money stage: surviving | stretching | steady | building';
 COMMENT ON COLUMN public.businesses.goal IS 'The goal(s) the person chose (GoalOption[])';
 COMMENT ON COLUMN public.businesses.rule IS 'The one money rule they chose to live by (RuleOption[])';
-COMMENT ON TABLE public.businesses IS 'One row per household (one WhatsApp number). Named businesses because Fin is built from Charlie; see db/0033.';
+COMMENT ON TABLE public.businesses IS 'One row per household (one WhatsApp number). Named businesses because Charles is built from Charlie; see db/0033.';
 COMMENT ON TABLE public.business_map IS 'The Money Map: eight areas (income, spending, debt, cushion, credit_record, protection, family_money, goals), red/amber/green.';
-COMMENT ON TABLE public.owner_notes IS 'What Fin remembers about the person, in their words.';
+COMMENT ON TABLE public.owner_notes IS 'What Charles remembers about the person, in their words.';

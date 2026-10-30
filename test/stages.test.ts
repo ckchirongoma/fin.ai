@@ -1,4 +1,4 @@
-// Fin — no dead ends.
+// Charles — no dead ends.
 //
 // A stage with no handler is how an owner gets silently stranded: every
 // message from then on falls through to "Got it, I've written that down" and

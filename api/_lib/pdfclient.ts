@@ -1,4 +1,4 @@
-// Fin — asking the render function for a PDF, without importing Chromium.
+// Charles — asking the render function for a PDF, without importing Chromium.
 //
 // See the note at the top of _lib/pdf.ts: Chromium is ~64MB of incompressible
 // binaries, traced into every function that imports it. Keeping it behind an

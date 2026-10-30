@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Ask Fin</title>
-<meta name="description" content="Ask Fin about your 90-day money plan and watch the plan answer back: the step, the area of your money, or the place it is sending you.">
+<title>Ask Charles</title>
+<meta name="description" content="Ask Charles about your 90-day money plan and watch the plan answer back: the step, the area of your money, or the place it is sending you.">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex">
 
 <!--
-  /ask.html — ask Fin about your own plan, on the web.
+  /ask.html — ask Charles about your own plan, on the web.
 
-  Same sign-in as /plan.html (the fin_session cookie from /api/plan?action=verify).
+  Same sign-in as /plan.html (the charles_session cookie from /api/plan?action=verify).
   Data comes from /api/ask:
     GET  /api/ask?action=state   → business (the person: name, one_liner, key), plan, map, tools, suggestions
     POST /api/ask {question, client_turn}
@@ -384,7 +384,7 @@
   <div class="wrap head-in">
     <a class="wordmark" href="/">
       <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="7" fill="#0f766e"/><rect x="9" y="8" width="14" height="3" fill="#fff"/><rect x="9" y="15" width="10" height="3" fill="#fff"/><rect x="9" y="22" width="3" height="3" fill="#fff"/></svg>
-      <span class="serif">Fin</span>
+      <span class="serif">Charles</span>
     </a>
     <span class="badge" id="demoBadge" hidden title="This page is showing made-up example data, not a real person.">Demo</span>
     <nav aria-label="Main"><a href="/plan.html">My plan</a><a href="/">Home</a></nav>
@@ -396,13 +396,13 @@
   <noscript>
     <style>.needs-js{display:none !important}</style>
     <div class="wrap narrow">
-      <p class="eyebrow">Ask Fin</p>
+      <p class="eyebrow">Ask Charles</p>
       <h1>This page needs JavaScript</h1>
       <div class="card">
         <p>Turn JavaScript on and reload to ask questions about your plan here.</p>
-        <p>Or just ask on WhatsApp — it's the same Fin, and the same plan.</p>
+        <p>Or just ask on WhatsApp — it's the same Charles, and the same plan.</p>
         <p style="margin-top:16px">
-          <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=ask">Ask Fin on WhatsApp</a>
+          <a class="btn btn-primary" target="_blank" rel="noopener" href="/wa?m=ask">Ask Charles on WhatsApp</a>
         </p>
       </div>
     </div>
@@ -412,9 +412,9 @@
 
   <!-- ── sign in ─────────────────────────────────────────── -->
   <div class="wrap narrow needs-js" id="signIn" hidden>
-    <p class="eyebrow">Ask Fin</p>
+    <p class="eyebrow">Ask Charles</p>
     <h1 id="signInTitle" tabindex="-1">Ask about your plan</h1>
-    <p class="lede">Ask anything about your 90-day money plan, and the plan shows you the answer — the step, the part of your money, the place it sends you. Sign in with the number you use to talk to Fin.</p>
+    <p class="lede">Ask anything about your 90-day money plan, and the plan shows you the answer — the step, the part of your money, the place it sends you. Sign in with the number you use to talk to Charles.</p>
 
     <div class="card" id="stepNumber">
       <form id="numberForm" novalidate>
@@ -429,7 +429,7 @@
     <div class="card" id="stepCode" hidden>
       <form id="codeForm" novalidate>
         <label for="code">The 6-digit code</label>
-        <span class="hint" id="codeHint">Fin sent it to <span id="waEcho">your number</span> on WhatsApp. It works for ten minutes.</span>
+        <span class="hint" id="codeHint">Charles sent it to <span id="waEcho">your number</span> on WhatsApp. It works for ten minutes.</span>
         <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
                pattern="[0-9]{6}" maxlength="6" placeholder="000000" aria-describedby="codeHint" required>
         <div class="btn-row">
@@ -483,7 +483,7 @@
         <div class="panel" aria-labelledby="mapTitle">
           <div class="panel-head">
             <h2 id="mapTitle">Your Money Map, area by area</h2>
-            <p class="panel-sub">Tap an area to read Fin's note.</p>
+            <p class="panel-sub">Tap an area to read Charles's note.</p>
           </div>
           <div class="map" id="map"></div>
         </div>
@@ -498,16 +498,16 @@
         </div>
       </section>
 
-      <aside class="chat" id="chat" aria-label="Ask Fin">
+      <aside class="chat" id="chat" aria-label="Ask Charles">
         <div class="chat-head" id="chatHead">
           <span class="dot-live" aria-hidden="true"></span>
-          <h2 id="chatTitle">Ask Fin</h2>
+          <h2 id="chatTitle">Ask Charles</h2>
           <button type="button" class="sheet-toggle" id="sheetToggle" aria-expanded="false" aria-controls="log">Open</button>
         </div>
 
         <div class="log" id="log" role="log" aria-live="polite" aria-relevant="additions" aria-labelledby="chatTitle">
           <div class="intro" id="intro">
-            <p>Ask anything about your plan — a step you're stuck on, a letter you got, a message someone forwarded you, how you're doing. Fin answers from your plan and from checked facts, and shows you the part of the plan it means.</p>
+            <p>Ask anything about your plan — a step you're stuck on, a letter you got, a message someone forwarded you, how you're doing. Charles answers from your plan and from checked facts, and shows you the part of the plan it means.</p>
             <div class="sugg" id="sugg"></div>
           </div>
         </div>
@@ -542,16 +542,16 @@
   var MODE = DEMO ? "demo" : "live";
   // Both are scoped to the signed-in person (see scopeStorage()): the key
   // under OWNER_KEY says whose they are, and each record carries it too.
-  var HISTORY_KEY = "fin.ask.history.v2." + MODE;
+  var HISTORY_KEY = "charles.ask.history.v2." + MODE;
   // A slow answer keeps computing server-side; the page polls for it (see send()).
-  var PENDING_KEY = "fin.ask.pending.v2." + MODE;
-  var OWNER_KEY = "fin.ask.owner.v2." + MODE;
+  var PENDING_KEY = "charles.ask.pending.v2." + MODE;
+  var OWNER_KEY = "charles.ask.owner.v2." + MODE;
   var bizKey = null;                      // state.business.key once state has loaded
   var POLL_MS = 2000;                     // between polls for a pending turn
   var POLL_NET_RETRIES = 3;               // network failures in a row before "Try again"
   var PENDING_RESUME_MS = 5 * 60 * 1000;  // a stored pending turn older than this is not resumed
   var PENDING_GIVE_UP_MS = 6 * 60 * 1000; // the server gives up at ~300s; never poll forever
-  var UNREACHABLE = "Fin isn't answering right now. Check your connection and try again — or ask on WhatsApp.";
+  var UNREACHABLE = "Charles isn't answering right now. Check your connection and try again — or ask on WhatsApp.";
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var mobileMQ = window.matchMedia("(max-width: 959.98px)");
 
@@ -626,7 +626,7 @@
   // ── session storage (per-tab, per-person) ──────────────
   // v1 keys (and Charlie's) were not scoped to a person; drop them rather than guess whose they were.
   try {
-    ["fin.ask.history.v1.", "fin.ask.pending.v1.", "fin.ask.history.v2.", "fin.ask.pending.v2.", "fin.ask.owner.v2."].forEach(function (k) { sessionStorage.removeItem(k + MODE); });
+    ["charles.ask.history.v1.", "charles.ask.pending.v1.", "charles.ask.history.v2.", "charles.ask.pending.v2.", "charles.ask.owner.v2."].forEach(function (k) { sessionStorage.removeItem(k + MODE); });
   } catch (e) { /* private mode: fine */ }
 
   // Called once state names the person. A different person than the one
@@ -771,7 +771,7 @@
       stepNumber.hidden = true;
       stepCode.hidden = false;
       el("waEcho").textContent = "+" + waId;
-      say(str(r.data.message) || "If that number has a plan with Fin, a code is on its way to it on WhatsApp.", "ok");
+      say(str(r.data.message) || "If that number has a plan with Charles, a code is on its way to it on WhatsApp.", "ok");
       codeInput.value = "";
       codeInput.focus();
       startCooldown(60);
@@ -868,7 +868,7 @@
     var b = state.business;
     var name = str(b.name) || "Your money";
     el("bizName").textContent = name;
-    document.title = name + " — Ask Fin";
+    document.title = name + " — Ask Charles";
     var meta = [];
     if (b.one_liner) meta.push(str(b.one_liner));
     if (b.country) meta.push(COUNTRY[b.country] || str(b.country));
@@ -925,8 +925,8 @@
     wrap.textContent = "";
     stepIndex = {};
     if (!state.plan || !state.plan.steps.length) {
-      wrap.appendChild(node("p", "empty", "Your plan will show here once you've finished the questions on WhatsApp. You can still ask Fin things in the meantime."));
-      var a = node("a", "btn btn-ghost btn-sm", "Carry on with Fin on WhatsApp");
+      wrap.appendChild(node("p", "empty", "Your plan will show here once you've finished the questions on WhatsApp. You can still ask Charles things in the meantime."));
+      var a = node("a", "btn btn-ghost btn-sm", "Carry on with Charles on WhatsApp");
       a.href = "/wa?m=ask"; a.target = "_blank"; a.rel = "noopener";
       wrap.appendChild(a);
       return;
@@ -1380,14 +1380,14 @@
     var reply = entry.reply || {};
     var focus = entry.focus || {};
     var b = node("div", "bub bot");
-    b.appendChild(node("span", "sr", "Fin: "));
+    b.appendChild(node("span", "sr", "Charles: "));
     b.appendChild(node("div", "txt", str(reply.message) || "…"));
 
     if (entry.grounded === false) {
       var g = node("div", "ungrounded");
       var i = node("span", null, "\u26A0"); i.setAttribute("aria-hidden", "true");
       g.appendChild(i);
-      g.appendChild(node("span", null, "Fin doesn't have checked information on this yet, so treat it as a starting point and confirm before you rely on it."));
+      g.appendChild(node("span", null, "Charles doesn't have checked information on this yet, so treat it as a starting point and confirm before you rely on it."));
       b.appendChild(g);
     }
 
@@ -1477,7 +1477,7 @@
     var dots = node("span", "dots"); dots.setAttribute("aria-hidden", "true");
     dots.appendChild(node("i")); dots.appendChild(node("i")); dots.appendChild(node("i"));
     typingEl.appendChild(dots);
-    var t = node("span", null, "Fin is thinking…");
+    var t = node("span", null, "Charles is thinking…");
     typingText = t;
     typingEl.appendChild(t);
     log.appendChild(typingEl);
@@ -1694,10 +1694,10 @@
       showSignIn("Your session ran out. Sign in again to keep asking.");
       return;
     }
-    if (r.status === 429) { errBubble(problem(r) || "You're asking faster than Fin can answer. Give it a minute.", function () { send(text); }); return; }
+    if (r.status === 429) { errBubble(problem(r) || "You're asking faster than Charles can answer. Give it a minute.", function () { send(text); }); return; }
     if (r.status === 400 || r.status === 409) { errBubble(problem(r), null); return; }
     if (!r.ok || !r.data || !r.data.ok || !r.data.reply) { errBubble(problem(r), function () { send(text); }); return; }
-    var entry = { who: "fin", reply: r.data.reply, focus: r.data.focus || { kind: "none" }, grounded: r.data.grounded !== false };
+    var entry = { who: "charles", reply: r.data.reply, focus: r.data.focus || { kind: "none" }, grounded: r.data.grounded !== false };
     history.push(entry);
     saveHistory();
     var bub = botBubble(entry, true);
@@ -1715,10 +1715,10 @@
     if (!history.length) { el("intro").hidden = false; return; }
     el("intro").hidden = true;
     var lastBot = -1;
-    history.forEach(function (h, i) { if (h.who === "fin") lastBot = i; });
+    history.forEach(function (h, i) { if (h.who === "charles") lastBot = i; });
     history.forEach(function (h, i) {
       if (h.who === "me") meBubble(str(h.text));
-      else if (h.who === "fin") botBubble(h, i === lastBot && i === history.length - 1);
+      else if (h.who === "charles") botBubble(h, i === lastBot && i === history.length - 1);
     });
     scrollLog();
   }
@@ -1825,12 +1825,12 @@
         steps: [
           { id: "d1", title: "Write down every rand you owe", workstream: "See the whole picture", domain: "debt", status: "done", push: "One list: who you owe, how much, what it costs you a month, and the day it is due.", why_for_you: "You said you owe three places and are not sure of the total. The list is what every other step is built on.", done_when: "the list has every debt on it with its monthly cost", tool_id: "money_log", is_next: false },
           { id: "d2", title: "Make the month fit the money", workstream: "See the whole picture", domain: "spending", status: "done", push: "On payday, pay the fixed things first, then split what is left into three pots: food and transport, the family line, and the mashonisa.", why_for_you: "You said the month is longer than the money. Paying the fixed things first means the shortfall shows up on day one, not day twenty.", done_when: "one month has run on the plan", tool_id: "money_log", is_next: false },
-          { id: "d3", title: "Get out of the mashonisa's book", workstream: "Stop the bleeding", domain: "debt", status: "open", push: "This payday the mashonisa gets paid first, and nothing new gets borrowed from anyone. Keep the receipt or the message as proof of every payment.", why_for_you: "You told Fin the mashonisa takes R600 of your R7,800 every month. That is the debt bleeding fastest, so it goes first.", done_when: "the mashonisa is paid off and you have told them you are done", tool_id: "ncr_line", is_next: true },
+          { id: "d3", title: "Get out of the mashonisa's book", workstream: "Stop the bleeding", domain: "debt", status: "open", push: "This payday the mashonisa gets paid first, and nothing new gets borrowed from anyone. Keep the receipt or the message as proof of every payment.", why_for_you: "You told Charles the mashonisa takes R600 of your R7,800 every month. That is the debt bleeding fastest, so it goes first.", done_when: "the mashonisa is paid off and you have told them you are done", tool_id: "ncr_line", is_next: true },
           { id: "d4", title: "Set the family line", workstream: "Stop the bleeding", domain: "family_money", status: "open", push: "Decide one fixed amount for your mother each month, say it out loud to her, and send it on payday — not when asked.", why_for_you: "You said family asks for money most months and it breaks the plan. A fixed line everyone knows is easier to keep than a different answer every time.", done_when: "the amount is agreed and has been sent on payday once", tool_id: null, is_next: false },
           { id: "d5", title: "Kill the smallest debt first", workstream: "Stop the bleeding", domain: "debt", status: "open", push: "Once the mashonisa is gone, put what you were paying them onto the clothing account until it is closed, then onto the bank loan.", why_for_you: "The clothing account is your smallest debt. Closing one whole account early is what keeps people going.", done_when: "the clothing account shows a zero balance", tool_id: null, is_next: false },
           { id: "d6", title: "Build a cushion you can reach", workstream: "Something that is yours", domain: "cushion", status: "done", push: "Move R50 into a separate pocket on payday, before anything else, and name it so you know what it is for.", why_for_you: "You said a surprise cost means borrowing. Fifty rand on payday is small enough to keep and separate enough not to spend.", done_when: "the pocket exists and has had two paydays of money land in it", tool_id: "goalsave", is_next: false },
           { id: "d7", title: "Get your free credit report", workstream: "Something that is yours", domain: "credit_record", status: "open", push: "Pull your free report once, read every account on it, and dispute anything that is not yours or is older than three years.", why_for_you: "You said you want to fix your credit record. The report is the only way to know what is actually on it.", done_when: "you have the report and have checked every line", tool_id: "transunion_free", is_next: false },
-          { id: "d8", title: "Make your money hard to steal", workstream: "Something that is yours", domain: "protection", status: "skipped", push: "Turn on app notifications for every payment, and send Fin any message about a loan, a prize or a \"debt removal\" before you answer it.", why_for_you: "Almost all banking-app losses are social engineering. A bank never asks for your PIN or OTP; neither does Fin.", done_when: "notifications are on and you have forwarded one message to check", tool_id: null, is_next: false },
+          { id: "d8", title: "Make your money hard to steal", workstream: "Something that is yours", domain: "protection", status: "skipped", push: "Turn on app notifications for every payment, and send Charles any message about a loan, a prize or a \"debt removal\" before you answer it.", why_for_you: "Almost all banking-app losses are social engineering. A bank never asks for your PIN or OTP; neither does Charles.", done_when: "notifications are on and you have forwarded one message to check", tool_id: null, is_next: false },
           { id: "d9", title: "Put a name on the bigger goal", workstream: "After the ninety days", domain: "goals", status: "open", push: "Write one sentence about what the money is for after the debts are gone, with a number and a year on it.", why_for_you: "You mentioned your daughter's school fees. A written goal with a number is what the next plan is built from.", done_when: "the sentence is written down", tool_id: null, is_next: false }
         ]
       },
@@ -1848,7 +1848,7 @@
         money_log: { id: "money_log", name: "A money log in your notes app", url: null, cost_line: "Demo text: free — it is the notes app already on the phone.", walkthrough: ["Open the notes app and make one note called Money.", "Write every debt on its own line: who, how much, what it costs a month, the day it is due.", "Under that, write what comes in and the day it lands.", "Each payday, write what went where. Three lines is enough."] },
         ncr_line: { id: "ncr_line", name: "National Credit Regulator consumer line", url: "https://www.ncr.org.za", cost_line: "Demo text: the call is free, and so is the first conversation with a registered debt counsellor.", walkthrough: ["Call 0860 627 627 and say you want to find a registered debt counsellor.", "Ask them to confirm the counsellor's registration number before you agree to anything.", "Nobody on that line is selling you a product — if someone asks for a fee to \"release\" money, it is not them."] },
         goalsave: { id: "goalsave", name: "A separate savings pocket in your bank app", url: null, cost_line: "Demo text: opening a pocket costs nothing — confirm the current terms in the app.", walkthrough: ["Open your bank app and find the savings pocket or goal feature.", "Make one pocket and give it a name you will recognise.", "Set up a transfer of R50 for payday, before anything else goes out.", "Do not link a card to it."] },
-        transunion_free: { id: "transunion_free", name: "TransUnion free credit report", url: "https://www.transunion.co.za", cost_line: "Demo text: one report a year is free by law (NCA s72) — confirm on the site.", walkthrough: ["Go to the site and choose the free annual report.", "You will be asked to confirm who you are; the site does it, not Fin.", "Read every account listed. Note anything you do not recognise or that is older than three years.", "Dispute errors on the site; the bureau has 20 business days to answer."] }
+        transunion_free: { id: "transunion_free", name: "TransUnion free credit report", url: "https://www.transunion.co.za", cost_line: "Demo text: one report a year is free by law (NCA s72) — confirm on the site.", walkthrough: ["Go to the site and choose the free annual report.", "You will be asked to confirm who you are; the site does it, not Charles.", "Read every account listed. Note anything you do not recognise or that is older than three years.", "Dispute errors on the site; the bureau has 20 business days to answer."] }
       },
       suggestions: ["How do I get out of the mashonisa's book?", "Someone sent me a message about a loan — is it real?", "How am I doing?", "What is prescribed debt?"]
     };

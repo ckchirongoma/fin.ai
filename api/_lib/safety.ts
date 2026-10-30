@@ -1,9 +1,9 @@
-// Fin — the guardrails, with two engines and an audit trail.
+// Charles — the guardrails, with two engines and an audit trail.
 //
 // THE PROBLEM THIS FILE FIXES
 // The first version ran every safety check through Jev alone, keyed off an
 // environment variable that appeared in no deploy document. Set up exactly as
-// written, Fin shipped with distress detection, per-step compliance and
+// written, Charles shipped with distress detection, per-step compliance and
 // rubric scoring all silently returning "nothing to see here". That is the
 // precise failure the evidence warns about: in the Kenya RCT the businesses
 // harmed by AI advice were the weakest ones, and these checks are what stand
@@ -79,7 +79,7 @@ export interface SafetyCtx {
   /**
    * What the person said in the message being answered, and anything they
    * forwarded. A figure the reply only QUOTES back from here ("do not pay the
-   * R350") is not Fin asserting a price, and gets no price hedge.
+   * R350") is not Charles asserting a price, and gets no price hedge.
    */
   ownerMessage?: string;
   /** The business's market, so a "confirm with" line names that market's bodies (confirmWho). */
@@ -91,7 +91,7 @@ export interface SafetyCtx {
    */
   ownerEarlier?: string;
   /**
-   * Fin is writing something the person asked for (a promo, a post), or
+   * Charles is writing something the person asked for (a promo, a post), or
    * finishing one: the person just confirmed the special's price. No
    * regulator line under it unless they asked about customers' data. When
    * absent, read from ownerMessage (WRITE_REQUEST).
@@ -399,7 +399,7 @@ const SEVERE_TROUBLE_PARTS = [
   String.raw`\b(?:staff|workers?|employees|people|rent|suppliers?|wages|salar\w+)\s+(?:have|has)(?:\s+not|n'?t|nt)\s+been\s+paid\b`,
   String.raw`\bsuppliers?\s+(?:wants?|is\s+chasing|are\s+chasing|keeps?\s+chasing|is\s+demanding|are\s+demanding)\s+(?:(?:his|her|their|the|my|our)\s+)?money\b`,
   String.raw`\bevict\w*`,
-  // Fin: a household's hardship in so many words — food, the lights, the
+  // Charles: a household's hardship in so many words — food, the lights, the
   // children's school, a grant or wage that stopped, a lender holding a card.
   String.raw`\b(?:can'?t|cannot|can\s+not|couldn'?t|could\s+not|unable\s+to|not\s+able\s+to|no\s+money\s+(?:to|for))\s+(?:even\s+)?(?:buy|afford|get|pay\s+for)?\s*(?:food|groceries|bread|mealie\s*meal|maize\s*meal|nappies|formula|electricity|prepaid|the\s+lights|school\s+fees|transport|taxi\s+fare|the\s+taxi|rent)\b`,
   String.raw`\b(?:electricity|lights|power|water)\s+(?:is\s+|was\s+|got\s+|has\s+been\s+|have\s+been\s+)?(?:cut|cut\s+off|disconnected|switched\s+off|off\s+since)\b`,
@@ -806,7 +806,7 @@ export async function checkStepCompliance(
       // account — "take your ID and proof of address to the branch", or a
       // collection message carrying the person's OWN account number so a
       // customer can pay them. Those are the product working. What must never
-      // happen is Fin asking the person to send such a detail HERE.
+      // happen is Charles asking the person to send such a detail HERE.
       asks_sensitive_data:
         "Is the reader being asked to send, reply with, or share an ID number, bank account number, card number, PIN or password WITH THE ASSISTANT ITSELF, in this chat? Answer false if the message merely mentions such a detail, tells the reader to take it somewhere else (a bank branch, a provider's own sign-up), or contains the reader's own payment details for them to give to someone else.",
       claims_they_said:
@@ -883,7 +883,7 @@ export async function checkStepCompliance(
  * and is it a tax or legal conclusion stated as certain.
  */
 /**
- * Does this reply put a money figure forward on Fin's own authority?
+ * Does this reply put a money figure forward on Charles's own authority?
  * False when every figure in it was already in what the person sent (quoting
  * a scam, restating their own price) or is a verified cost in the sheet.
  * With no money figure at all, true only for a rate that is not verified
@@ -896,7 +896,7 @@ export function assertsAPrice(reply: string, verifiedCosts: string, ownerMessage
 }
 
 /**
- * The money figures and rates a reply puts forward on Fin's own
+ * The money figures and rates a reply puts forward on Charles's own
  * authority: in neither what the person sent (their numbers count however
  * they wrote them, exactly — this is a quote check, not arithmetic) nor the
  * verified costs. A rate is a percentage next to a rate word ("2% per
@@ -910,7 +910,7 @@ export function ungroundedFigures(reply: string, verifiedCosts: string, ownerMes
   // sign-up" under a question about the person's own price).
   const stated = allSentences(reply).filter((x) => !/\?\s*["'”’)]*\s*$/.test(x)).join("\n");
   // The gap between two of the person's own figures, or their sum, is their
-  // arithmetic, not a price Fin found: "UGX 5,000 less than your usual
+  // arithmetic, not a price Charles found: "UGX 5,000 less than your usual
   // UGX 45,000" (round 28, UG, live, under their own special).
   const own = [...g.owner].slice(0, 20);
   const sums = new Set<number>();
@@ -945,7 +945,7 @@ const CONFIRMS_PREVIOUS = /^(?:was that right|did you mean|have i got that right
  * ", which matches what you told me," inside a sentence: an aside, removable
  * on its own. (A causal lead — "Since you told me you're VAT-registered, add
  * VAT" — is NOT removed on its own: it is the premise the advice rests on,
- * and without it Fin would state the invented fact itself. That sentence
+ * and without it Charles would state the invented fact itself. That sentence
  * goes whole. Review, round 21.)
  */
 const ATTRIBUTION_MID = /,\s*(?:which|that)\s+(?:matches|fits|lines up with|agrees with)\s+what you (?:told me|said|mentioned|picked|chose)\s*,/gi;
@@ -1136,7 +1136,7 @@ const DATA_PROTECTION_PLAIN = [
 const MAY_I_MESSAGE_CUSTOMERS =
   /\b(?:can|may|could)\s+(?:i|we)\b[^?]*\b(?:message|whatsapp|text|sms|send|email|broadcast|contact|market|promote)\w*\b[^?]*\b(?:customers?|clients?|numbers|contacts|people who)\b|\b(?:am i|are we) allowed to\b[^?]*\b(?:message|whatsapp|text|sms|send|email|contact)\w*\b/i;
 /**
- * The person asked Fin to write something for them: a message, a post, a
+ * The person asked Charles to write something for them: a message, a post, a
  * caption. Round 30 (ZA, live): "Write me a message to send my customers
  * about a special this Saturday" came back with "register yourself as
  * Information Officer" and the regulator line on top of the promo.
@@ -1254,7 +1254,7 @@ export async function checkReply(
     // ended in "Check that price at sign-up — it may have changed.", because
     // the judge saw rand figures outside the tool sheet. They were the
     // scammer's figures, quoted back from the person's own message. The hedge
-    // is for a price Fin ASSERTS: a money figure that is neither in what
+    // is for a price Charles ASSERTS: a money figure that is neither in what
     // the person sent nor a verified cost, or an unverified rate — each with
     // its own words, and each only when the sentence it is in (or the next)
     // does not already say to confirm THAT price (review, round 21: "have
@@ -1644,7 +1644,7 @@ export async function checkTraceability(
 // should not become the thing that checks it: a second model proof-reading a
 // first model's prose is expensive and can itself drift on the same word.
 //
-// What Fin already knows exactly should be checked against the stored
+// What Charles already knows exactly should be checked against the stored
 // string directly, cheaply, mechanically — a plain lookup, never askJev,
 // never askJSON. That is the whole fix, and it is deliberately the opposite
 // shape of checkTraceability above: that one is a judgement (is this claim
@@ -1785,7 +1785,7 @@ function knownUnits(knownFacts: Record<string, string | null | undefined>): { wo
  * Runs on a reply right before it is sent. Mechanical only: no Jev, no model
  * call — a plain lookup where a lookup will do, which is the entire fix.
  * Finds a word (or a run of words) that reads as a near-miss of a fact
- * Fin already knows exactly, and puts the real spelling back.
+ * Charles already knows exactly, and puts the real spelling back.
  * `knownFacts` is deliberately small and specific — see businessKnownFacts —
  * never the free-text diagnostic answers, which are prose, not exact
  * strings to enforce.
@@ -1897,7 +1897,7 @@ export function businessKnownFacts(biz: {
 // step is actually about that checkReply's price check never looks at: a
 // button or link's exact wording ("tap Manage now"), a timeframe
 // ("verification takes up to 5 business days"), or a fee stated in words
-// rather than a bare number. Every one of those is something Fin already
+// rather than a bare number. Every one of those is something Charles already
 // has on file for that specific tool — tools.cost, tools.walkthrough,
 // tools.url — so a "help" reply should never tell a person a fact about the
 // tool that is not traceable to that stored data. This is a narrower,
@@ -1927,7 +1927,7 @@ function toolFactsSheet(tool: ToolFacts | null): string {
  * Runs on a "help"/"stuck" reply, alongside (never instead of) checkReply.
  * Deliberately narrow, like every other check in this file: it does not ask
  * whether the ADVICE is good, only whether a concrete, checkable fact the
- * reply states about the tool is one Fin can actually back with stored
+ * reply states about the tool is one Charles can actually back with stored
  * data — a fee, a button/link's name, or a timeframe. When there is no tool
  * on this step at all, any such claim is by definition unbacked.
  */

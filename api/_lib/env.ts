@@ -1,4 +1,4 @@
-// Fin — every environment variable in one place, with an honest readiness
+// Charles — every environment variable in one place, with an honest readiness
 // report.
 //
 // The rule this file exists to enforce: a subsystem that is not configured must
@@ -24,7 +24,7 @@ export const env = {
   // ── WhatsApp ───────────────────────────────────────────────────
   WHATSAPP_ACCESS_TOKEN: read("WHATSAPP_ACCESS_TOKEN"),
   WHATSAPP_PHONE_NUMBER_ID: read("WHATSAPP_PHONE_NUMBER_ID"),
-  WHATSAPP_VERIFY_TOKEN: read("WHATSAPP_VERIFY_TOKEN") || "fin-verify",
+  WHATSAPP_VERIFY_TOKEN: read("WHATSAPP_VERIFY_TOKEN") || "charles-verify",
   /** Meta app secret. Without it, inbound webhooks cannot be authenticated. */
   WHATSAPP_APP_SECRET: read("WHATSAPP_APP_SECRET"),
   /**
@@ -65,7 +65,7 @@ export const env = {
   SIGNALS_ADMIN_SECRET: read("SIGNALS_ADMIN_SECRET"),
   /** Pepper for hashing login codes and connector tokens before storage. */
   SESSION_SECRET: read("SESSION_SECRET"),
-  /** e.g. https://fin.vercel.app — used for connector URLs and self-calls. */
+  /** e.g. https://charles.vercel.app — used for connector URLs and self-calls. */
   PUBLIC_BASE_URL: read("PUBLIC_BASE_URL") || (read("VERCEL_URL") ? `https://${read("VERCEL_URL")}` : ""),
 
   /** Set to "1" to let the webhook run the work inline instead of via the queue. */
@@ -77,7 +77,7 @@ export const env = {
   /** Who alert emails go to, comma-separated. Kept out of code on purpose. */
   ALERT_EMAIL_TO: read("ALERT_EMAIL_TO"),
   /** The sender. Until a domain is verified in Resend, only its test sender works, and only to the account owner's own address. */
-  ALERT_EMAIL_FROM: read("ALERT_EMAIL_FROM") || "Fin alerts <onboarding@resend.dev>",
+  ALERT_EMAIL_FROM: read("ALERT_EMAIL_FROM") || "Charles alerts <onboarding@resend.dev>",
   /** UTC hour the daily summary goes out. Default 5 = 07:00 in Johannesburg. */
   ALERT_DIGEST_HOUR_UTC: Number(read("ALERT_DIGEST_HOUR_UTC") || 5),
   /** "0" leaves people' own words (scrubbed of numbers and links) out of alert emails. */
@@ -144,7 +144,7 @@ export function readiness(): Readiness[] {
       subsystem: "whatsapp_send",
       ready: has(env.WHATSAPP_ACCESS_TOKEN) && has(env.WHATSAPP_PHONE_NUMBER_ID),
       required: false,
-      detail: "WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID. Missing means Fin runs and logs but sends nothing — deliberate, so the flow can be exercised before a number exists.",
+      detail: "WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID. Missing means Charles runs and logs but sends nothing — deliberate, so the flow can be exercised before a number exists.",
     },
     {
       subsystem: "whatsapp_verify",
@@ -193,7 +193,7 @@ export function readiness(): Readiness[] {
       ready: publicWhatsAppNumber() !== null || (has(read("WHATSAPP_PHONE_NUMBER_ID")) && has(read("WHATSAPP_ACCESS_TOKEN"))),
       required: false,
       detail:
-        "Every 'Message Fin' button on the website goes through /wa, which opens WhatsApp on the bot's own number as Meta reports it (from WHATSAPP_PHONE_NUMBER_ID + WHATSAPP_ACCESS_TOKEN), or on WHATSAPP_PUBLIC_NUMBER if set. Not ready means those buttons show a 'not live yet' page instead of opening WhatsApp.",
+        "Every 'Message Charles' button on the website goes through /wa, which opens WhatsApp on the bot's own number as Meta reports it (from WHATSAPP_PHONE_NUMBER_ID + WHATSAPP_ACCESS_TOKEN), or on WHATSAPP_PUBLIC_NUMBER if set. Not ready means those buttons show a 'not live yet' page instead of opening WhatsApp.",
     },
     {
       subsystem: "connector",
@@ -244,7 +244,7 @@ export function missingRequired(): string[] {
 
 /**
  * True when at least one guardrail engine can actually run. If this is ever
- * false in production, Fin is giving business advice with no safety net,
+ * false in production, Charles is giving business advice with no safety net,
  * and the health endpoint says so in plain words.
  */
 export const guardrailsLive = (): boolean => Boolean(env.TYPESAFE_API_KEY || env.OPENROUTER_API_KEY);

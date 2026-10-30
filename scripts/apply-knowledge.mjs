@@ -1,4 +1,4 @@
-// Fin — load a few named seed rows into Supabase, with no SQL.
+// Charles — load a few named seed rows into Supabase, with no SQL.
 //
 // The founder does not run SQL, and a tester without a SQL path could not
 // load db/0019 at all in round 10. This upserts rows straight from

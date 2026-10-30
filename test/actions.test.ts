@@ -1,4 +1,4 @@
-// Fin — typed shortcuts, and the line between a command and a question.
+// Charles — typed shortcuts, and the line between a command and a question.
 //
 // CLAUDE.md rule 7. An early version turned every tap into a chat message and
 // re-parsed the text, so a leftover conversational mode could swallow an

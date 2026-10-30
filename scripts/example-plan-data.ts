@@ -1,4 +1,4 @@
-// Fin — one example household's plan, for the landing page and the print check.
+// Charles — one example household's plan, for the landing page and the print check.
 //
 // The landing page shows the REAL plan template, filled in for an example
 // household and captioned as one. Every tool cost is read from
@@ -17,7 +17,7 @@ export const step = (id: string, domain: string, title: string, push: string, do
   ({ id, title, domain, outcome: "", done_when, brief: "", artifact_brief: null, tool_choices: tool_id ? [tool_id] : [], push, artifact, why_for_you, tool_id });
 
 export const EXAMPLE_PLAN: PlanDocData = {
-  productName: "Fin",
+  productName: "Charles",
   countryCode: "ZA",
   ctx: {
     name: "Lerato",
@@ -99,5 +99,5 @@ export const EXAMPLE_PLAN: PlanDocData = {
     sheets_budget: T("sheets_budget", "The three pots, written once a month"),
     gotyme_goalsave: T("gotyme_goalsave", "A named savings pocket inside the banking app"),
   },
-  planUrl: "https://fin.example/plan",
+  planUrl: "https://charles.example/plan",
 };

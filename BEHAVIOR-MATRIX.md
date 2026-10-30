@@ -1,4 +1,4 @@
-# Behaviour matrix — how Claude works on Fin
+# Behaviour matrix — how Claude works on Charles
 
 The founder's standing instructions to Claude, in one place, carried over from
 Charlie and kept current. **Read this before doing anything in this
@@ -8,7 +8,7 @@ rule here and a tool default disagree, this file wins.
 
 | # | Rule | Since | What it means in practice |
 |---|------|-------|---------------------------|
-| 1 | **At most two agents, and only when the founder says so.** | 2026-10-30 (Fin round 1) | Charlie's rule was "no agents, ever". On 2026-10-30 the founder allowed two for the Fin build ("just two"). That is the ceiling until they say otherwise: at most two, each briefed with the rules below, never for review of the lead's own work, and the lead reads and checks what comes back. |
+| 1 | **At most two agents, and only when the founder says so.** | 2026-10-30 (Charles round 1) | Charlie's rule was "no agents, ever". On 2026-10-30 the founder allowed two for the Charles build ("just two"). That is the ceiling until they say otherwise: at most two, each briefed with the rules below, never for review of the lead's own work, and the lead reads and checks what comes back. |
 | 2 | **Keep this matrix up to date, constantly.** | 2026-10-11 | A new instruction is added the turn it arrives; a changed one is edited, not duplicated. |
 | 3 | **Fix everything a report finds, without back-and-forth.** | earlier rounds | Every tester finding is fixed or, if it truly cannot be, explained. Don't ask what to do; do it. |
 | 4 | **Read the evidence first.** | 2026-10-11 | When the tester's evidence is in the repo, read it before changing code, and fix from what it shows. |
@@ -24,7 +24,7 @@ rule here and a tool default disagree, this file wins.
 | 14 | **The founder's email lives only in the `ALERT_EMAIL_TO` setting.** | earlier rounds | Never in code, docs or commits. |
 | 15 | **One market at full depth before the next.** | 2026-10-30 | South Africa is the market. The depth and coverage tests are the yardstick and only ratchet up; a second market (the Philippines first) is added as data plus the small code list in `docs/EXPERIENCE.md` §1.1, never by guessing its rules. |
 | 16 | **Commit and push before stopping.** | session hook | Nothing is left uncommitted at the end of a turn. Commit messages end with the session's attribution lines. |
-| 17 | **No regression. Test for it here and everywhere else.** | 2026-10-12 | The rules Fin talks by came from research (one recommendation, not a menu; grounded facts only; free first; hardship mode; no "you told me"; never credit; never an ID, card, PIN or OTP) and must hold on every door — WhatsApp, the web, and the person's own AI. A guard is tested through the whole path it lives in. Before every push: the full suite in both modes (normal and `WA_STRICT_LIMITS=1`), the typecheck, `eval.ts --dry`, and the library depth and coverage scripts. |
+| 17 | **No regression. Test for it here and everywhere else.** | 2026-10-12 | The rules Charles talks by came from research (one recommendation, not a menu; grounded facts only; free first; hardship mode; no "you told me"; never credit; never an ID, card, PIN or OTP) and must hold on every door — WhatsApp, the web, and the person's own AI. A guard is tested through the whole path it lives in. Before every push: the full suite in both modes (normal and `WA_STRICT_LIMITS=1`), the typecheck, `eval.ts --dry`, and the library depth and coverage scripts. |
 | 18 | **Check for drift every round.** | 2026-10-12 | Before each push, audit the round's work against this matrix and CLAUDE.md's twelve rules, and say in the reply what had drifted and what was put back. |
-| 19 | **Never recommend credit.** | 2026-10-30 (Fin) | No loan, consolidation, buy-now-pay-later, cash advance or overdraft is ever the recommendation, however cheap, in any prompt, row or step. A bank product that is free and reversible (a savings pocket, an instant payment) may be named where it fits; a loan may only be explained, downside first. |
-| 20 | **Never ask for or store an ID number, account number, card number, PIN, OTP or password.** | 2026-10-30 (Fin) | Said in the first message; refused by the memory step, the connector and the guardrails. Anything that needs one happens inside the bank's own app or at the counter. |
+| 19 | **Never recommend credit.** | 2026-10-30 (Charles) | No loan, consolidation, buy-now-pay-later, cash advance or overdraft is ever the recommendation, however cheap, in any prompt, row or step. A bank product that is free and reversible (a savings pocket, an instant payment) may be named where it fits; a loan may only be explained, downside first. |
+| 20 | **Never ask for or store an ID number, account number, card number, PIN, OTP or password.** | 2026-10-30 (Charles) | Said in the first message; refused by the memory step, the connector and the guardrails. Anything that needs one happens inside the bank's own app or at the counter. |

@@ -1,4 +1,4 @@
-// Fin — the knowledge-base yardstick.
+// Charles — the knowledge-base yardstick.
 //
 // WHY THIS EXISTS
 // South Africa had four times the content of Kenya, Nigeria or Ghana, and three

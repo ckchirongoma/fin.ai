@@ -1,4 +1,4 @@
-// Fin — the one function that carries Chromium.
+// Charles — the one function that carries Chromium.
 //
 // Isolated on purpose. @sparticuz/chromium ships ~64MB of already-compressed
 // binaries and Vercel traces dependencies per entrypoint, so anything importing

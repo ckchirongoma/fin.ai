@@ -1,4 +1,4 @@
-// Fin — prove the plan document still prints.
+// Charles — prove the plan document still prints.
 //
 // CLAUDE.md rule 8 exists because the first plan document rendered as an
 // unstyled, colourless wall of text in some environments: CSS Grid, Flexbox and

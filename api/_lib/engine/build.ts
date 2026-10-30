@@ -1,4 +1,4 @@
-// Fin — building the plan: identity → goals → rule → context → plan.
+// Charles — building the plan: identity → goals → rule → context → plan.
 //
 // The rule that shapes this whole file (CLAUDE.md rule 1): the model never
 // chooses or invents plan structure. A fixed library of modules decides what
@@ -26,7 +26,7 @@ import { errorText, since, track, trackFailure, trackUnmet } from "../track.js";
 import { queueKeptQuestions } from "./kept.js";
 import type { RuleOption, Business, HouseholdContext, GoalOption, JobRow, MapEntry } from "../types.js";
 
-export const PRODUCT_NAME = "Fin";
+export const PRODUCT_NAME = "Charles";
 
 /**
  * Which third of the cohort this household starts in, from its Money Map on

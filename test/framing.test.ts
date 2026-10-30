@@ -1,4 +1,4 @@
-// Fin — the conversation says what it costs and what comes next.
+// Charles — the conversation says what it costs and what comes next.
 //
 // First testers (2026-09-23) liked the questions but wanted the start framed
 // (how many, how long, what you get) and the hand-over framed (where the plan

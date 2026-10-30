@@ -1,6 +1,6 @@
-// Fin — the market, in one place.
+// Charles — the market, in one place.
 //
-// Fin carried five markets; Fin starts with one. The shape is kept on
+// Charles carried five markets; Charles starts with one. The shape is kept on
 // purpose: a second market (the Philippines is Tyme's other home, with 11
 // million customers) is a new row here, its places in location.ts, its money
 // forms in grounding.ts, pricestamp.ts, contacts.ts and signals.ts, its ids

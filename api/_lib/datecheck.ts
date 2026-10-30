@@ -1,4 +1,4 @@
-// Fin — a date, a law or a waiting time that came from nowhere, taken out.
+// Charles — a date, a law or a waiting time that came from nowhere, taken out.
 //
 // Rule 10: never invent a price, fee, rule or deadline. Prices have been
 // checked mechanically for a long time (grounding.ts, pricestamp.ts); dates

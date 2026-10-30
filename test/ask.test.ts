@@ -1,4 +1,4 @@
-// Fin — "ask me anything", on WhatsApp at any point after the plan, and
+// Charles — "ask me anything", on WhatsApp at any point after the plan, and
 // on the web where the page itself reacts.
 //
 // WhatsApp (audit of 2026-09-23): after a plan exists an open question was
@@ -106,12 +106,12 @@ async function planned(wa: string) {
   return { biz: (await dbmod.findBusiness(wa))!, token, planId };
 }
 
-const url = "https://fin.example/api/ask";
+const url = "https://charles.example/api/ask";
 const collect = (token: string | undefined, turn: string) =>
-  ask.GET(new Request(`${url}?action=reply&turn=${encodeURIComponent(turn)}`, { headers: token ? { cookie: `fin_session=${token}` } : {} }));
-const get = (token?: string) => ask.GET(new Request(`${url}?action=state`, { headers: token ? { cookie: `fin_session=${token}` } : {} }));
+  ask.GET(new Request(`${url}?action=reply&turn=${encodeURIComponent(turn)}`, { headers: token ? { cookie: `charles_session=${token}` } : {} }));
+const get = (token?: string) => ask.GET(new Request(`${url}?action=state`, { headers: token ? { cookie: `charles_session=${token}` } : {} }));
 const post = (token: string | undefined, question: unknown) =>
-  ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { cookie: `fin_session=${token}` } : {}) }, body: JSON.stringify({ question }) }));
+  ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { cookie: `charles_session=${token}` } : {}) }, body: JSON.stringify({ question }) }));
 
 describe("web: /api/ask", () => {
   test("no session, no answer", async () => {
@@ -191,7 +191,7 @@ describe("web: /api/ask", () => {
   test("the same question sent again with its client_turn (a reload) is never answered or charged twice", async () => {
     const { token, biz } = await planned("27809930060");
     const ct = "ct_0123456789abcdefXYZ";
-    const send = () => ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", cookie: `fin_session=${token}` }, body: JSON.stringify({ question: "can I offer layaway?", client_turn: ct }) }));
+    const send = () => ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", cookie: `charles_session=${token}` }, body: JSON.stringify({ question: "can I offer layaway?", client_turn: ct }) }));
     net.modelCalls.length = 0;
     const first = await send();
     assert.equal(first.status, 200);
@@ -202,7 +202,7 @@ describe("web: /api/ask", () => {
     assert.equal(net.modelCalls.length, calls, "no second model call");
     assert.equal(db.tables.messages!.filter((m) => m.business_id === biz.id && m.kind === "web" && m.direction === "in").length, 1, "one question row, one charge");
     // And it can be collected by client_turn alone (a reload before the 202 arrived).
-    const got = await ask.GET(new Request(`${url}?action=reply&client_turn=${ct}`, { headers: { cookie: `fin_session=${token}` } }));
+    const got = await ask.GET(new Request(`${url}?action=reply&client_turn=${ct}`, { headers: { cookie: `charles_session=${token}` } }));
     assert.equal(got.status, 200);
   });
 
@@ -268,7 +268,7 @@ describe("web: /api/ask", () => {
     const undo = ask.__setAnswerDeadlineMs(80);
     replyDelayMs = 600;
     const collect = (turn: string) =>
-      ask.GET(new Request(`${url}?action=reply&turn=${encodeURIComponent(turn)}`, { headers: { cookie: `fin_session=${token}` } }));
+      ask.GET(new Request(`${url}?action=reply&turn=${encodeURIComponent(turn)}`, { headers: { cookie: `charles_session=${token}` } }));
     try {
       const t0 = Date.now();
       const res = await post(token, "How am I doing?");
@@ -305,7 +305,7 @@ describe("web: /api/ask", () => {
     const { token, biz } = await planned("27809930055");
     const asked = new Date(Date.now() - 301_000).toISOString();
     db.tables.messages!.push({ id: "old-turn", business_id: biz.id, direction: "in", kind: "web", text: "slow one", wa_message_id: null, meta: { channel: "web" }, created_at: asked });
-    const res = await ask.GET(new Request(`${url}?action=reply&turn=old-turn`, { headers: { cookie: `fin_session=${token}` } }));
+    const res = await ask.GET(new Request(`${url}?action=reply&turn=old-turn`, { headers: { cookie: `charles_session=${token}` } }));
     assert.equal(res.status, 410, "final: the page stops polling");
     const body = await res.json();
     assert.equal(body.ok, false);
@@ -541,7 +541,7 @@ describe("review regressions", () => {
     assert.equal((await post(token, null as never)).status, 400);
     assert.equal((await post(token, ["a", "b"])).status, 400);
     assert.equal((await post(token, { q: 1 })).status, 400);
-    const nullBody = await ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", cookie: `fin_session=${token}` }, body: "null" }));
+    const nullBody = await ask.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", cookie: `charles_session=${token}` }, body: "null" }));
     assert.equal(nullBody.status, 400);
     await dbmod.updateBusiness(biz.id, { stage: "choose_rule" } as never);
     net.modelCalls.length = 0;
@@ -627,7 +627,7 @@ describe("review regressions", () => {
 });
 
 // Live, 2026-09-25: real one-time sign-in codes sat in the messages table as
-// plain "text" rows, in both the old "Your Fin code is NNNNNN" wording and
+// plain "text" rows, in both the old "Your Charles code is NNNNNN" wording and
 // the bare six digits — and that table is the RECENT CONVERSATION every
 // prompt carries, the recent_whatsapp the owner's own AI reads, and whatever
 // else treats the conversation as memory. The row stays in the table (the
@@ -646,7 +646,7 @@ describe("a sign-in code never leaves the messages table", () => {
     await dbmod.recordMessage(p.biz.id, "out", NEW, { kind: "login_code" });
     // … and the rows an older deploy left behind, both wordings.
     await dbmod.recordMessage(p.biz.id, "out", OLD_BARE);
-    await dbmod.recordMessage(p.biz.id, "out", `Your Fin code is ${OLD_WORDED}.`);
+    await dbmod.recordMessage(p.biz.id, "out", `Your Charles code is ${OLD_WORDED}.`);
     // An owner typing six digits is conversation, not a code.
     await dbmod.recordMessage(p.biz.id, "in", "123456");
     return p;

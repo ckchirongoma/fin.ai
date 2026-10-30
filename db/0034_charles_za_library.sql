@@ -1,8 +1,8 @@
 /*
-# Fin — South Africa, the money library (apply AFTER 0033)
+# Charles — South Africa, the money library (apply AFTER 0033)
 
 Data only, no schema change, safe to run more than once. It loads the
-personal-finance knowledge base Fin runs on: 56 knowledge entries and
+personal-finance knowledge base Charles runs on: 56 knowledge entries and
 30 tools for South Africa (country 'ZA'), covering all eight areas of the
 Money Map (income, spending, debt, cushion, credit_record, protection,
 family_money, goals), as whole-row upserts keyed on id. Every id that
@@ -12,7 +12,7 @@ file is generated from them by scripts/seed-to-sql.mjs and must not be
 hand-edited (regenerate it instead).
 
 Charlie's business rows (k.deposits, yoco, …) are not touched by this file;
-removing them is a separate, deliberate step for the founder once the Fin
+removing them is a separate, deliberate step for the founder once the Charles
 rows are live (the two sets share no ids).
 
 ## How to apply — no SQL needed

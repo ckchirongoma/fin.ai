@@ -1,4 +1,4 @@
-// Fin — never let an unfilled placeholder reach a phone.
+// Charles — never let an unfilled placeholder reach a phone.
 //
 // PRIORITY 5.1, live-verified 2026-09-22, reproduced three times: a plan
 // step's artifact — a message written for the OWNER to send to THEIR
@@ -13,7 +13,7 @@
 // message asking five regulars for a review" — the exact artifact this bug
 // was found on). No prompt can fix that; the model is being asked to fill in
 // a fact nobody has yet. This is the runtime backstop: resolve whatever
-// Fin already knows for certain, and refuse — never guess — the rest.
+// Charles already knows for certain, and refuse — never guess — the rest.
 //
 // The gap track1 (PR #22) flagged explicitly in its own body: this choke
 // point only sat on the WhatsApp step-push/reply path (steps.ts) and the new
@@ -43,9 +43,9 @@ export interface KnownFactsSource {
 }
 
 /**
- * Facts Fin actually has, keyed by the words an artifact plausibly uses
+ * Facts Charles actually has, keyed by the words an artifact plausibly uses
  * for them. Deliberately small and literal — this is a lookup, not a guess
- * (see docs note in CLAUDE.md-adjacent Priority 2b: a fact Fin already
+ * (see docs note in CLAUDE.md-adjacent Priority 2b: a fact Charles already
  * knows exactly gets checked/filled mechanically; only a genuinely unknown
  * fact goes unfilled rather than invented).
  */
@@ -113,7 +113,7 @@ export function blanks(text: string): string {
  * (stepdoc.ts, via sendStepPdf), the full-plan PDF/webpage (plandoc.ts's
  * stepRow), the MCP connector's get_plan (connector.ts), and the row as it
  * is written to plan_steps in the first place (planbuild.ts's
- * runFinalizeStage). Fills what Fin actually knows; anything left is
+ * runFinalizeStage). Fills what Charles actually knows; anything left is
  * handed over clearly marked as the person's to fill, never invented.
  */
 export function checkArtifact(raw: string | null | undefined, biz: KnownFactsSource): ArtifactCheck {
@@ -184,7 +184,7 @@ export function bracketUnknownPayments(text: string | null, known: string): { te
  * stated as fact in words they would paste to their customers (rule 2).
  * Where a business is, beyond the area it gave, is a detail only the person
  * knows: a "next to / opposite / near the …" whose words appear nowhere in
- * what they told Fin becomes a slot for them to fill, the round-18
+ * what they told Charles becomes a slot for them to fill, the round-18
  * convention for owner-only details in an artifact. Their own area, or a
  * landmark they did name, stays as written.
  */

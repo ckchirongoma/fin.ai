@@ -1,4 +1,4 @@
-// Fin — the eval harness's own judge (docs/EXPERIENCE.md §5.8, "eval
+// Charles — the eval harness's own judge (docs/EXPERIENCE.md §5.8, "eval
 // judging"): Jev's calibrated `score` questions first, a model on the
 // original rubric only as a backstop. What matters here is exactly what
 // mattered for map_score: the round-half-DOWN convention, engine attribution

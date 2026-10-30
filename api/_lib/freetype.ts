@@ -1,4 +1,4 @@
-// Fin — what "free" actually means for a tool.
+// Charles — what "free" actually means for a tool.
 //
 // A flat cost string that starts "free" used to be the only signal, and it
 // conflated very different claims: Yoco has no monthly fee but takes a cut of

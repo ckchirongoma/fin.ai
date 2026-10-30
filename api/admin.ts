@@ -1,4 +1,4 @@
-// Fin — the tracking dashboard's data (/admin reads this).
+// Charles — the tracking dashboard's data (/admin reads this).
 //
 // Read-only views over `events` and `incidents` (db/0024), plus two actions:
 // mark an incident resolved, and send a test email. Authenticated with
@@ -69,7 +69,7 @@ async function funnel(url: URL): Promise<unknown> {
     const o = people.get(e.business_id) ?? { furthest: -1, last: "1970-01-01T00:00:00.000Z", stage: null };
     const i = FUNNEL.findIndex((f) => f.event === e.name && (!f.where || f.where(e)));
     if (i > o.furthest) o.furthest = i;
-    // Only what the person did counts as them being active: Fin's own
+    // Only what the person did counts as them being active: Charles's own
     // system work for them (a nudge sweep, a build job) does not.
     if (e.channel !== "system" && e.at > o.last) o.last = e.at;
     if (e.name === "stage_entered") o.stage = String(e.props?.to ?? e.stage ?? "");
@@ -196,9 +196,9 @@ async function handler(req: Request): Promise<Response> {
       }
       if (action === "test_email") {
         const r = await sendEmail({
-          subject: "[Fin] Test alert — email is working",
-          text: "This is a test from the Fin dashboard. If you can read it, alert emails will reach you.",
-          html: "<p>This is a test from the Fin dashboard. If you can read it, alert emails will reach you.</p>",
+          subject: "[Charles] Test alert — email is working",
+          text: "This is a test from the Charles dashboard. If you can read it, alert emails will reach you.",
+          html: "<p>This is a test from the Charles dashboard. If you can read it, alert emails will reach you.</p>",
         });
         return json(r, r.ok ? 200 : 502);
       }

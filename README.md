@@ -1,4 +1,4 @@
-# Fin
+# Charles
 
 A WhatsApp number that knows your money.
 
@@ -12,11 +12,11 @@ South Africa first, built so the next market (the Philippines, where the same
 bank has 11 million customers) is a data migration, not a rewrite. Built to
 pitch to GoTyme Bank; see `docs/PITCH.md`.
 
-Fin is built from [Charlie](https://github.com/ckchirongoma/charlie), the
+Charles is built from [Charlie](https://github.com/ckchirongoma/charlie), the
 small-business coach. The engine, the guardrails, the queue, the connector and
 the plan document are Charlie's; the domain (one household's money, not one
 business), the diagnostic, the module library, the prompts, the Money Map and
-the knowledge base are new. `docs/superpowers/specs/2026-10-30-fin-design.md`
+the knowledge base are new. `docs/superpowers/specs/2026-10-30-charles-design.md`
 is the design to argue with.
 
 ## The design rule everything else follows
@@ -28,7 +28,7 @@ worse**, because they could not tell which suggestion fitted them. Drexler,
 Fischer and Schoar (2014) found the opposite works for money: one rule of
 thumb, kept, moved people where accounting lessons did nothing.
 
-So Fin does the opposite of the usual chatbot on both counts: **one
+So Charles does the opposite of the usual chatbot on both counts: **one
 recommendation, grounded in this household's own figures, free and reversible
 first, never a loan, with a follow-up on whether it actually worked.** Every
 guardrail in this repo exists to keep that true under pressure.
@@ -49,14 +49,14 @@ guardrail in this repo exists to keep that true under pressure.
 | `api/cron/` | The nudge sweep and the knowledge-freshness job |
 | `api/_lib/` | Everything shared: the engine, prompts, retrieval, guardrails, the fixed plan library (`playbooks.ts`), the Money Map rubric (`moneymap.ts`), the diagnostic (`diagnostic.ts`) |
 | `public/` | The landing page, the plan viewer, the web chat, the sponsor and admin consoles |
-| `db/` | Migrations, in order. `0001` is the security fix; `0033` renames the columns for the money journey; `0034` is the South African library |
+| `db/` | Migrations, in order, and `CHARLES-SETUP.sql`, all of them in one paste for a fresh Supabase project (`docs/SUPABASE-SETUP.md` has the paste and the success table). `0001` is the security fix; `0033` renames the columns for the money journey; `0034` is the South African library |
 | `seed/` | The library as JSON: 56 knowledge entries and 30 tools, every figure sourced in `docs/kb-sources.md`. `db/0034` is generated from it by `scripts/seed-to-sql.mjs` |
 | `test/` | 871 tests, including the whole money journey end to end against in-memory fakes. `npm test` |
 | `eval/`, `scripts/eval.ts` | The prompt evaluation harness |
 | `scripts/kb-coverage.ts`, `scripts/kb-depth.ts` | The library yardsticks (`docs/kb-gap-analysis.md`) |
 | `docs/PITCH.md` | The one-page pitch to the bank |
 | `docs/superpowers/` | The design spec and the build plan |
-| `docs/ARCHITECTURE.md`, `docs/EXPERIENCE.md`, `docs/PRODUCT-DEFINITION.md`, `docs/OPERATIONS.md` | Charlie's design record, each with a Fin addendum at the top saying what changed |
+| `docs/ARCHITECTURE.md`, `docs/EXPERIENCE.md`, `docs/PRODUCT-DEFINITION.md`, `docs/OPERATIONS.md` | Charlie's design record, each with a Charles addendum at the top saying what changed |
 | `HANDOFF-DEPLOY.md` | The going-live checklist, for a fresh Supabase project |
 | `CLAUDE.md` | The build brief: the twelve rules, how to work here |
 
@@ -93,7 +93,7 @@ from the `model_config` table, never from code.
 ## The journey, in one line each
 
 1. Twelve questions: who, how money comes in, where, the aim, what is in the way, who depends on them, what comes in, who they owe, what they could reach tomorrow, what cover they have, how they keep track.
-2. Hardship first: if the answers say food, rent or transport cannot be covered, Fin stops planning, protects cash, names the free help (the NCR consumer line, the National Financial Ombud) and keeps a way back.
+2. Hardship first: if the answers say food, rent or transport cannot be covered, Charles stops planning, protects cash, names the free help (the NCR consumer line, the National Financial Ombud) and keeps a way back.
 3. The read-back: one identity object, confirmed or corrected before anything is built on it.
 4. Three goals, genuinely different, one picked (or two). Then three rules of thumb, shown against what people in that spot usually do instead; one picked.
 5. The plan: at most three of thirteen fixed modules, each earned by the diagnosis, tailored in wording only; the strategy and the Money Map; one document, tables and inline hex, printed to PDF.
@@ -101,7 +101,7 @@ from the `model_config` table, never from code.
 
 ## The twelve rules
 
-Charlie's ten (fixed library, never "you told me", one recommendation, collaborative choices, identity once, retries, action ids, tables-and-hex rendering, free and reversible first with a hardship mode, never invent a figure) plus two of Fin's own: **never recommend credit** (no loan, no consolidation, no buy-now-pay-later, however cheap), and **never ask for or store an ID number, account number, card number, PIN, OTP or password**, said out loud in the first message. `CLAUDE.md` has them in full; `test/` pins them.
+Charlie's ten (fixed library, never "you told me", one recommendation, collaborative choices, identity once, retries, action ids, tables-and-hex rendering, free and reversible first with a hardship mode, never invent a figure) plus two of Charles's own: **never recommend credit** (no loan, no consolidation, no buy-now-pay-later, however cheap), and **never ask for or store an ID number, account number, card number, PIN, OTP or password**, said out loud in the first message. `CLAUDE.md` has them in full; `test/` pins them.
 
 ## Running it locally
 

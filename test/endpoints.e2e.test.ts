@@ -1,4 +1,4 @@
-// Fin — the endpoints an owner or an operator actually touches:
+// Charles — the endpoints an owner or an operator actually touches:
 // signing in to read a plan, checking whether the thing is healthy, and the
 // cohort report a sponsor gets.
 //
@@ -16,7 +16,7 @@ process.env.WORKER_SECRET = "fake-worker-secret";
 process.env.WHATSAPP_APP_SECRET = "fake-app-secret";
 process.env.WHATSAPP_ACCESS_TOKEN = "fake-wa-token";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "1";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 delete process.env.TYPESAFE_API_KEY;
 
 import { installFakeNet, makeFakeDb, type FakeDb, type FakeNet } from "./_fakes.ts";
@@ -32,10 +32,10 @@ let health: typeof import("../api/health.ts");
 let sponsor: typeof import("../api/sponsor.ts");
 
 const post = (body: unknown, action: string) =>
-  plan.POST(new Request(`https://fin.test/api/plan?action=${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }));
+  plan.POST(new Request(`https://charles.test/api/plan?action=${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }));
 
 const get = (cookie?: string, qs = "") =>
-  plan.GET(new Request(`https://fin.test/api/plan${qs}`, { headers: cookie ? { cookie } : {} }));
+  plan.GET(new Request(`https://charles.test/api/plan${qs}`, { headers: cookie ? { cookie } : {} }));
 
 /** The code only ever exists in the message we sent, which is the point. */
 const codeFromWhatsApp = (): string => {
@@ -67,7 +67,7 @@ before(async () => {
     commitments: [{ business_id: "biz-1", status: "done" }],
     business_map: [{ business_id: "biz-1", domain: "spending", status: "red", note: "Cash only" }],
     safety_events: [{ check_name: "distress", engine: "model", outcome: "pass", created_at: new Date().toISOString() }],
-    wa_templates: [{ id: "login_code", meta_name: "fin_login_code", language: "en", body: "Your Fin code is {{1}}.", variables: ["code"], status: "draft" }],
+    wa_templates: [{ id: "login_code", meta_name: "charles_login_code", language: "en", body: "Your Charles code is {{1}}.", variables: ["code"], status: "draft" }],
     model_config: [{ role: "safety", provider: "openrouter", model: "test/safety", fallbacks: [], params: {}, enabled: true }],
   });
   const dbmod = await import("../api/_lib/db.ts");
@@ -151,7 +151,7 @@ test("the right code signs you in, and the code cannot be reused", async () => {
   assert.equal(session.business_id, "biz-1");
 
   // The stored session is a hash, so the cookie value must not appear in it.
-  const token = /fin_session=([^;]+)/.exec(cookie)![1]!;
+  const token = /charles_session=([^;]+)/.exec(cookie)![1]!;
   assert.notEqual(session.token_hash, token);
 });
 
@@ -180,7 +180,7 @@ test("with a session the plan renders, and it is the SAME plan WhatsApp built", 
   net.sent.length = 0;
   await post({ wa_id: OWNER }, "request_code");
   const verify = await post({ wa_id: OWNER, code: codeFromWhatsApp() }, "verify");
-  const cookie = `fin_session=${/fin_session=([^;]+)/.exec(verify.headers.get("set-cookie")!)![1]}`;
+  const cookie = `charles_session=${/charles_session=([^;]+)/.exec(verify.headers.get("set-cookie")!)![1]}`;
 
   const res = await get(cookie);
   assert.equal(res.status, 200);
@@ -198,20 +198,20 @@ test("with a session the plan renders, and it is the SAME plan WhatsApp built", 
 });
 
 test("a forged session token gets nothing", async () => {
-  const res = await get("fin_session=made-up-value");
+  const res = await get("charles_session=made-up-value");
   assert.equal(res.status, 401);
 });
 
 test("an expired session gets nothing, and is cleaned up", async () => {
   db.tables.plan_sessions![0]!.expires_at = new Date(Date.now() - 1000).toISOString();
-  const res = await get("fin_session=anything");
+  const res = await get("charles_session=anything");
   assert.equal(res.status, 401);
 });
 
 // ── Health ───────────────────────────────────────────────────────
 
 test("the public health check says whether the guardrails are live, and nothing else", async () => {
-  const res = await health.GET(new Request("https://fin.test/api/health"));
+  const res = await health.GET(new Request("https://charles.test/api/health"));
   const body = await res.json();
 
   assert.equal(body.guardrails_live, true);
@@ -222,7 +222,7 @@ test("the public health check says whether the guardrails are live, and nothing 
 });
 
 test("with the worker secret, health says exactly what is configured", async () => {
-  const res = await health.GET(new Request("https://fin.test/api/health", { headers: { Authorization: "Bearer fake-worker-secret" } }));
+  const res = await health.GET(new Request("https://charles.test/api/health", { headers: { Authorization: "Bearer fake-worker-secret" } }));
   const body = await res.json();
   assert.ok(Array.isArray(body.subsystems));
   assert.ok(body.notes.some((n: string) => /Guardrails running/.test(n)));
@@ -232,11 +232,11 @@ test("with the worker secret, health says exactly what is configured", async () 
 // ── The cohort report ────────────────────────────────────────────
 
 test("the sponsor report needs a secret", async () => {
-  assert.equal((await sponsor.GET(new Request("https://fin.test/api/sponsor"))).status, 403);
+  assert.equal((await sponsor.GET(new Request("https://charles.test/api/sponsor"))).status, 403);
 });
 
 test("the sponsor report is aggregates only, split by baseline tier", async () => {
-  const res = await sponsor.GET(new Request("https://fin.test/api/sponsor", { headers: { Authorization: "Bearer fake-worker-secret" } }));
+  const res = await sponsor.GET(new Request("https://charles.test/api/sponsor", { headers: { Authorization: "Bearer fake-worker-secret" } }));
   const body = await res.json();
 
   assert.equal(body.cohort.onboarded, 1);
@@ -253,7 +253,7 @@ test("the sponsor report is aggregates only, split by baseline tier", async () =
 });
 
 test("the sponsor report can be downloaded as a CSV", async () => {
-  const res = await sponsor.GET(new Request("https://fin.test/api/sponsor?format=csv", { headers: { Authorization: "Bearer fake-worker-secret" } }));
+  const res = await sponsor.GET(new Request("https://charles.test/api/sponsor?format=csv", { headers: { Authorization: "Bearer fake-worker-secret" } }));
   assert.match(res.headers.get("content-type") ?? "", /text\/csv/);
   const csv = await res.text();
   assert.match(csv, /^metric,segment,value/);
@@ -271,7 +271,7 @@ test("a number typed the local way is refused with how to fix it, not a silent '
 
 test("outside the 24-hour window, the answer says how to get a code through", async () => {
   const res = await post({ wa_id: STRANGER }, "request_code");
-  assert.match((await res.json()).message, /No code after a minute\? Send "hi" to Fin on WhatsApp/);
+  assert.match((await res.json()).message, /No code after a minute\? Send "hi" to Charles on WhatsApp/);
 });
 
 test("a number from outside the five markets can still sign in — only the local 0 form is refused", async () => {
@@ -319,7 +319,7 @@ test("the website plan shows the connected-AI box once the owner has connected, 
   db.tables.connector_tokens = [];
   await post({ wa_id: OWNER }, "request_code");
   const verify = await post({ wa_id: OWNER, code: codeFromWhatsApp() }, "verify");
-  const cookie = `fin_session=${/fin_session=([^;]+)/.exec(verify.headers.get("set-cookie")!)![1]}`;
+  const cookie = `charles_session=${/charles_session=([^;]+)/.exec(verify.headers.get("set-cookie")!)![1]}`;
 
   const before = await (await get(cookie)).text();
   assert.ok(!before.includes("Carrying this with you"), "nothing is claimed for an owner who has not connected");

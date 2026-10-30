@@ -1,4 +1,4 @@
-// Fin — reading your plan on the web.
+// Charles — reading your plan on the web.
 //
 // Not a second product: the same plan, from the same row, rendered by the same
 // planDocHTML() that produces the PDF. If the two ever disagree, one of them is
@@ -103,7 +103,7 @@ function codeSent(via: "text" | "template", sent: SendResult | undefined, starte
 
 async function requestCode(waId: string): Promise<Response> {
   // Always answer the same way, whether or not this number is known. Otherwise
-  // this endpoint becomes a way to test which numbers have a Fin account.
+  // this endpoint becomes a way to test which numbers have a Charles account.
   // The "no code?" line is the same for every number, so it tells a stranger
   // nothing. It is there because a code can only be sent as plain text within
   // 24 hours of the person's last WhatsApp message (Meta's rule); outside that,
@@ -111,7 +111,7 @@ async function requestCode(waId: string): Promise<Response> {
   // quiet owner got "on its way" and then nothing (founder, 2026-09-24).
   const generic = {
     ok: true,
-    message: "If that number has a plan with Fin, a code is on its way to it on WhatsApp. No code after a minute? Send \"hi\" to Fin on WhatsApp, then ask for a new code here.",
+    message: "If that number has a plan with Charles, a code is on its way to it on WhatsApp. No code after a minute? Send \"hi\" to Charles on WhatsApp, then ask for a new code here.",
   };
 
   let lookupFailed = false;
@@ -255,7 +255,7 @@ async function verifyCode(waId: string, code: string): Promise<Response> {
     200,
     {
       "Set-Cookie": [
-        `fin_session=${token}`,
+        `charles_session=${token}`,
         "Path=/",
         "HttpOnly",
         "Secure",
@@ -272,7 +272,7 @@ export function sessionToken(req: Request): string {
   const auth = req.headers.get("authorization") ?? "";
   if (auth.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
   const cookie = req.headers.get("cookie") ?? "";
-  return /(?:^|;\s*)fin_session=([^;]+)/.exec(cookie)?.[1]?.trim() ?? "";
+  return /(?:^|;\s*)charles_session=([^;]+)/.exec(cookie)?.[1]?.trim() ?? "";
 }
 
 /** `where` is only for tracking: which page or call the session was presented to. */
@@ -414,7 +414,7 @@ const notYet = (): string => `<!doctype html><html><head><meta charset="utf-8"><
 
 // ── The website's WhatsApp buttons ───────────────────────────────
 //
-// Every "Message Fin" button on public/*.html links to /wa?m=<preset>
+// Every "Message Charles" button on public/*.html links to /wa?m=<preset>
 // (vercel.json rewrites /wa here), and this answers with a redirect to
 // wa.me/<number>. The number is WHATSAPP_PUBLIC_NUMBER if set, otherwise the
 // bot's own number as Meta reports it (see _lib/wanumber.ts). Live, 2026-09-23: the pages used to carry
@@ -428,21 +428,21 @@ const notYet = (): string => `<!doctype html><html><head><meta charset="utf-8"><
 //
 // The prefilled text comes from a fixed list, never the query string: an
 // open "?text=" would let anyone craft a link that puts their words in an
-// owner's mouth to Fin.
+// owner's mouth to Charles.
 export const WA_PRESETS: Record<string, string> = {
-  start: "Hi Fin, I want to start.",
+  start: "Hi Charles, I want to start.",
   plan: "Send me my plan please.",
-  programme: "I'm asking about Fin for a programme or cohort.",
+  programme: "I'm asking about Charles for a programme or cohort.",
   ask: "",
 };
 
-const notLiveYet = (): string => `<!doctype html><html><head><meta charset="utf-8"><title>Fin on WhatsApp</title>
+const notLiveYet = (): string => `<!doctype html><html><head><meta charset="utf-8"><title>Charles on WhatsApp</title>
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head>
 <body style="margin:0;background:#171f1a;color:#f2f4f0;font-family:Helvetica,Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center">
 <div style="max-width:420px;padding:24px">
-<h1 style="font-size:22px;margin:0 0 10px">Fin's WhatsApp number isn't switched on yet</h1>
+<h1 style="font-size:22px;margin:0 0 10px">Charles's WhatsApp number isn't switched on yet</h1>
 <p style="color:#b8c2ba;line-height:1.6;font-size:15px;margin:0 0 18px">Sorry — this button should have opened WhatsApp. Please try again a little later.</p>
-<p style="margin:0"><a href="/" style="color:#8fd6ae">Back to the Fin home page</a></p>
+<p style="margin:0"><a href="/" style="color:#8fd6ae">Back to the Charles home page</a></p>
 </div></body></html>`;
 
 export async function whatsappRedirect(req: Request): Promise<Response> {
@@ -453,12 +453,12 @@ export async function whatsappRedirect(req: Request): Promise<Response> {
     // but a visitor gets an honest page, never a wa.me link to nobody.
     console.log("wa: no WhatsApp number — WHATSAPP_PUBLIC_NUMBER is unset (or the placeholder) and Meta could not be asked for the bot's number; the website's WhatsApp buttons cannot open WhatsApp");
     const asked = url.searchParams.get("m") ?? "";
-    // Every visitor who lands here wanted to message Fin and could not.
+    // Every visitor who lands here wanted to message Charles and could not.
     trackFailure("wa_link_dead", "no public WhatsApp number", {
       severity: "critical",
       props: { preset: Object.hasOwn(WA_PRESETS, asked) ? asked : "start", source: publicNumberSource() },
       fingerprint: "wa_link_dead",
-      summary: "A visitor tapped a \"Message Fin\" button and got the \"not switched on yet\" page: no public WhatsApp number",
+      summary: "A visitor tapped a \"Message Charles\" button and got the \"not switched on yet\" page: no public WhatsApp number",
     });
     return new Response(notLiveYet(), { status: 503, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
   }

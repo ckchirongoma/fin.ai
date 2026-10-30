@@ -1,4 +1,4 @@
-// Fin — draining the work queue.
+// Charles — draining the work queue.
 //
 // The webhook makes the inbound message durable and answers Meta in
 // milliseconds. This is what then does the actual work, and it can be driven
@@ -573,7 +573,7 @@ export async function alertSlowBuilds(now = Date.now()): Promise<void> {
  * honest line, once per build, says it is slow and that nothing is lost.
  * Claimed first (alert_state), so two ticks can never both send it. Not
  * sent when they are no longer waiting on the build (another stage), or when
- * Fin spoke to them in the last two minutes — that reply already told
+ * Charles spoke to them in the last two minutes — that reply already told
  * them where things stand. Never throws: it runs inside the tick that also
  * revives stalled builds.
  */
@@ -585,7 +585,7 @@ async function noticeSlowBuild(businessId: string, createdAt: string, minutes: n
     const waiting = biz && (biz.stage === "building_plan" || (biz.stage === "plan_ready" && (buildStage === "finalize" || buildStage === "pdf")));
     if (!biz || !waiting) return;
     if (biz.last_outbound_at && Date.now() - new Date(biz.last_outbound_at).getTime() < 2 * 60_000) return;
-    // Claimed only now, just before the send: a tick that skips (Fin
+    // Claimed only now, just before the send: a tick that skips (Charles
     // spoke to them a minute ago) leaves the notice for a later one —
     // review, round 21: claimed first, one skip silenced the whole build.
     if (!(await claimOnce(`slow_notice:${businessId}:${createdAt}`))) return;

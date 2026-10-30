@@ -1,4 +1,4 @@
-// Fin — name fidelity must never rewrite ordinary prose into a place name.
+// Charles — name fidelity must never rewrite ordinary prose into a place name.
 //
 // Review of 4e685e5 (2026-09-23): an independent reviewer ran 2,632 ordinary
 // words (every distinct word in this repo's docs and prompts) against ~120

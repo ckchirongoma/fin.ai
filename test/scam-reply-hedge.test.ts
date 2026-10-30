@@ -1,4 +1,4 @@
-// Fin — a price hedge only on a price Fin asserts.
+// Charles — a price hedge only on a price Charles asserts.
 //
 // Live, 2026-09-23: "Someone from 'SARS Refunds' WhatsApped me saying I
 // qualify for a R4,500 tax refund but I need to pay a R350 processing fee
@@ -70,7 +70,7 @@ test("the live reproduction: a scam warning quoting the scammer's figures gets n
   assert.ok(ev.flags.includes("ungrounded_price_quoted_only"), `recorded honestly as quoted-only: ${JSON.stringify(ev.flags)}`);
 });
 
-test("a price Fin asserts on its own authority still gets the hedge", async () => {
+test("a price Charles asserts on its own authority still gets the hedge", async () => {
   await ready("27834440002");
   replyText = "Get a card machine — it costs R499 and pays out next day.";
   await engine.handleInbound(textFrom("27834440002", "should I get a card machine?"));
@@ -94,7 +94,7 @@ test("assertsAPrice: the owner's figure counts however they wrote it, and a new 
   assert.equal(assertsAPrice("Don't pay the R500.", "", "they want 500 rand upfront"), false);
   assert.equal(assertsAPrice("Never send KSh 500 to unlock a loan.", "", "asked me for 500 shillings"), false);
   assert.equal(assertsAPrice("Don't send the ₦5,000.", "", "they said pay N5000"), false);
-  // Every money figure is theirs, but the 15% is Fin's own claim.
+  // Every money figure is theirs, but the 15% is Charles's own claim.
   assert.equal(assertsAPrice("Don't pay the R350. Legit lenders charge 15% interest.", "", "they want R350 first"), true);
   assert.equal(assertsAPrice("Don't pay the R350 — and 2.95% is Yoco's rate.", "Yoco: 2.95% per card sale", "they want R350 first"), false);
 });

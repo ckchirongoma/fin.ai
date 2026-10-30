@@ -1,4 +1,4 @@
-// Fin — sending an email to the team. One function, one provider.
+// Charles — sending an email to the team. One function, one provider.
 //
 // Resend's HTTP API (resend.com, free tier: 3,000 emails a month, 100 a day),
 // called with fetch, so there is no SDK to install or keep up to date. The

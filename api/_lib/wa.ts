@@ -1,4 +1,4 @@
-// Fin — talking to WhatsApp.
+// Charles — talking to WhatsApp.
 //
 // Everything Meta's Cloud API can do that this product needs, behind functions
 // that already know the platform's real limits, so no caller has to remember
@@ -176,9 +176,9 @@ export interface SendResult {
 }
 
 /**
- * Words Fin uses when it cannot do what was asked. Every outbound message
+ * Words Charles uses when it cannot do what was asked. Every outbound message
  * that says one of these is an "unmet request" (track.ts): the founder wants
- * to know every time a person tries something Fin can't do, and an
+ * to know every time a person tries something Charles can't do, and an
  * apology is where that shows, whatever path produced it.
  */
 export const APOLOGY_RE =
@@ -198,7 +198,7 @@ export const HONEST_GAP_RE = new RegExp(
     // Round 23: "As at 11 Oct 2026 it was — I don't have anything newer checked."
     String.raw`\bi (?:don'?t|do not) have (?:anything|nothing|any(?:thing)? (?:figure|fee|price|date)s?) (?:newer|more recent|later|more up-to-date|more up to date)\b[^.!?\n]*`,
     // An off-topic decline that steers back to the business is the design
-    // working (off_topic_request records it), not something Fin failed
+    // working (off_topic_request records it), not something Charles failed
     // at: "I can't help with match predictions. What I can help with is…".
     String.raw`\bi (?:can'?t|cannot) help with [^.!?\n]*[.!?]?(?=[\s\S]{0,120}\b(?:what i can|but i can|i can help(?: you)? with|i'?m here for|i stick to)\b)`,
     // Advice that leaves the person's own judgement to them: "I can't answer
@@ -211,7 +211,7 @@ export const HONEST_GAP_RE = new RegExp(
     // mornings only, you close at 2, so I won't suggest anything after
     // 1:30" (round 30, KE, live: counted as an apology).
     String.raw`\bi (?:can'?t|cannot|won'?t|will not|don'?t) (?:suggest|recommend|book|plan|schedule|put|send)\b[^.!?\n]{0,40}\b(?:after|before|past|outside|later than|earlier than|on (?:mon|tues|wednes|thurs|fri|satur|sun)days?|in the (?:afternoon|evening|morning))\b[^.!?\n]*`,
-    // Sympathy for the person's week, not Fin failing them: "Sorry about
+    // Sympathy for the person's week, not Charles failing them: "Sorry about
     // that — slow weeks happen" (round 27, KE, live), "sorry to hear it".
     // Not "Sorry about that, I got the price wrong": that one is ours.
     String.raw`\b(?:i'?m |so |really )*sorry (?:to hear(?: that| it| about)?|that happened|you'?re (?:going through|dealing with|having)|about that)\b(?![^.!?\n]*\b(?:i|i'?ve|i'?m|i'?d|my|me|mine)\b)[^.!?\n]*`,
@@ -248,11 +248,11 @@ async function post(payload: Record<string, unknown>): Promise<SendResult> {
     }
     const text = payloadText(payload);
     if (r.ok && APOLOGY_RE.test(text.replace(HONEST_GAP_RE, "")) && currentTrackContext().channel !== "system") {
-      // Fin's reply, scrubbed like a person's words: it can echo them
+      // Charles's reply, scrubbed like a person's words: it can echo them
       // ("I heard: …") or carry a number. What they said is the excerpt.
       const said = currentTrackContext().said?.trim();
       const reply = scrubExcerpt(said && said.length > 3 && text.includes(said) ? text.split(said).join("[their words]") : text);
-      trackUnmet("apology_sent", { props: { reply, kind }, excerpt: said ?? null, summary: "Fin told a person it couldn't do something" });
+      trackUnmet("apology_sent", { props: { reply, kind }, excerpt: said ?? null, summary: "Charles told a person it couldn't do something" });
     }
   } catch {
     /* tracking never breaks a send */

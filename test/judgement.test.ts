@@ -1,4 +1,4 @@
-// Fin — the five judgements that used to be a writer grading its own work.
+// Charles — the five judgements that used to be a writer grading its own work.
 // Each one: what it decides, what it may NOT do, and what happens when no
 // engine can run.
 

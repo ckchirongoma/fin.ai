@@ -1,10 +1,10 @@
-// Fin — rule 2 at the context stage, 2026-10-30 (from Charlie's Priority 2 tests).
+// Charles — rule 2 at the context stage, 2026-10-30 (from Charlie's Priority 2 tests).
 //
 // The real incident, in Charlie: given deliberately thin diagnostic answers,
 // the context-building call invented a specific customer segment, a price
 // range and value-proposition claims, and asserted every one as settled
 // fact, while its own `identity.unsure` had already said the answers were
-// too thin. For Fin the same failure would be an invented income, an
+// too thin. For Charles the same failure would be an invented income, an
 // invented debt ("a bank loan of R20,000") or an invented cover, written
 // into the plan a person is then asked to live by.
 //

@@ -1,11 +1,11 @@
-// Fin — the scheduled follow-up pass.
+// Charles — the scheduled follow-up pass.
 //
 // Vercel calls this with a GET and an `Authorization: Bearer $CRON_SECRET`
 // header. It fails CLOSED: with no secret configured it refuses, because a
 // misconfigured deploy must not leave an endpoint that sends WhatsApp messages
 // open to anyone who guesses the URL.
 //
-// Cron schedules are UTC, always. Fin's five markets are UTC+0 (Ghana),
+// Cron schedules are UTC, always. Charles's five markets are UTC+0 (Ghana),
 // UTC+1 (Nigeria), UTC+2 (South Africa) and UTC+3 (Kenya, Uganda), and none of them
 // observes daylight saving — which is the one thing that makes a single
 // morning schedule workable. See vercel.json for the chosen time.

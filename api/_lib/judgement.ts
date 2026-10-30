@@ -1,4 +1,4 @@
-// Fin — five more judgements, each one a place where the thing being
+// Charles — five more judgements, each one a place where the thing being
 // checked used to grade its own homework.
 //
 //   arbitrateTrade      the laundromat-heard-as-lodge class of error

@@ -1,4 +1,4 @@
-// Fin — knowledge signals (db/0015): the cheap, automatic capture half.
+// Charles — knowledge signals (db/0015): the cheap, automatic capture half.
 //
 // What this pins:
 //   - a correction-shaped owner message writes a `correction` row, tied to the
@@ -252,7 +252,7 @@ describe("entity matching and the free pre-filter", () => {
 });
 
 describe("the admin endpoint", () => {
-  const url = "https://fin.example/api/knowledge-signals";
+  const url = "https://charles.example/api/knowledge-signals";
   const auth = { Authorization: "Bearer ks-worker-secret" };
 
   test("refuses without the worker secret", async () => {
@@ -331,7 +331,7 @@ describe("review round 2", () => {
     assert.equal(signalsFor(biz.id).length, 0, "no signal at all from forwarded content");
   });
 
-  test("a tapped quick reply (Fin's own words) is never captured as the owner's", async () => {
+  test("a tapped quick reply (Charles's own words) is never captured as the owner's", async () => {
     const biz = await readyBiz("27809940041");
     verdict = { correction: 0.95, outcome_report: 0.1 };
     await engine.handleInbound(tapFrom(biz.wa_id, "a.q.0:Is Yoco still R699 now", "Is Yoco still R699 now"));
@@ -372,7 +372,7 @@ describe("review round 2", () => {
     env.SIGNALS_ADMIN_SECRET = "signals-only";
     env.CRON_SECRET = "cron-secret";
     try {
-      const url = "https://fin.example/api/knowledge-signals";
+      const url = "https://charles.example/api/knowledge-signals";
       assert.equal((await endpoint.GET(new Request(url, { headers: { Authorization: "Bearer signals-only" } }))).status, 200);
       assert.equal((await endpoint.GET(new Request(url, { headers: { Authorization: "Bearer cron-secret" } }))).status, 403);
     } finally {

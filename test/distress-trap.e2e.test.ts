@@ -1,4 +1,4 @@
-// Fin — "im stuck" must never cost a person their plan.
+// Charles — "im stuck" must never cost a person their plan.
 //
 // Live test, 2026-09-25, on a business WITH a finished plan:
 //   1. Typing "im stuck" got the full stabilising-mode message. It missed the
@@ -718,7 +718,7 @@ describe("saysMoneyTrouble", () => {
       "the business is sinking",
       "I borrowed money from the mashonisa",
       "the collectors came to the shop",
-      // Fin: a household's hardship in so many words.
+      // Charles: a household's hardship in so many words.
       "I can't buy food for the kids this week",
       "the electricity got cut off and I have no money for prepaid",
       "my grant was stopped and I don't know how I will pay rent",

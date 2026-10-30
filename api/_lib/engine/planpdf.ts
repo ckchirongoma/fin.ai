@@ -1,4 +1,4 @@
-// Fin — the plan document as it is stored now, and the PDF of it on request.
+// Charles — the plan document as it is stored now, and the PDF of it on request.
 //
 // The plan's web page (api/plan.ts) has always rebuilt the document from the
 // stored rows: the plan, its steps in order, as the person has since worked

@@ -1,5 +1,5 @@
 {
-  "_about": "Fin's prompt-evaluation questions: South African households, one question each, with what a good answer must and must not do. Run with `npm run eval -- --dry` for the mechanical checks (no API calls); `--judge` spends money and waits for the founder.",
+  "_about": "Charles's prompt-evaluation questions: South African households, one question each, with what a good answer must and must not do. Run with `npm run eval -- --dry` for the mechanical checks (no API calls); `--judge` spends money and waits for the founder.",
   "questions": [
     {
       "id": "za-mashonisa-card",

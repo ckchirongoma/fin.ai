@@ -1,4 +1,4 @@
-// Fin — the surfaces: what an owner sees of their own progress, and what a
+// Charles — the surfaces: what an owner sees of their own progress, and what a
 // sponsor sees of the cohort.
 //
 // Two rules carry the file. An owner sees only their own business, and typed
@@ -16,7 +16,7 @@ process.env.SESSION_SECRET = "fake-session-secret";
 process.env.WORKER_SECRET = "fake-worker-secret";
 process.env.WHATSAPP_ACCESS_TOKEN = "fake-wa-token";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "1";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 delete process.env.TYPESAFE_API_KEY;
 
 import { installFakeNet, makeFakeDb, type FakeDb, type FakeNet } from "./_fakes.ts";
@@ -93,19 +93,19 @@ async function ownerCookie(): Promise<string> {
     ...(db.tables.plan_sessions ?? []),
     { token_hash: crypto.hashSecret(token), business_id: "biz-1", expires_at: new Date(Date.now() + 3600_000).toISOString() },
   ];
-  return `fin_session=${token}`;
+  return `charles_session=${token}`;
 }
 
 const dash = (cookie?: string) =>
-  plan.GET(new Request("https://fin.test/api/plan?action=dashboard", { headers: cookie ? { cookie } : {} }));
+  plan.GET(new Request("https://charles.test/api/plan?action=dashboard", { headers: cookie ? { cookie } : {} }));
 
 const sp = (qs: string, headers: Record<string, string> = {}, method = "GET") =>
-  sponsor.GET(new Request(`https://fin.test/api/sponsor${qs}`, { method, headers }));
+  sponsor.GET(new Request(`https://charles.test/api/sponsor${qs}`, { method, headers }));
 const spPost = (qs: string, headers: Record<string, string> = {}) =>
-  sponsor.POST(new Request(`https://fin.test/api/sponsor${qs}`, { method: "POST", headers }));
+  sponsor.POST(new Request(`https://charles.test/api/sponsor${qs}`, { method: "POST", headers }));
 
 const rpc = (token: string, method: string, params: unknown = {}) =>
-  mcp.POST(new Request("https://fin.test/api/mcp", {
+  mcp.POST(new Request("https://charles.test/api/mcp", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
@@ -275,7 +275,7 @@ test("a rebuild never replaces where the business started", () => {
 test("a one-time-code template carries the code in the body AND the copy-code button", async () => {
   const wa = await import("../api/_lib/wa.ts");
   net.sent.length = 0;
-  await wa.sendTemplate(OWNER, "fin_login_code", "en", ["482913"], "biz-1", { otp: true });
+  await wa.sendTemplate(OWNER, "charles_login_code", "en", ["482913"], "biz-1", { otp: true });
   const comps = net.sent[0]!.raw.template.components;
   assert.deepEqual(comps[0], { type: "body", parameters: [{ type: "text", text: "482913" }] });
   assert.deepEqual(comps[1], { type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: "482913" }] });
@@ -286,7 +286,7 @@ test("a one-time-code template carries the code in the body AND the copy-code bu
 test("an ordinary template gets body parameters only", async () => {
   const wa = await import("../api/_lib/wa.ts");
   net.sent.length = 0;
-  await wa.sendTemplate(OWNER, "fin_monday_focus", "en", ["Lerato", "pay the mashonisa on Friday"], "biz-1");
+  await wa.sendTemplate(OWNER, "charles_monday_focus", "en", ["Lerato", "pay the mashonisa on Friday"], "biz-1");
   assert.equal(net.sent[0]!.raw.template.components.length, 1);
   assert.equal(net.sent[0]!.raw.template.components[0].type, "body");
 });

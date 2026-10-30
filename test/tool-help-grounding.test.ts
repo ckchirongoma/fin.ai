@@ -1,4 +1,4 @@
-// Fin — PRIORITY 4.5: reply-grounding for tool-help replies specifically.
+// Charles — PRIORITY 4.5: reply-grounding for tool-help replies specifically.
 //
 // checkReply (safety.ts) already asks whether a stated PRICE is backed by
 // the verified tool-costs sheet for the whole conversation — but a

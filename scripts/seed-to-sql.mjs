@@ -1,4 +1,4 @@
-// Fin — write a db/ migration from seed/knowledge.json and seed/tools.json.
+// Charles — write a db/ migration from seed/knowledge.json and seed/tools.json.
 //
 // The seed is the single source for the South African library; the migration
 // must say exactly the same thing, row for row, or the two drift (the founder
@@ -6,12 +6,12 @@
 // generated from the .json, never hand-edited, and regenerated whenever a row
 // changes:
 //
-//   node scripts/seed-to-sql.mjs > db/0034_fin_za_library.sql
+//   node scripts/seed-to-sql.mjs > db/0034_charles_za_library.sql
 //
 // Options:
 //   --country ZA        only rows of this country (default: every row)
 //   --header FILE       a markdown/plain-text file to wrap in the /* … */ header
-//                       (default: the built-in Fin header below)
+//                       (default: the built-in Charles header below)
 //
 // Every row is a whole-row upsert keyed on id (INSERT … ON CONFLICT (id) DO
 // UPDATE SET every column), the same shape as db/0029_uganda.sql, so running
@@ -52,10 +52,10 @@ function upsert(table, cols, row) {
   return `-- ${row.id} (${row.country})\nINSERT INTO public.${table} (${cols.join(", ")})\nVALUES (\n${values}\n)\nON CONFLICT (id) DO UPDATE SET\n${set};\n`;
 }
 
-const defaultHeader = `# Fin — South Africa, the money library (apply AFTER 0033)
+const defaultHeader = `# Charles — South Africa, the money library (apply AFTER 0033)
 
 Data only, no schema change, safe to run more than once. It loads the
-personal-finance knowledge base Fin runs on: ${knowledge.length} knowledge entries and
+personal-finance knowledge base Charles runs on: ${knowledge.length} knowledge entries and
 ${tools.length} tools for South Africa (country 'ZA'), covering all eight areas of the
 Money Map (income, spending, debt, cushion, credit_record, protection,
 family_money, goals), as whole-row upserts keyed on id. Every id that
@@ -65,7 +65,7 @@ file is generated from them by scripts/seed-to-sql.mjs and must not be
 hand-edited (regenerate it instead).
 
 Charlie's business rows (k.deposits, yoco, …) are not touched by this file;
-removing them is a separate, deliberate step for the founder once the Fin
+removing them is a separate, deliberate step for the founder once the Charles
 rows are live (the two sets share no ids).
 
 ## How to apply — no SQL needed

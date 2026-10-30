@@ -1,4 +1,4 @@
-// Fin — the connector, against both MCP protocol eras.
+// Charles — the connector, against both MCP protocol eras.
 //
 // This matters because the two eras are live at the same time and a server that
 // speaks only one fails to connect to half its clients: Anthropic's hosted
@@ -14,7 +14,7 @@ process.env.SUPABASE_URL = "https://fake.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-service-key";
 process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.SESSION_SECRET = "fake-session-secret";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 process.env.WHATSAPP_ACCESS_TOKEN = "fake-wa-token";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "1";
 
@@ -28,7 +28,7 @@ let mcp: typeof import("../api/mcp.ts");
 let token: string;
 let businessId: string;
 
-const call = (body: unknown, headers: Record<string, string> = {}, url = "https://fin.test/api/mcp") =>
+const call = (body: unknown, headers: Record<string, string> = {}, url = "https://charles.test/api/mcp") =>
   mcp.POST(new Request(url, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) }));
 
 const authed = (body: unknown, headers: Record<string, string> = {}) => call(body, { Authorization: `Bearer ${token}`, ...headers });
@@ -68,7 +68,7 @@ after(() => {
 
 test("GET and DELETE are refused with 405 and say what is allowed", async () => {
   for (const method of ["GET", "DELETE"] as const) {
-    const res = await mcp[method](new Request("https://fin.test/api/mcp", { method }));
+    const res = await mcp[method](new Request("https://charles.test/api/mcp", { method }));
     assert.equal(res.status, 405);
     assert.equal(res.headers.get("Allow"), "POST, OPTIONS");
   }
@@ -87,7 +87,7 @@ test("a revoked or unknown token is a 401, not a silent empty result", async () 
 });
 
 test("the token also works in the URL, which is what most hosts actually accept", async () => {
-  const res = await call({ jsonrpc: "2.0", id: 1, method: "tools/list" }, {}, `https://fin.test/api/mcp?k=${token}`);
+  const res = await call({ jsonrpc: "2.0", id: 1, method: "tools/list" }, {}, `https://charles.test/api/mcp?k=${token}`);
   assert.equal(res.status, 200);
   assert.ok((await res.json()).result.tools.length > 0);
 });
@@ -100,7 +100,7 @@ test("legacy clients get the initialize handshake they expect", async () => {
   // Advertising capabilities we do not implement makes clients call them and
   // fail. Resources are implemented since round 28: the person's view.
   assert.deepEqual(Object.keys(body.result.capabilities), ["tools", "resources"]);
-  assert.ok(body.result.instructions.includes("Fin"));
+  assert.ok(body.result.instructions.includes("Charles"));
   assert.equal(body.result.resultType, undefined, "resultType is a modern-era field and must not leak into a legacy reply");
 });
 
@@ -235,7 +235,7 @@ test("an unknown method is -32601, 404 under the modern era", async () => {
 });
 
 test("a malformed body is a parse error, not a crash", async () => {
-  const res = await mcp.POST(new Request(`https://fin.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{oops" }));
+  const res = await mcp.POST(new Request(`https://charles.test/api/mcp?k=${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{oops" }));
   assert.equal(res.status, 400);
   assert.equal((await res.json()).error.code, -32700);
 });

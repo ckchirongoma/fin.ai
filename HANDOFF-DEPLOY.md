@@ -1,4 +1,4 @@
-# Fin — deployment handoff
+# Charles — deployment handoff
 
 Written for whoever puts this live. Everything needed is in this file, in the
 order it is needed. Sections 1–4 get a working WhatsApp test number. Section 5
@@ -17,7 +17,7 @@ section 3.
 
 | | |
 |---|---|
-| Database | A **fresh Supabase project** the founder creates for Fin (Charlie's project is not reused). Region: pick the one closest to Johannesburg. |
+| Database | A **fresh Supabase project** the founder creates for Charles (Charlie's project is not reused). Region: pick the one closest to Johannesburg. |
 | Hosting | **Vercel** runs the code, Supabase stores the data |
 | Models | **Everything goes through OpenRouter.** Which model does which job comes from the `model_config` table, never from code |
 | Guardrails | Jev (TypeSafe) preferred; the `safety` model row runs the same checks without it. `/api/health` says which is live |
@@ -27,32 +27,15 @@ section 3.
 
 ## Section 1 — create the database and run the scripts (do this first)
 
-1. Supabase → New project. Note the project URL and the service-role key (section 3). Enable the `vector` extension (Database → Extensions) before `0010`.
-2. SQL Editor → New query → paste each file in `db/` → Run. **In order:** `0001` to `0016`, `0018`, `0024` to `0026`, `0032`, `0033`, `0034`, `0035`. `db/README.md` says what each one does. All are safe to run twice.
-3. Check RLS:
+The whole of this section, with the paste, the one thing to edit and the
+success table, is `docs/SUPABASE-SETUP.md`. In short:
 
-```sql
-select relname, relrowsecurity from pg_class
- where relnamespace = 'public'::regnamespace and relkind = 'r' order by relname;
-```
+1. Supabase → New project. Note the project URL and the service-role key (section 3). Database → Extensions → enable `vector`.
+2. SQL Editor → New query → paste **all of `db/CHARLES-SETUP.sql`** → Run. It is every migration in order in one file, safe to run twice.
+3. SQL Editor → New query → paste the check query from `docs/SUPABASE-SETUP.md` section 4 → Run. Every row must say `PASS`. Among them: RLS on for all 32 tables, 56 knowledge entries and 30 tools for ZA, six model rows, six template drafts, no Charlie column left behind.
+4. Set the models. The `model_config` rows the script inserts are starting values; replace each `model` slug with one you have chosen on your OpenRouter dashboard (OpenRouter → Models). One `UPDATE` per role; the webhook reads the table on every call, so a change is live at once.
 
-Every row must say `true`.
-
-4. Check the library landed:
-
-```sql
-select country, count(*) from public.knowledge_entries group by country;
-```
-
-```sql
-select country, count(*) from public.tools group by country;
-```
-
-Expect ZA 56 and ZA 30.
-
-5. Set the models. `db/0002` and `db/0009` seed starting rows; replace each `model` slug with one you have chosen on your OpenRouter dashboard (OpenRouter → Models). One `UPDATE` per role; the webhook reads the table on every call, so a change is live at once.
-
-Without SQL, the library can also be loaded from `seed/` through the REST API: the command is at the top of `db/0034_fin_za_library.sql`.
+Without SQL, the library can also be loaded from `seed/` through the REST API: the command is at the top of `db/0034_charles_za_library.sql`.
 
 ---
 
@@ -68,7 +51,7 @@ Without SQL, the library can also be loaded from `seed/` through the REST API: t
 
 Vercel → Project → Settings → Environment Variables, then **redeploy** (a change does not reach a running deployment). `.env.example` lists every variable with what it is for; the names below are the ones that matter in order.
 
-### Required. Fin will not run without these.
+### Required. Charles will not run without these.
 
 | Name | Where it comes from |
 |---|---|
@@ -77,7 +60,7 @@ Vercel → Project → Settings → Environment Variables, then **redeploy** (a 
 | `OPENROUTER_API_KEY` | openrouter.ai → Keys |
 | `WHATSAPP_APP_SECRET` | Meta → App → App Settings → Basic |
 | `WORKER_SECRET` | Any long random string you generate |
-| `PUBLIC_BASE_URL` | The Vercel URL, e.g. `https://fin.vercel.app` |
+| `PUBLIC_BASE_URL` | The Vercel URL, e.g. `https://charles.vercel.app` |
 
 ### To actually send WhatsApp messages
 
@@ -87,7 +70,7 @@ Vercel → Project → Settings → Environment Variables, then **redeploy** (a 
 | `WHATSAPP_PHONE_NUMBER_ID` | Same page |
 | `WHATSAPP_VERIFY_TOKEN` | Any string; you type the same one into Meta in section 4 |
 
-Without these Fin still runs, thinks and writes to the database; it sends nothing and logs every skipped send.
+Without these Charles still runs, thinks and writes to the database; it sends nothing and logs every skipped send.
 
 ### Strongly recommended
 
@@ -123,7 +106,7 @@ Meta business verification and a production number are the founder's call and co
 
 ## What is deliberately not built
 
-- Reading bank statements or the bank's data. Fin knows what it is told.
+- Reading bank statements or the bank's data. Charles knows what it is told.
 - A second market's library.
 - A recommendation to take credit, ever.
 - Testimonials, user counts, pilot results. No cohort has run.

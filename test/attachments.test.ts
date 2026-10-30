@@ -1,4 +1,4 @@
-// Fin — reading a forwarded photo or PDF, and the two rules that make that
+// Charles — reading a forwarded photo or PDF, and the two rules that make that
 // safe: extraction is not interpretation, and what a picture SAYS is never
 // what the owner SAID.
 

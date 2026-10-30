@@ -1,4 +1,4 @@
-// Fin — how a plan page is printed. Shared by the renderer (pdf.ts) and the
+// Charles — how a plan page is printed. Shared by the renderer (pdf.ts) and the
 // print checks in scripts/, so a check prints exactly what production prints.
 // No Chromium import here on purpose: see pdf.ts for why that stays isolated.
 

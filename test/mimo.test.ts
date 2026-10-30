@@ -1,4 +1,4 @@
-// Fin — one model for everything (Xiaomi MiMo-V2.5), and what that changes:
+// Charles — one model for everything (Xiaomi MiMo-V2.5), and what that changes:
 // per-role reasoning, a real cost meter, and voice notes heard directly.
 
 import { test, before, after } from "node:test";

@@ -1,4 +1,4 @@
-// Fin — the guard on fetching a link an owner forwarded.
+// Charles — the guard on fetching a link an owner forwarded.
 //
 // "Is this legit?" is one of the three answer paths, and it means this backend
 // will fetch a URL a stranger sent over WhatsApp. That is a server-side
@@ -16,7 +16,7 @@ import assert from "node:assert/strict";
 
 import { isFetchableUrl, URL_RE } from "../api/_lib/engine/qa.js";
 
-describe("links Fin is allowed to fetch", () => {
+describe("links Charles is allowed to fetch", () => {
   test("an ordinary public page is fine", () => {
     for (const url of [
       "https://www.cipc.co.za/?page_id=3036",
@@ -33,7 +33,7 @@ describe("links Fin is allowed to fetch", () => {
   });
 });
 
-describe("links Fin must refuse", () => {
+describe("links Charles must refuse", () => {
   test("anything that is not http or https", () => {
     for (const url of [
       "file:///etc/passwd",

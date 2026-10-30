@@ -1,4 +1,4 @@
-// Fin — the webhook's contract with Meta.
+// Charles — the webhook's contract with Meta.
 //
 // Four properties, and every one of them was broken in the first version:
 //   - an unsigned request is refused, because this endpoint is public and
@@ -18,7 +18,7 @@ process.env.SUPABASE_URL = "https://fake.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-service-key";
 process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.WHATSAPP_APP_SECRET = "top-secret-app-secret";
-process.env.WHATSAPP_VERIFY_TOKEN = "fin-verify";
+process.env.WHATSAPP_VERIFY_TOKEN = "charles-verify";
 process.env.WORKER_SECRET = "fake-worker-secret";
 // No WhatsApp send credentials: the webhook must still accept and enqueue.
 delete process.env.WHATSAPP_ACCESS_TOKEN;
@@ -33,7 +33,7 @@ let hook: typeof import("../api/whatsapp-webhook.ts");
 const sign = (raw: string): string => "sha256=" + createHmac("sha256", "top-secret-app-secret").update(raw, "utf8").digest("hex");
 
 const post = (raw: string, signature?: string) =>
-  hook.POST(new Request("https://fin.test/api/whatsapp-webhook", {
+  hook.POST(new Request("https://charles.test/api/whatsapp-webhook", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(signature ? { "X-Hub-Signature-256": signature } : {}) },
     body: raw,
@@ -58,14 +58,14 @@ before(async () => {
 after(() => restore?.());
 
 test("the verification handshake returns the raw challenge, not JSON", async () => {
-  const res = await hook.GET(new Request("https://fin.test/api/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=fin-verify&hub.challenge=1158201444"));
+  const res = await hook.GET(new Request("https://charles.test/api/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=charles-verify&hub.challenge=1158201444"));
   assert.equal(res.status, 200);
   // Wrapping it in quotes is the classic reason Meta reports "verification failed".
   assert.equal(await res.text(), "1158201444");
 });
 
 test("a wrong verify token is refused", async () => {
-  const res = await hook.GET(new Request("https://fin.test/api/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=guess&hub.challenge=1"));
+  const res = await hook.GET(new Request("https://charles.test/api/whatsapp-webhook?hub.mode=subscribe&hub.verify_token=guess&hub.challenge=1"));
   assert.equal(res.status, 403);
 });
 
@@ -133,7 +133,7 @@ test("a change on a field other than messages is ignored", async () => {
   const before = db.tables.jobs!.length;
   const raw = JSON.stringify({
     object: "whatsapp_business_account",
-    entry: [{ id: "W", changes: [{ field: "message_template_status_update", value: { event: "APPROVED", message_template_name: "fin_monday_focus" } }] }],
+    entry: [{ id: "W", changes: [{ field: "message_template_status_update", value: { event: "APPROVED", message_template_name: "charles_monday_focus" } }] }],
   });
   assert.equal((await post(raw, sign(raw))).status, 200);
   assert.equal(db.tables.jobs!.length, before);

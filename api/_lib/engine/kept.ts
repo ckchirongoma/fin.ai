@@ -1,4 +1,4 @@
-// Fin — a question asked mid-diagnostic, kept and answered later.
+// Charles — a question asked mid-diagnostic, kept and answered later.
 //
 // Round 20 (live): at question 4 a person asked "how much does it cost to
 // register a business name in Kenya?" and was told to ask it again once the
@@ -113,7 +113,7 @@ export function diagQuestionShort(step: number, countryCode: string): string | n
 
 /**
  * What the person sees before each answer: which question it answers, and
- * which of Fin's questions they asked it at. One per kept question —
+ * which of Charles's questions they asked it at. One per kept question —
  * round 21: two questions answered as one lost "what do you mean by that?"
  * (asked at "How do they pay you?") to the registration question beside it.
  */
@@ -160,7 +160,7 @@ export async function runKeptQuestionJob(job: JobRow): Promise<void> {
         await note();
       }
     }
-    // The question of Fin's they were answering, for the models: "what
+    // The question of Charles's they were answering, for the models: "what
     // does that mean?" means nothing without it.
     const askedAt = diagQuestionAsked(q.step, biz.country) ?? undefined;
     // And what they then picked there, when it was a fixed-option question:

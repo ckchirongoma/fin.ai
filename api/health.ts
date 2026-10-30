@@ -1,4 +1,4 @@
-// Fin — is this thing actually working?
+// Charles — is this thing actually working?
 //
 // The specific failure this exists to prevent: shipping with a guardrail
 // switched off and no way to tell. The first version's safety checks all keyed
@@ -139,9 +139,9 @@ async function handler(req: Request): Promise<Response> {
         ? publicNumberSource() === "env"
           ? "Website WhatsApp buttons (/wa) open the number in WHATSAPP_PUBLIC_NUMBER."
           : "Website WhatsApp buttons (/wa) open the bot's own number, as Meta reports it."
-        : "WEBSITE WHATSAPP BUTTONS ARE DEAD: WHATSAPP_PUBLIC_NUMBER is unset and Meta could not be asked for the bot's number (check WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN). Every 'Message Fin' button shows a 'not switched on yet' page.",
+        : "WEBSITE WHATSAPP BUTTONS ARE DEAD: WHATSAPP_PUBLIC_NUMBER is unset and Meta could not be asked for the bot's number (check WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN). Every 'Message Charles' button shows a 'not switched on yet' page.",
       engine === "none"
-        ? "NO GUARDRAIL ENGINE IS LIVE. Fin is giving money advice with nothing checking it. Set TYPESAFE_API_KEY or OPENROUTER_API_KEY."
+        ? "NO GUARDRAIL ENGINE IS LIVE. Charles is giving money advice with nothing checking it. Set TYPESAFE_API_KEY or OPENROUTER_API_KEY."
         : `Guardrails running on the ${engine} engine.`,
       missing.length ? `Required subsystems not configured: ${missing.join(", ")}.` : "All required subsystems configured.",
     ],

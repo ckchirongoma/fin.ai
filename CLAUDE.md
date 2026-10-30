@@ -1,4 +1,4 @@
-# Fin — build brief for Claude Code
+# Charles — build brief for Claude Code
 
 > **Read `BEHAVIOR-MATRIX.md` first.** It holds the founder's standing
 > instructions for how Claude works here, and it is kept up to date every
@@ -11,7 +11,7 @@ production data. Everything else: build it.*
 
 ---
 
-## What Fin is
+## What Charles is
 
 A WhatsApp number that knows your money. A person answers twelve questions
 about one household's money, hears it read back and confirms it, picks the one
@@ -27,9 +27,9 @@ consumers with impaired records, a third of surveyed borrowers using a
 mashonisa. The next market (the Philippines) is a data migration, not a
 rewrite.
 
-Fin is built from Charlie, the small-business coach, and keeps its engine,
-guardrails, queue, connector and plan document. `docs/superpowers/specs/2026-10-30-fin-design.md`
-is the design; `docs/superpowers/plans/2026-10-30-fin-build-plan.md` the build
+Charles is built from Charlie, the small-business coach, and keeps its engine,
+guardrails, queue, connector and plan document. `docs/superpowers/specs/2026-10-30-charles-design.md`
+is the design; `docs/superpowers/plans/2026-10-30-charles-build-plan.md` the build
 order and the vocabulary map (business → household, owner → person, customer →
 goal, angle → rule, idea/start/run/grow → surviving/stretching/steady/building,
 distress → hardship, "forget my business" → "forget my money").
@@ -57,8 +57,8 @@ distress → hardship, "forget my business" → "forget my money").
 
 Supabase is the source of truth once the founder has created the project and
 run `db/` in order; until then `seed/knowledge.json` and `seed/tools.json` are
-the library and `db/0034_fin_za_library.sql` is generated from them
-(`node scripts/seed-to-sql.mjs > db/0034_fin_za_library.sql`). Never hand-edit
+the library and `db/0034_charles_za_library.sql` is generated from them
+(`node scripts/seed-to-sql.mjs > db/0034_charles_za_library.sql`). Never hand-edit
 the SQL. Every row has `country`, `domain` (one of the eight money areas),
 `stages` (a subset of the four money stages), `keywords`, and `verified_on`.
 The `keywords` column is the whole first-pass retrieval: keyword overlap in
@@ -80,7 +80,7 @@ held-out phrasing.
 6. **Retries with backoff on every model call.** Truncated JSON is retried with more output tokens.
 7. **Every button is an action, never re-parsed text.** A message that reads as a question is never an answer to an earlier prompt.
 8. **The plan document renders with plain HTML tables and inline hex colours.** Never Grid, Flexbox, `var()` or negative-margin bleed. Built like HTML email.
-9. **Free and reversible before anything that costs money**, and a hardship mode: if someone cannot cover food, rent or transport, Fin stops planning, protects cash, names the free help (the NCR consumer line, the National Financial Ombud) and keeps a way back.
+9. **Free and reversible before anything that costs money**, and a hardship mode: if someone cannot cover food, rent or transport, Charles stops planning, protects cash, names the free help (the NCR consumer line, the National Financial Ombud) and keeps a way back.
 10. **Never invent a price, fee, rule, deadline or grant amount.** Every figure comes from the library with its `verified_on`; past 90 days it is hedged; where sources differ, the row says so.
 11. **Never recommend credit.** No loan, consolidation, buy-now-pay-later, cash advance or overdraft, however cheap. A free, reversible bank product (a savings pocket, an instant payment) may be named; a loan may only be explained, downside first.
 12. **Never ask for or store an ID number, account number, card number, PIN, OTP or password.** Said in the first message; refused by the memory step, the connector and the guardrails.

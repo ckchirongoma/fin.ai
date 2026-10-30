@@ -1,4 +1,4 @@
-// Fin — a single step's own PDF: everything needed to execute it without
+// Charles — a single step's own PDF: everything needed to execute it without
 // coming back to WhatsApp.
 //
 // PRIORITY 4.1. Built for the SAME render path as the full plan document —

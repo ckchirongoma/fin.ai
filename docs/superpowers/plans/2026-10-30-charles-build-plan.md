@@ -1,6 +1,6 @@
-# Fin — implementation plan
+# Charles — implementation plan
 
-*From the spec at `docs/superpowers/specs/2026-10-30-fin-design.md`. Charlie's
+*From the spec at `docs/superpowers/specs/2026-10-30-charles-design.md`. Charlie's
 code is the starting point (1,731 tests green on the fork). Every step ends
 with the typecheck and the suite; nothing is committed red.*
 
@@ -46,9 +46,9 @@ with the typecheck and the suite; nothing is committed red.*
 
 ## Vocabulary map (code and copy)
 
-| Charlie | Fin |
+| Charlie | Charles |
 |---|---|
-| Charlie | Fin |
+| Charlie | Charles |
 | business / owner | household / the person ("you") — `biz` stays as the row variable name where renaming buys nothing |
 | customer options → `GoalOption` | goal options |
 | angle options → `RuleOption` | money-rule options |

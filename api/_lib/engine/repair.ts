@@ -1,4 +1,4 @@
-// Fin — redoing a part of the plan that went out degraded.
+// Charles — redoing a part of the plan that went out degraded.
 //
 // Round 22, live: of twelve builds, four shipped with something missing.
 // GH's had no written strategy (the person was told it was "flagged to be

@@ -1,4 +1,4 @@
-// Fin — hashing and token minting.
+// Charles — hashing and token minting.
 //
 // Nothing that can be replayed is ever stored in plain text: login codes and
 // connector tokens are kept as HMAC-SHA256 digests, peppered with
@@ -9,7 +9,7 @@ import { env } from "./env.js";
 
 /** HMAC-SHA256, hex. Peppered, so the digest is useless without the server secret. */
 export function hashSecret(value: string): string {
-  const pepper = env.SESSION_SECRET || "fin-unpeppered-dev-only";
+  const pepper = env.SESSION_SECRET || "charles-unpeppered-dev-only";
   return createHmac("sha256", pepper).update(value).digest("hex");
 }
 

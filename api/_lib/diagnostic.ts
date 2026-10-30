@@ -1,4 +1,4 @@
-// Fin — the money diagnostic, and how it maps onto what WhatsApp can do.
+// Charles — the money diagnostic, and how it maps onto what WhatsApp can do.
 //
 // Three question shapes, and the platform decides which is which:
 //   - open           → plain text (a voice note still gets an answer, but is not offered)
@@ -37,17 +37,17 @@ export interface DiagQuestion {
 /**
  * The promise about their data, said once, in the first message.
  * forgetHousehold() makes the second half true; the first half is rule 12:
- * Fin never asks for an ID, account, card, PIN or password, and says so.
+ * Charles never asks for an ID, account, card, PIN or password, and says so.
  */
 export const CONSENT_LINE =
-  "I'll keep what you tell me about your money so I can help you properly. I never ask for your ID number, account number, card, PIN or password — nobody at a bank should either. Nobody else sees this, and you can send \"forget my money\" any time and it's gone.";
+  "I'll keep what you tell me about your money so I can help you properly. I never ask for your ID number, account number, card, PIN or password — nobody at a bank should either. Nobody else sees this, and you can send \"forget my money\" any time and it's gone. One more thing: I teach and I plan with you; I'm not a financial adviser and I never sell you anything.";
 
 export const DIAG: DiagQuestion[] = [
   {
     key: "person",
     q: () =>
       // Say up front what this costs them and what they get.
-      "Hi, I'm Fin. I learn your money once, then I answer for it: what to do first, what it costs you, and where to tap.\n\n" +
+      "Hi, I'm Charles. I learn your money once, then I answer for it: what to do first, what it costs you, and where to tap.\n\n" +
       `Here's how this goes: ${DIAG.length} short questions (most take a number or a few words), about 5 minutes. Then you pick the one thing to fix first and the one rule you'll live by, and I build your 90-day money plan — a full document you can keep. I'll tell you how long each part takes as we go.\n\n` +
       `${CONSENT_LINE}\n\n` +
       "Question 1: what should I call you, and what do you do for money?",

@@ -1,4 +1,4 @@
-// Fin — tracking: what people do, how the platform performs, what goes wrong.
+// Charles — tracking: what people do, how the platform performs, what goes wrong.
 //
 // Founder, 2026-10: "We want to know what our users are trying to do, also how
 // our system fails… in-depth." Before this, behaviour lived in the message log,
@@ -11,7 +11,7 @@
 //                         entered, a model answered in 3.1s.
 //   trackFailure(name, …) something broke. Also counted in `incidents`, which
 //                         the per-minute tick turns into an email (alerts.ts).
-//   trackUnmet(name, …)   a person tried to do something Fin could not.
+//   trackUnmet(name, …)   a person tried to do something Charles could not.
 //                         Counted and emailed the same way.
 //
 // Rules this file keeps, so no call site has to remember them:
@@ -273,7 +273,7 @@ function bump(row: EventRow, alert: AlertLevel, summary: string): void {
         p_severity: row.severity,
         p_alert: alert,
         p_summary: summary,
-        // Fin's own words (apology_sent's reply) stay on the event, never on
+        // Charles's own words (apology_sent's reply) stay on the event, never on
         // the incident row that outlives it.
         p_props: { ...Object.fromEntries(Object.entries(row.props).filter(([k]) => k !== "reply")), stage: row.stage, channel: row.channel, country: row.country, internal: row.internal },
       });
@@ -370,7 +370,7 @@ export function trackFailure(name: string, err: unknown, opts: TrackOptions = {}
   });
 }
 
-/** A person tried to do something Fin could not. */
+/** A person tried to do something Charles could not. */
 export function trackUnmet(name: string, opts: TrackOptions = {}): void {
   const said = opts.excerpt !== undefined ? opts.excerpt : (ctxStore.getStore()?.said ?? null);
   track(name, { alert: "digest", ...opts, excerpt: said, category: "unmet_request", severity: opts.severity ?? "warn" });
@@ -434,7 +434,7 @@ export function installConsoleCapture(): void {
       if (/^wa: .* over WhatsApp's/.test(first) || /^webhook refused: bad or missing/.test(first)) return;
       // Recorded as wa_number_lookup_failed, with the HTTP status this label would lose.
       if (/^wa-number: Meta/.test(first)) return;
-      // The runtime's own warnings ("(node:6) ExperimentalWarning…") are not Fin's failures.
+      // The runtime's own warnings ("(node:6) ExperimentalWarning…") are not Charles's failures.
       if (/^\(node:\d+\)/.test(first)) return;
       const label = first.split(/:\s|\n/)[0]!.trim().slice(0, 120);
       const objects = args.slice(first ? 1 : 0).filter((a) => typeof a !== "string").map((a) => errorText(a));

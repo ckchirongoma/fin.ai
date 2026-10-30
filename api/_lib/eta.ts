@@ -1,4 +1,4 @@
-// Fin — how long a person should expect to wait, said honestly.
+// Charles — how long a person should expect to wait, said honestly.
 //
 // Founder, 2026-09-24: "Let me put the whole thing together. Won't be long"
 // arrived, and then the plan took many minutes more. A promise like that is

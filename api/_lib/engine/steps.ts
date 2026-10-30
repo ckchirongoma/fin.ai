@@ -1,4 +1,4 @@
-// Fin — the loop that makes this a product rather than a document.
+// Charles — the loop that makes this a product rather than a document.
 //
 // "Send next step" → do it (with a walkthrough if the step names a tool) →
 // "Done" → did it actually work? → next step. The first backend generated a
@@ -116,7 +116,7 @@ export function fitQuickReplies(reply: Pick<Reply, "message" | "artifact" | "qui
     // the person's own R80 in it.
     if (figures.length && !CONFIRMS_A_FIGURE.test(q)) return false;
     if (wordsThere && ASKS_FOR_WORDS.test(q)) return false;
-    // A tap that cuts their price is Fin pushing one (KEEP IT SAFE:
+    // A tap that cuts their price is Charles pushing one (KEEP IT SAFE:
     // never push a price cut). Round 32 (ZA, live): "Lower the price" under
     // a price the person had just confirmed, "Make it cheaper" under a
     // discount they had already chosen; round 33, "Change the price". They

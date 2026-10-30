@@ -1,4 +1,4 @@
-// Fin — the fixed plan-step library.
+// Charles — the fixed plan-step library.
 // Steps are FIXED and sequenced; each one's output feeds the next. The model
 // may only tailor wording to this person — it may never invent, add, drop
 // or reorder a step (CLAUDE.md rule 1).
@@ -208,7 +208,7 @@ export const MODULES: Record<string, Module> = {
         done_when: "you have the report in front of you",
         tool_choices: BUREAUS,
         knowledge_ids: ["k.free_credit_report"],
-        brief: "Point them to one bureau's free report (their own name, their own ID, on the bureau's site — never sent to Fin). Say what to look for: an account they do not recognise, a debt older than three years, a judgment that was paid. Say they are entitled to this.",
+        brief: "Point them to one bureau's free report (their own name, their own ID, on the bureau's site — never sent to Charles). Say what to look for: an account they do not recognise, a debt older than three years, a judgment that was paid. Say they are entitled to this.",
         artifact_brief: null,
       },
       {
@@ -459,7 +459,7 @@ export const MODULES: Record<string, Module> = {
         done_when: "you have read at least one report",
         tool_choices: BUREAUS,
         knowledge_ids: ["k.free_credit_report"],
-        brief: "Point them to the free report, on the bureau's own site with their own ID (never sent to Fin). Say what to look for first: anything they do not recognise, anything older than three years with no payment, anything paid that still shows as owing.",
+        brief: "Point them to the free report, on the bureau's own site with their own ID (never sent to Charles). Say what to look for first: anything they do not recognise, anything older than three years with no payment, anything paid that still shows as owing.",
         artifact_brief: null,
       },
       {

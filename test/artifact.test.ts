@@ -1,4 +1,4 @@
-// Fin — engine/artifact.ts, the PRIORITY 5.1 guard.
+// Charles — engine/artifact.ts, the PRIORITY 5.1 guard.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

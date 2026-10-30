@@ -1,4 +1,4 @@
-// Fin — the plan, the step and the map, drawn inside Claude and ChatGPT.
+// Charles — the plan, the step and the map, drawn inside Claude and ChatGPT.
 //
 // Round 28, the founder: "render within ChatGPT and Claude". Both speak MCP
 // Apps (SEP-1865, io.modelcontextprotocol/ui, stable 2026-01-26): a tool
@@ -27,9 +27,9 @@
 // them: a change to the plan still goes through the person on WhatsApp.
 
 /** The page, as MCP Apps hosts (Claude, and ChatGPT's preferred path) read it. */
-export const VIEW_URI = "ui://fin/view.html";
+export const VIEW_URI = "ui://charles/view.html";
 /** The same page under ChatGPT's Apps SDK key. */
-export const VIEW_URI_CHATGPT = "ui://fin/view-chatgpt.html";
+export const VIEW_URI_CHATGPT = "ui://charles/view-chatgpt.html";
 export const MCP_APP_MIME = "text/html;profile=mcp-app";
 export const SKYBRIDGE_MIME = "text/html+skybridge";
 /** The extension's id, for capability checks and the docs. */
@@ -39,8 +39,8 @@ const DESCRIPTION = "Your 90-day money plan, the step you're on and your money m
 
 /** What resources/list returns to a person's AI. Sponsors get none. */
 export const UI_RESOURCES = [
-  { uri: VIEW_URI, name: "fin_view", title: "Fin — your plan", description: DESCRIPTION, mimeType: MCP_APP_MIME },
-  { uri: VIEW_URI_CHATGPT, name: "fin_view_chatgpt", title: "Fin — your plan (ChatGPT)", description: DESCRIPTION, mimeType: SKYBRIDGE_MIME },
+  { uri: VIEW_URI, name: "charles_view", title: "Charles — your plan", description: DESCRIPTION, mimeType: MCP_APP_MIME },
+  { uri: VIEW_URI_CHATGPT, name: "charles_view_chatgpt", title: "Charles — your plan (ChatGPT)", description: DESCRIPTION, mimeType: SKYBRIDGE_MIME },
 ] as const;
 
 /**
@@ -87,7 +87,7 @@ export function viewHTML(): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fin</title>
+<title>Charles</title>
 <style>
 html,body{margin:0;padding:0;background:#ffffff}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#171f1a;-webkit-text-size-adjust:100%}
@@ -399,7 +399,7 @@ const VIEW_SCRIPT = String.raw`(function () {
     }
     if (action === "send" && d.view === "step") {
       run("get_current_step", { send_to_whatsapp: true }, function (sc) {
-        state.note = sc && sc.sent_to_whatsapp === "sent" ? "Sent to your WhatsApp." : "WhatsApp only lets Fin message you within 24 hours of your last message there. Send Fin any message on WhatsApp, then try again.";
+        state.note = sc && sc.sent_to_whatsapp === "sent" ? "Sent to your WhatsApp." : "WhatsApp only lets Charles message you within 24 hours of your last message there. Send Charles any message on WhatsApp, then try again.";
         render();
       });
     }
@@ -424,8 +424,8 @@ const VIEW_SCRIPT = String.raw`(function () {
   render();
   request("ui/initialize", {
     protocolVersion: "2026-01-26",
-    clientInfo: { name: "fin-view", version: "1.0.0" },
-    appInfo: { name: "fin-view", version: "1.0.0" },
+    clientInfo: { name: "charles-view", version: "1.0.0" },
+    appInfo: { name: "charles-view", version: "1.0.0" },
     appCapabilities: { availableDisplayModes: ["inline"] },
     capabilities: {}
   }).then(function (r) {

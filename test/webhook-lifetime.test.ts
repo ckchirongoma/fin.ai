@@ -1,4 +1,4 @@
-// Fin — proof that the webhook's background work is actually kept alive.
+// Charles — proof that the webhook's background work is actually kept alive.
 //
 // Production incident, 2026-09-20: three real "Hi" messages were claimed by
 // the queue and never answered. Root cause: the webhook responded 200 to
@@ -32,7 +32,7 @@ process.env.SUPABASE_URL = "https://fake.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "fake-service-key";
 process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.WHATSAPP_APP_SECRET = "top-secret-app-secret";
-process.env.WHATSAPP_VERIFY_TOKEN = "fin-verify";
+process.env.WHATSAPP_VERIFY_TOKEN = "charles-verify";
 process.env.WORKER_SECRET = "fake-worker-secret";
 delete process.env.WHATSAPP_ACCESS_TOKEN;
 delete process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -49,7 +49,7 @@ let waitUntilCalls: unknown[];
 const sign = (raw: string): string => "sha256=" + createHmac("sha256", "top-secret-app-secret").update(raw, "utf8").digest("hex");
 
 const post = (raw: string) =>
-  hook.POST(new Request("https://fin.test/api/whatsapp-webhook", {
+  hook.POST(new Request("https://charles.test/api/whatsapp-webhook", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Hub-Signature-256": sign(raw) },
     body: raw,

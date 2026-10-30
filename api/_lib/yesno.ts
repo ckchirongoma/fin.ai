@@ -1,4 +1,4 @@
-// Fin — a yes/no question gets a yes/no answer, in a line or two.
+// Charles — a yes/no question gets a yes/no answer, in a line or two.
 //
 // The reply prompt already says it (prompts.ts REPLY_SCHEMA, "YES OR NO"):
 // the first word is the answer, the whole message is one or two short lines,

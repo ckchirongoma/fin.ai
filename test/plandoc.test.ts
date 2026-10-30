@@ -1,4 +1,4 @@
-// Fin — the plan document.
+// Charles — the plan document.
 //
 // CLAUDE.md rule 8, and it is a structural rule rather than a style
 // preference: the first version rendered as an unstyled, colourless wall of
@@ -57,7 +57,7 @@ const workstream: HydratedWorkstream = {
 };
 
 const base = (over: Partial<PlanDocData> = {}): PlanDocData => ({
-  productName: "Fin",
+  productName: "Charles",
   countryCode: "ZA",
   ctx: {
     name: "Thabo's Laundry",
@@ -207,7 +207,7 @@ describe("PRIORITY 5.1: an unresolved artifact placeholder never reaches this do
     assert.doesNotMatch(doc, /write that part yourself/i);
   });
 
-  test("a placeholder Fin actually knows — the business's own name — is filled in, not withheld", () => {
+  test("a placeholder Charles actually knows — the business's own name — is filled in, not withheld", () => {
     const doc = withArtifact("Thanks for choosing [Your Name]! Tell your friends.");
     assert.match(doc, /Thanks for choosing Thabo['’]s Laundry! Tell your friends\./);
     assert.doesNotMatch(doc, /\[Your Name\]/);
@@ -230,7 +230,7 @@ describe("the sections that only appear when they are real", () => {
   // Only connected owners see this. It says the connection is live and never
   // sends them to "connect" for an address — a new one would switch theirs off.
   test("once connected, the section says so, prints no address, and warns before replacing", () => {
-    const connected = planDocHTML(base({ connectorUrl: "https://fin.example/mcp/abc123" }));
+    const connected = planDocHTML(base({ connectorUrl: "https://charles.example/mcp/abc123" }));
     assert.ok(connected.includes("Your own AI is connected"));
     assert.ok(!connected.includes("/mcp/"), "no address, placeholder or real, is printed");
     assert.match(connected, /choose a new one; the old one then stops working/);
@@ -238,7 +238,7 @@ describe("the sections that only appear when they are real", () => {
 
   test("the online-plan section appears only when there is somewhere to read it", () => {
     assert.ok(!html.includes("Read it online"));
-    assert.ok(planDocHTML(base({ planUrl: "https://fin.example/plan" })).includes("Read it online"));
+    assert.ok(planDocHTML(base({ planUrl: "https://charles.example/plan" })).includes("Read it online"));
   });
 
   test("the tools section is absent when the plan names no tool", () => {

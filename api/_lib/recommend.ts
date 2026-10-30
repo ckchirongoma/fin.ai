@@ -1,4 +1,4 @@
-// Fin — the "My pick" line, made to point at what the person can see.
+// Charles — the "My pick" line, made to point at what the person can see.
 //
 // Live test, 2026-09-25: in 3 of 5 customer-options messages the model's
 // recommendation named its own internal option id ("Start with c — ...")

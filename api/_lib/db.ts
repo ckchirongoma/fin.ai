@@ -1,4 +1,4 @@
-// Fin — the database, behind one door.
+// Charles — the database, behind one door.
 //
 // Every query in the product goes through the service role, never an anon key:
 // db/0001 locks the person-data tables with RLS and no policies, so the public
@@ -54,7 +54,7 @@ export function db(): SupabaseClient {
       // Round 13: two plan-build jobs sat "running", last_error null, for
       // 9-13 minutes. A database call with no timeout that hangs holds the
       // job until the platform kills the function, and nothing records why.
-      global: { headers: { "x-fin": "backend" }, fetch: fetchWithTimeout(DB_TIMEOUT_MS) },
+      global: { headers: { "x-charles": "backend" }, fetch: fetchWithTimeout(DB_TIMEOUT_MS) },
     });
   }
   return client;
@@ -251,14 +251,14 @@ export const LOGIN_CODE_KIND = "login_code";
 /**
  * A row that is (or was) a one-time sign-in code. New ones carry the kind;
  * rows from before 2026-09-25 are plain "text" and are recognised by their
- * wording — the bare six digits, or the earlier "Your Fin code is NNNNNN".
- * Outbound only: a person typing six digits at Fin is conversation.
+ * wording — the bare six digits, or the earlier "Your Charles code is NNNNNN".
+ * Outbound only: a person typing six digits at Charles is conversation.
  */
 export function isLoginCodeRow(m: { direction: string; text: string; kind?: string | null }): boolean {
   if (m.kind === LOGIN_CODE_KIND) return true;
   if (m.direction !== "out") return false;
   const t = (m.text ?? "").trim();
-  return /^\d{6}$/.test(t) || /Your Fin code is \d{6}/.test(t);
+  return /^\d{6}$/.test(t) || /Your Charles code is \d{6}/.test(t);
 }
 
 /**
@@ -287,7 +287,7 @@ export async function recentMessages(businessId: string, limit = 12): Promise<{ 
     .reverse();
 }
 
-/** The single most recent thing Fin said, and when — used to coalesce a
+/** The single most recent thing Charles said, and when — used to coalesce a
  * burst of stale messages into one apology instead of one per message. */
 export async function lastOutboundMessage(businessId: string): Promise<{ text: string; createdAt: string } | null> {
   const { data } = await db()
@@ -1351,7 +1351,7 @@ export async function logDecision(businessId: string, what: string, why: string 
   if (error) console.error("logDecision failed", error);
 }
 
-// ── What Fin remembers about the person ───────────────────────
+// ── What Charles remembers about the person ───────────────────────
 //
 // Notes about the PERSON, not the business facts in businesses.context: the
 // time they have, who helps them, how they like to work, what worries them
@@ -1400,8 +1400,8 @@ function notesFailed(phase: "read" | "write" | "delete", error: unknown): void {
     props: { phase, missing_table: missing },
     fingerprint: `owner_notes_failed:${phase}:${missing ? "missing_table" : "other"}`,
     summary: missing
-      ? "Fin cannot remember things about people: the owner_notes table is missing (run db/0032_owner_notes.sql)"
-      : `Fin could not ${phase} what it remembers about a person`,
+      ? "Charles cannot remember things about people: the owner_notes table is missing (run db/0032_owner_notes.sql)"
+      : `Charles could not ${phase} what it remembers about a person`,
   });
 }
 

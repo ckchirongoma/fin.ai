@@ -1,4 +1,4 @@
-// Fin — the dispatcher. One message in, one conversation forward.
+// Charles — the dispatcher. One message in, one conversation forward.
 //
 // Two rules shape this file, and both came from real failures:
 //
@@ -140,7 +140,7 @@ const STAGE_HANDLED_AS: Partial<Record<Stage, string>> = {
  * one added to fail the same way, so the guarantee lives here, once: if
  * nothing on the way wrote a note, this writes "skipped: handled as <path>".
  * A path that already noted is never noted twice (db.ts signalTurn).
- * A tap is not included — it is Fin's own words, never a signal.
+ * A tap is not included — it is Charles's own words, never a signal.
  */
 /** The running job's phone number and message, wiped (after a forget). Best effort. */
 async function clearCurrentJobIdentity(): Promise<void> {
@@ -251,14 +251,14 @@ async function dispatchInbound(inbound: InboundMessage, turn: InboundTurn): Prom
       severity: "error",
       alert: "immediate",
       props: { kind: inbound.kind, late_ms: Date.now() - inbound.timestamp, apologised: !apologisedRecently, ...(inbound.actionId ? { action: inbound.actionId.split(":")[0] } : {}) },
-      summary: "A person's message reached Fin more than 10 minutes late and was dropped unread; they were asked to send it again",
+      summary: "A person's message reached Charles more than 10 minutes late and was dropped unread; they were asked to send it again",
     });
     return;
   }
 
   // ── A brand-new number that opened with a voice note, photo, file or tap ──
   // Still a hello. It used to be read first, so a voice note with transcription
-  // off made Fin's very first words "I didn't catch that one" — before it
+  // off made Charles's very first words "I didn't catch that one" — before it
   // had said hello (audit, 2026-10). Nothing in it is used yet either way.
   if (isNew && inbound.kind !== "text") {
     turn.handledAs = "a first message (a hello, before any questions)";
@@ -417,7 +417,7 @@ async function dispatchInbound(inbound: InboundMessage, turn: InboundTurn): Prom
     if (handled) return;
     // An id nothing here knows (a button retired since it was sent): the tap
     // goes on to the stage machine with no words in it.
-    trackUnmet("stale_tap", { props: { action: actionId.split(":")[0], reason: "unknown_action" }, fingerprint: "stale_tap:unknown_action", summary: "A person tapped a button whose action id Fin no longer knows" });
+    trackUnmet("stale_tap", { props: { action: actionId.split(":")[0], reason: "unknown_action" }, fingerprint: "stale_tap:unknown_action", summary: "A person tapped a button whose action id Charles no longer knows" });
   }
 
   // ── Typed shortcuts, only where they make sense ──
@@ -545,7 +545,7 @@ async function resolveContent(
         props: { kind: inbound.kind, reason, has_caption: Boolean(inbound.text), mime: baseMime(mime), ...(media ? { bytes: media.bytes.byteLength } : {}) },
         excerpt: inbound.text || null,
         fingerprint: `attachment_unreadable:${reason}`,
-        summary: `A person sent a ${inbound.kind === "document" ? "file" : "photo"} Fin could not read (${reason.replace(/_/g, " ")})`,
+        summary: `A person sent a ${inbound.kind === "document" ? "file" : "photo"} Charles could not read (${reason.replace(/_/g, " ")})`,
       });
       if (!inbound.text) {
         await sendText(biz.wa_id, CANT_READ_THAT, biz.id);
@@ -562,7 +562,7 @@ async function resolveContent(
     await sendText(biz.wa_id, "I didn't catch that one. Send it as a message and I'll pick it up.", biz.id);
     trackUnmet("unsupported_message", {
       props: { kind: inbound.kind },
-      summary: "A person sent something Fin cannot read (a sticker, location, contact, video or reaction)",
+      summary: "A person sent something Charles cannot read (a sticker, location, contact, video or reaction)",
     });
     return null;
   }
@@ -1166,7 +1166,7 @@ const NO_WORDS = (said: string): boolean => !/[\p{L}\p{N}]/u.test(said);
  * Johannesburg" and "Hi-Tech Motors" are answers.
  */
 const GREETING_ONLY =
-  /^(?:(?:hi|hii+|hey|heyy+|hello|helo|hallo|hola|howzit|heita|sawubona|molo|dumela|habari|mambo|jambo|sasa|niaje|sannu|bawo|kedu|ete sen|akwaaba|oli otya|osiibye otya|wasuze otya|gyebale(?:\s?ko)?|agandi|good (?:morning|afternoon|evening|day)|morning|evening|afternoon|greetings|yo)(?:\s+(?:again|there|fin|all|sir|madam|boss|ssebo|sebo|nnyabo|nyabo))*|i'?m back|back again|it'?s me|it'?s me again)[\s!?.,👋🙂😊]*$/iu;
+  /^(?:(?:hi|hii+|hey|heyy+|hello|helo|hallo|hola|howzit|heita|sawubona|molo|dumela|habari|mambo|jambo|sasa|niaje|sannu|bawo|kedu|ete sen|akwaaba|oli otya|osiibye otya|wasuze otya|gyebale(?:\s?ko)?|agandi|good (?:morning|afternoon|evening|day)|morning|evening|afternoon|greetings|yo)(?:\s+(?:again|there|charles|all|sir|madam|boss|ssebo|sebo|nnyabo|nyabo))*|i'?m back|back again|it'?s me|it'?s me again)[\s!?.,👋🙂😊]*$/iu;
 
 /**
  * An old button tapped long after its moment. Plan buttons only when there is
@@ -1467,7 +1467,7 @@ function marketRows(first: string): ListRow[] {
 
 /**
  * Where they are named no place on the lists ("Town centre", a small town),
- * or places in two markets: they say, Fin never guesses. One tap when
+ * or places in two markets: they say, Charles never guesses. One tap when
  * the number's own country is one of the five ("Yes, Uganda"); the list of
  * the five otherwise, or when they say it is another.
  */
@@ -1502,7 +1502,7 @@ async function outsideMarkets(biz: Business, place: string | null): Promise<void
   // Demand for a market not yet covered: what a sixth one would be.
   trackUnmet("market_outside", {
     props: { place, phone_country: biz.country },
-    summary: `A person lives ${place ? `in ${placeName(place)}` : "somewhere"} outside the markets Fin knows; Fin said so and kept the location question open`,
+    summary: `A person lives ${place ? `in ${placeName(place)}` : "somewhere"} outside the markets Charles knows; Charles said so and kept the location question open`,
   });
   await sendText(
     biz.wa_id,
@@ -1970,8 +1970,8 @@ function howToConnect(address: "the address I'm about to send" | "your private a
     "Here's what this does: it lets ChatGPT or Claude read your money picture and your 90-day plan — what comes in, what you owe, your goal, your rule, your steps and how far you've got. Then you can ask it anything and it already knows your situation.\n\n" +
     "You can work through your plan there too: it can show you the step you're on, tick it off when you've done it, note a decision or a reminder, and remember things you tell it about how you work, so I know them here as well. It can't change your plan on its own — if it suggests a change, I ask you here first.\n\n" +
     "How to add it (on a computer is easiest):\n\n" +
-    `In Claude: Settings → Connectors → Add custom connector. Name it Fin, paste ${address}, and save. In a new chat, switch Fin on and ask "What do you know about my money?"\n\n` +
-    `In ChatGPT: Settings → Apps & Connectors, and add a custom connector (ChatGPT may ask you to turn on developer mode first, and may need a paid plan). Name it Fin and paste ${address}.\n\n` +
+    `In Claude: Settings → Connectors → Add custom connector. Name it Charles, paste ${address}, and save. In a new chat, switch Charles on and ask "What do you know about my money?"\n\n` +
+    `In ChatGPT: Settings → Apps & Connectors, and add a custom connector (ChatGPT may ask you to turn on developer mode first, and may need a paid plan). Name it Charles and paste ${address}.\n\n` +
     "The menus change names now and then — if yours look different, look for \"connectors\" in Settings."
   );
 }

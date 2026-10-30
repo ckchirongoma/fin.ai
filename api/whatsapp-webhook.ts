@@ -1,4 +1,4 @@
-// Fin — the WhatsApp webhook.
+// Charles — the WhatsApp webhook.
 //
 // This endpoint has exactly one job and a hard deadline: prove the request came
 // from Meta, write down what arrived, and answer 200 in well under a second.
@@ -203,7 +203,7 @@ async function accept(body: unknown): Promise<number> {
         internal,
         props: { code: s.errorCode ?? null, detail: errorText(s.errorDetail ?? "").slice(0, 160) },
         fingerprint: `delivery_failed:${s.errorCode ?? "none"}`,
-        summary: `WhatsApp could not deliver a message Fin sent (Meta code ${s.errorCode ?? "none"}: ${errorText(s.errorDetail ?? "").slice(0, 120)})`,
+        summary: `WhatsApp could not deliver a message Charles sent (Meta code ${s.errorCode ?? "none"}: ${errorText(s.errorDetail ?? "").slice(0, 120)})`,
       });
     }
     if (s.windowExpiresAt && s.recipient) {

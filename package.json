@@ -1,15 +1,16 @@
 {
-  "name": "fin",
+  "name": "charles",
   "private": true,
   "type": "module",
-  "description": "A WhatsApp number that knows your money — twelve questions, a 90-day money plan from a fixed module library, then one step at a time. South Africa first.",
+  "description": "A WhatsApp number that knows your money \u2014 twelve questions, a 90-day money plan from a fixed module library, then one step at a time. South Africa first.",
   "engines": {
     "node": ">=22.6"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "WA_STRICT_LIMITS=1 TRACKING_OFF=1 node --experimental-strip-types --import ./scripts/register-ts.mjs --test \"test/**/*.test.ts\"",
-    "eval": "node --experimental-strip-types --import ./scripts/register-ts.mjs scripts/eval.ts"
+    "eval": "node --experimental-strip-types --import ./scripts/register-ts.mjs scripts/eval.ts",
+    "setup-sql": "node scripts/build-setup-sql.mjs > db/CHARLES-SETUP.sql"
   },
   "dependencies": {
     "@sparticuz/chromium": "147.0.0",

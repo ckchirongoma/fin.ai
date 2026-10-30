@@ -1,4 +1,4 @@
-// Fin — retrieval, pass two: search by meaning.
+// Charles — retrieval, pass two: search by meaning.
 //
 // Pass one (retrieval.ts) is keyword scoring in plain code: free, predictable,
 // and the default. It fails in one specific way — the person asks in words the

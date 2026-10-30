@@ -1,4 +1,4 @@
-// Fin — the model layer. Every call goes through OpenRouter; which model
+// Charles — the model layer. Every call goes through OpenRouter; which model
 // does which job comes from the `model_config` table, never from code.
 //
 // Why that matters concretely: hosted open-model catalogues retire models with
@@ -465,7 +465,7 @@ async function requestOnce(
         Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
         // OpenRouter attributes usage with these; harmless if the URL is blank.
         "HTTP-Referer": env.PUBLIC_BASE_URL || "https://github.com/ckchirongoma/fin.ai",
-        "X-Title": "Fin",
+        "X-Title": "Charles",
       },
       body: JSON.stringify({
         model,

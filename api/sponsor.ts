@@ -1,4 +1,4 @@
-// Fin — the cohort report a sponsor actually needs, and the one this
+// Charles — the cohort report a sponsor actually needs, and the one this
 // product owes itself.
 //
 // PRODUCT-DEFINITION 4.8 asks for cohort metrics; section 6.1 asks for
@@ -14,7 +14,7 @@
 //     a person wrote. Sponsors get counts. An individual profile requires that
 //     owner's explicit, per-sponsor opt-in, which is not built and is not
 //     something this endpoint could grant.
-//   - No gender or age split, which 4.8 lists. Fin does not ask for either,
+//   - No gender or age split, which 4.8 lists. Charles does not ask for either,
 //     and inferring them from a name or a voice would be worse than not
 //     reporting them. Say so rather than quietly omitting it.
 
@@ -80,7 +80,7 @@ async function handler(req: Request): Promise<Response> {
       track("sponsor_report_viewed", { props: { who: "operator", days, format: "csv" } });
       return new Response(toCsv(r), {
         status: 200,
-        headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="fin-cohort-${r.generated_at.slice(0, 10)}.csv"`, "Cache-Control": "no-store" },
+        headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="charles-cohort-${r.generated_at.slice(0, 10)}.csv"`, "Cache-Control": "no-store" },
       });
     }
     track("sponsor_report_viewed", { props: { who: admin ? "operator" : "sponsor", label: sponsor?.label ?? null, days, format: "json" } });

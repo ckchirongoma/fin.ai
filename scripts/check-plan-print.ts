@@ -1,4 +1,4 @@
-// Fin — print the plan document the way production does, and check it.
+// Charles — print the plan document the way production does, and check it.
 //
 // A stress plan (long name, a long unbroken link inside a
 // ready-to-send message, many steps, every optional section filled) is
@@ -42,7 +42,7 @@ const d: PlanDocData = {
   },
   strategy: { ...EXAMPLE_PLAN.strategy!, reading: [1, 2, 3].map(() => L(EXAMPLE_PLAN.strategy!.reading[0]!, 2)), risks: [1, 2, 3].map(() => EXAMPLE_PLAN.strategy!.risks[0]!) },
   tools: { ...EXAMPLE_PLAN.tools, sassa_office: { id: "sassa_office", name: "The SASSA office, with a very long name for testing the layout", url: longUrl, why: L("Where a grant is checked and claimed."), cost: "Free", verified_on: "2026-01-01", walkthrough: ["Find your nearest office on sassa.gov.za.", L("Take your ID, the children's birth certificates and proof of address.", 2), `Reference: ${longUrl}`, "Ask for the outcome in writing."] } },
-  connectorUrl: "https://fin.example/mcp/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-AbCdEfGhIjKlMnOp",
+  connectorUrl: "https://charles.example/mcp/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-AbCdEfGhIjKlMnOp",
 };
 
 const html = planDocHTML(d);

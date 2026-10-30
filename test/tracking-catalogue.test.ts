@@ -1,4 +1,4 @@
-// Fin — every event name in the code is in docs/TRACKING.md.
+// Charles — every event name in the code is in docs/TRACKING.md.
 //
 // The catalogue is how anyone reading the dashboard or an alert email knows
 // what an event means. An event added to the code and not to the catalogue

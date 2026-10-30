@@ -1,4 +1,4 @@
-// Fin — the per-step PDF document (PRIORITY 4.1).
+// Charles — the per-step PDF document (PRIORITY 4.1).
 //
 // Priority 1 (a sibling track's fix for the Chromium launch crash) governs
 // whether this HTML actually renders to bytes on this deployment; that is not
@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { stepDocHTML, type StepDocData } from "../api/_lib/engine/stepdoc.ts";
 
 const base = (over: Partial<StepDocData> = {}): StepDocData => ({
-  productName: "Fin",
+  productName: "Charles",
   businessName: "Verify Script Test Business",
   stepTitle: "Show up when people search nearby",
   whyForYou: "You said people search nearby before calling.",

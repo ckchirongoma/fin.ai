@@ -1,4 +1,4 @@
-// Fin — three live findings from production, 2026-09-23.
+// Charles — three live findings from production, 2026-09-23.
 //
 // 1. The website's WhatsApp buttons pointed at a placeholder number, because
 //    the deploy-time `sed` meant to replace it never ran. They now go through
@@ -19,7 +19,7 @@ process.env.OPENROUTER_API_KEY = "fake-openrouter-key";
 process.env.SESSION_SECRET = "fake-session-secret";
 process.env.WORKER_SECRET = "fake-worker-secret";
 process.env.WHATSAPP_APP_SECRET = "fake-app-secret";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 delete process.env.TYPESAFE_API_KEY;
 delete process.env.WHATSAPP_PUBLIC_NUMBER;
 // The bot's own number is asked of Meta when WHATSAPP_PUBLIC_NUMBER is unset.
@@ -66,7 +66,7 @@ beforeEach(() => {
   net.phoneNumber.lookups.length = 0;
 });
 
-const wa = (qs: string) => plan.GET(new Request(`https://fin.test/api/plan?action=whatsapp${qs}`));
+const wa = (qs: string) => plan.GET(new Request(`https://charles.test/api/plan?action=whatsapp${qs}`));
 const ago = (s: number) => new Date(Date.now() - s * 1000).toISOString();
 
 // ── 1. The website's WhatsApp link ───────────────────────────────
@@ -94,17 +94,17 @@ test("/wa redirects to the configured number, however it was typed, with a fixed
 
   // An unknown preset falls back to "start" — the query string never supplies the text.
   const odd = await wa("&m=<script>&text=send%20money");
-  assert.equal(odd.headers.get("Location"), `https://wa.me/27809930003?text=${encodeURIComponent("Hi Fin, I want to start.")}`);
+  assert.equal(odd.headers.get("Location"), `https://wa.me/27809930003?text=${encodeURIComponent("Hi Charles, I want to start.")}`);
 
   // "ask" opens the chat with nothing prefilled.
   assert.equal((await wa("&m=ask")).headers.get("Location"), "https://wa.me/27809930003");
 });
 
 test("health says, publicly, whether the WhatsApp buttons work", async () => {
-  let body = await (await health.GET(new Request("https://fin.test/api/health"))).json();
+  let body = await (await health.GET(new Request("https://charles.test/api/health"))).json();
   assert.equal(body.whatsapp_link, false);
   process.env.WHATSAPP_PUBLIC_NUMBER = "27809930003";
-  body = await (await health.GET(new Request("https://fin.test/api/health"))).json();
+  body = await (await health.GET(new Request("https://charles.test/api/health"))).json();
   assert.equal(body.whatsapp_link, true);
 });
 
@@ -151,7 +151,7 @@ describe("/wa resolves the bot's own number from Meta", () => {
     assert.equal(net.phoneNumber.lookups.length, 1, "no second Graph call");
 
     // Health reads the same cached number.
-    const body = await (await health.GET(new Request("https://fin.test/api/health"))).json();
+    const body = await (await health.GET(new Request("https://charles.test/api/health"))).json();
     assert.equal(body.whatsapp_link, true);
     assert.equal(net.phoneNumber.lookups.length, 1);
   });
@@ -235,7 +235,7 @@ test("authenticated health lists recent dead jobs: kind, when, why, and whether 
     { id: 4, kind: "inbound", business_id: null, wa_id: "27820000001", payload: {}, status: "done", attempts: 1, max_attempts: 3, last_error: null, created_at: ago(10), updated_at: ago(5) },
   );
 
-  const res = await health.GET(new Request("https://fin.test/api/health", { headers: ADMIN }));
+  const res = await health.GET(new Request("https://charles.test/api/health", { headers: ADMIN }));
   const body = await res.json();
   assert.equal(body.queue.dead, 3);
   const dead = body.queue.recent_dead as import("../api/_lib/db.ts").DeadJobSummary[];
@@ -255,7 +255,7 @@ test("authenticated health lists recent dead jobs: kind, when, why, and whether 
   assert.doesNotMatch(raw, /secret business idea/, "no owner text");
 
   // And the public form still says nothing about the queue.
-  const pub = await (await health.GET(new Request("https://fin.test/api/health"))).json();
+  const pub = await (await health.GET(new Request("https://charles.test/api/health"))).json();
   assert.equal(pub.queue, undefined);
 });
 
@@ -316,7 +316,7 @@ test("health reports p50/max build time over 24h, and timing/strategy notes neve
     { check_name: "distress", engine: "model", outcome: "pass", created_at: recent },
   );
 
-  const body = await (await health.GET(new Request("https://fin.test/api/health", { headers: ADMIN }))).json();
+  const body = await (await health.GET(new Request("https://charles.test/api/health", { headers: ADMIN }))).json();
   assert.deepEqual(body.plan_build_times_24h, { builds: 3, p50_seconds: 200, max_seconds: 312, slowest: "total 312s; strategy 95s" });
   assert.equal(body.safety.checks24h, 1, "only the distress check is a guardrail check");
   assert.equal(body.plans_without_strategy_24h, 1);

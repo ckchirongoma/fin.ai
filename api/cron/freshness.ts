@@ -1,4 +1,4 @@
-// Fin — the quarterly knowledge check, run weekly so nothing drifts far.
+// Charles — the quarterly knowledge check, run weekly so nothing drifts far.
 //
 // Rule 10: every price carries a verification date, and anything past 90 days
 // is automatically hedged to "confirm at sign-up". That hedging is already

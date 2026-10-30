@@ -1,4 +1,4 @@
-// Fin — tracking: everything that happens is recorded, nothing identifying
+// Charles — tracking: everything that happens is recorded, nothing identifying
 // leaks, and the team is emailed when something goes wrong.
 //
 // Founder, 2026-10: "If anything ever goes wrong, that must be logged somewhere
@@ -17,7 +17,7 @@ process.env.RESEND_API_KEY = "fake-resend-key";
 process.env.ALERT_EMAIL_TO = "team@example.com";
 process.env.ADMIN_SECRET = "fake-admin-secret";
 process.env.INTERNAL_WA_IDS = "27829999*";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 // This file is about tracking, so it is on here (the suite runs with it off).
 delete process.env.TRACKING_OFF;
 delete process.env.TYPESAFE_API_KEY;
@@ -168,7 +168,7 @@ describe("what goes wrong is counted as incidents", () => {
     assert.equal(inc[0]!.alert, "immediate", "an error emails straight away");
   });
 
-  test("an owner trying something Fin can't do is an unmet request, with what they said", async () => {
+  test("an owner trying something Charles can't do is an unmet request, with what they said", async () => {
     await T.withTrackContext({ businessId: "b-2", said: "can you file my tax return for me? my number is 0825550199" }, async () => {
       T.trackUnmet("off_topic_request", { props: { intent: "off_topic" } });
     });
@@ -192,7 +192,7 @@ describe("what goes wrong is counted as incidents", () => {
     assert.equal(row.meta?.send_failed, true);
   });
 
-  test("Fin apologising is recorded as something an owner couldn't do, with the owner's words and the reply", async () => {
+  test("Charles apologising is recorded as something an owner couldn't do, with the owner's words and the reply", async () => {
     const { sendText } = await import("../api/_lib/wa.ts");
     await T.withTrackContext({ channel: "whatsapp", businessId: "b-4", said: "send me the invoice template" }, () => sendText("27809970004", "Sorry, I can't send files yet.", "b-4"));
     await T.flushTracking();
@@ -265,11 +265,11 @@ describe("the team is emailed", () => {
 describe("the dashboard", () => {
   test("refuses without the admin secret, opens with it, and never shows a phone number", async () => {
     const admin = await import("../api/admin.ts");
-    const no = await admin.GET(new Request("https://fin.test/api/admin?view=overview"));
+    const no = await admin.GET(new Request("https://charles.test/api/admin?view=overview"));
     assert.equal(no.status, 403);
     await engine.handleInbound(textFrom("27809970009", "hi"));
     await T.flushTracking();
-    const yes = await admin.GET(new Request("https://fin.test/api/admin?view=events", { headers: { Authorization: "Bearer fake-admin-secret" } }));
+    const yes = await admin.GET(new Request("https://charles.test/api/admin?view=events", { headers: { Authorization: "Bearer fake-admin-secret" } }));
     assert.equal(yes.status, 200);
     const body = await yes.text();
     assert.ok(body.includes("turn_received"));
@@ -280,14 +280,14 @@ describe("the dashboard", () => {
 describe("the final review's findings, pinned", () => {
   test("an owner's connector token in the URL is never stored or emailed", async () => {
     const handler = T.tracked("mcp", "mcp", async () => new Response("boom", { status: 500 }));
-    await handler(new Request("https://fin.test/mcp/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-"));
+    await handler(new Request("https://charles.test/mcp/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-"));
     await T.flushTracking();
     const all = JSON.stringify([...events(), ...db.tables.incidents!]);
     assert.ok(!all.includes("AbCdEfGhIjKlMnOp"), "token absent");
     assert.equal(named("http_request").pop()!.props.path, "/mcp/<token>");
   });
 
-  test("Fin's apology is scrubbed, the owner's echoed words are replaced, and the incident never keeps it", async () => {
+  test("Charles's apology is scrubbed, the owner's echoed words are replaced, and the incident never keeps it", async () => {
     const { sendText } = await import("../api/_lib/wa.ts");
     const said = "my number is 0825550199 and I owe the loan shark";
     await T.withTrackContext({ channel: "whatsapp", businessId: "b-ap", said }, () => sendText("27809970010", `Sorry, I can't help with that. I heard: "${said}"`, "b-ap"));

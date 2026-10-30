@@ -1,4 +1,4 @@
-// Fin — one question, one answer, however slow the model is.
+// Charles — one question, one answer, however slow the model is.
 //
 // Live, round 6 (2026-09-24): one "How am I doing?" was answered TWICE, ~5
 // minutes apart, in different words. The first attempt's model call ran

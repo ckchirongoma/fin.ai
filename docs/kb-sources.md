@@ -1,6 +1,6 @@
-# Knowledge-base sources: the Fin South African library (db/0034)
+# Knowledge-base sources: the Charles South African library (db/0034)
 
-Every knowledge entry and tool in `seed/knowledge.json` and `seed/tools.json` (all country `ZA`, all `verified_on` 2026-10-30, loaded by `db/0034_fin_za_library.sql`) is listed here with the URLs its facts came from, what those sources support, and the verdict of the check. The seed carries no source column, so this file is how a figure in a row is traced back. Keep it in step: when a row is re-verified, update its entry here as well as its `verified_on`.
+Every knowledge entry and tool in `seed/knowledge.json` and `seed/tools.json` (all country `ZA`, all `verified_on` 2026-10-30, loaded by `db/0034_charles_za_library.sql`) is listed here with the URLs its facts came from, what those sources support, and the verdict of the check. The seed carries no source column, so this file is how a figure in a row is traced back. Keep it in step: when a row is re-verified, update its entry here as well as its `verified_on`.
 
 ## How these rows were verified (read first)
 
@@ -8,7 +8,7 @@ Every knowledge entry and tool in `seed/knowledge.json` and `seed/tools.json` (a
 - Where published figures conflict, the row says "published figures differ" and names the place to confirm (CLAUDE.md rule 10). Where nothing could be confirmed, the figure was left out rather than guessed. The lead's pre-gathered facts were re-checked against the same search results; where a search contradicted the lead's figure, the row follows the search and the difference is listed under "Facts that differ from the lead's brief".
 - `verified_on` is 2026-10-30 on every row: the date the figures were checked, by that method. The freshness job flags them again after 90 days.
 - **No row recommends credit.** Loans, cards, overdrafts, buy-now-pay-later and consolidation loans appear only as things to refuse (`k.no_new_credit`) or as rules that protect a borrower (`k.nca_caps_reckless`).
-- **No row asks for or stores an ID number, account number, card number, PIN, OTP or password.** Walkthroughs say "you will be asked for your ID number on their site" where that is true, and several steps say never to send those to anyone, including Fin.
+- **No row asks for or stores an ID number, account number, card number, PIN, OTP or password.** Walkthroughs say "you will be asked for your ID number on their site" where that is true, and several steps say never to send those to anyone, including Charles.
 - `tools.informal_business_supported` keeps Charlie's column name but now means **"works without a payslip"**: `true` when a person with no formal job can use the tool (most rows), `false` when it needs an employer, a fund membership or a home loan (`ufiling_uif`, `ccma_referral`, `fund_two_pot_portal`, `nhfc_first_home_finance`).
 - The only phone numbers in the rows are institutional lines (regulators, ombuds, banks' published fraud lines, SASSA, SARS, Legal Aid). No example personal numbers were needed.
 - Measured by `scripts/kb-depth.ts` (knowledge avg 9.6/10, min 8; tools avg 9.9/10, min 9; no shallow rows) and `scripts/kb-coverage.ts` (29/29 plan steps that name a tool have one; the benchmark fixtures are still Charlie's business questions and score 0 until the lead replaces them). A scratch probe of 37 natural money questions through the real `shortlist()` reached a row of the right area in the top 3 for all 37.
@@ -81,7 +81,7 @@ Domain `income`. Sources: https://www.accountingweekly.com/sars-updates/filing-s
 Domain `income`. Rule of thumb; the only fact is that SASSA publishes monthly payment dates (older persons, then disability, then children), supported by https://www.ecr.co.za/shows/stacey-jsbu/sassa-confirms-payment-dates-for-june-2026/ and https://techcabal.com/2026/02/16/everything-you-need-to-know-about-sassa-grant-payments-for-march-2026/. Verdict: **kept**, no figures.
 
 #### `k.week_spend_log`, `k.three_pots_budget`, `k.twenty_four_hour_rule` — the budgeting rules of thumb
-Domain `spending`. No figures beyond illustrative lines the person writes themselves. The design basis (one rule at a time, physical separation) is Drexler, Fischer and Schoar, AEJ Applied 2014, as cited in `docs/superpowers/specs/2026-10-30-fin-design.md`. Verdict: **kept**.
+Domain `spending`. No figures beyond illustrative lines the person writes themselves. The design basis (one rule at a time, physical separation) is Drexler, Fischer and Schoar, AEJ Applied 2014, as cited in `docs/superpowers/specs/2026-10-30-charles-design.md`. Verdict: **kept**.
 
 #### `k.bank_fees_audit` — Find every fee on last month's statement
 Domain `spending`. Sources: https://gotyme.co.za/personal/bank-account/current-account/fees-and-charges · https://gotyme.co.za/personal/bank-account/current-account. Support: free current account, R3 declined debit order (fee page snippet). Verdict: **hedged** — GoTyme figures "confirm in the app"; other banks' fees not stated.

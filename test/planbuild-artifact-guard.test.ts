@@ -1,4 +1,4 @@
-// Fin — engine/planbuild.ts's runFinalizeStage, and PRIORITY 5.1's guard.
+// Charles — engine/planbuild.ts's runFinalizeStage, and PRIORITY 5.1's guard.
 //
 // PR #22 (track1) built engine/artifact.ts's checkArtifact() as the choke
 // point for the WhatsApp send path and the per-step PDF, and flagged
@@ -129,6 +129,6 @@ test("runFinalizeStage stores the message itself, with what only the owner knows
     // each of them which parts are the owner's to fill.
     if (!row.artifact) continue;
     assert.doesNotMatch(String(row.artifact), /write that part yourself/i, "round 18: the apology stored over the message left nothing to send or print");
-    assert.doesNotMatch(String(row.artifact), /\[Business Name\]/i, "what Fin knows is filled in");
+    assert.doesNotMatch(String(row.artifact), /\[Business Name\]/i, "what Charles knows is filled in");
   }
 });

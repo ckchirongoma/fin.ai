@@ -1,4 +1,4 @@
-// Fin — letting Node run the TypeScript sources directly.
+// Charles — letting Node run the TypeScript sources directly.
 //
 // The repo has no build step. Vercel transpiles each .ts file on its own and
 // leaves import specifiers untouched, which means every relative import in

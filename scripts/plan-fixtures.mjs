@@ -1,4 +1,4 @@
-// Fin — the plan fixture scripts/preview-plan.mjs and the tests render.
+// Charles — the plan fixture scripts/preview-plan.mjs and the tests render.
 //
 // One household, South Africa, built by scripts/example-plan-data.ts (the same
 // data the landing page's example plan is rendered from), so the preview,

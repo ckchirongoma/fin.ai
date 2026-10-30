@@ -1,20 +1,20 @@
 # Charlie — running it
 
-> ## Fin addendum (2026-10-30)
+> ## Charles addendum (2026-10-30)
 >
 > This document is Charlie's design record, kept because every decision in it
-> still holds for Fin and was earned the hard way. Read it with the
-> vocabulary map in `docs/superpowers/plans/2026-10-30-fin-build-plan.md`:
+> still holds for Charles and was earned the hard way. Read it with the
+> vocabulary map in `docs/superpowers/plans/2026-10-30-charles-build-plan.md`:
 > business → household (one person's money), owner → person, customer → goal,
 > angle → rule, idea/start/run/grow → surviving/stretching/steady/building,
 > distress → hardship, the eight business areas → the eight money areas
 > (income, spending, debt, cushion, credit_record, protection, family_money,
 > goals), the five markets → South Africa first. Where this file names a
-> business body (CIPC, SARS for a business, SEDFA), Fin names the money ones
+> business body (CIPC, SARS for a business, SEDFA), Charles names the money ones
 > (the NCR consumer line, SASSA, SARS for a person, the National Financial
-> Ombud). Two rules were added for Fin: never recommend credit, and never ask
+> Ombud). Two rules were added for Charles: never recommend credit, and never ask
 > for an ID number, account number, card number, PIN, OTP or password. The
-> design itself is `docs/superpowers/specs/2026-10-30-fin-design.md`.
+> design itself is `docs/superpowers/specs/2026-10-30-charles-design.md`.
 
 
 What to look at, what it means, and what to do about it. Written for the person

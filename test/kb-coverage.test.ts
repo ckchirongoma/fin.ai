@@ -1,4 +1,4 @@
-// Fin — the knowledge-base yardstick produces the shape the gap analysis
+// Charles — the knowledge-base yardstick produces the shape the gap analysis
 // reads, and pins the levels the South African money library reached so a
 // regression fails here.
 //

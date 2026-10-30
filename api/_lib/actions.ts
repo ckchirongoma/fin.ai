@@ -1,4 +1,4 @@
-// Fin — every tappable action, as an explicit id.
+// Charles — every tappable action, as an explicit id.
 //
 // CLAUDE.md rule 7: "Every button is an action, never re-parsed text." An early
 // version turned each tap into a chat message and re-parsed it, so a leftover

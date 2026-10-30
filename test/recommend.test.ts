@@ -1,4 +1,4 @@
-// Fin — the "My pick" line names the number on the card, never the id.
+// Charles — the "My pick" line names the number on the card, never the id.
 //
 // Live test, 2026-09-25: three of five customer-options messages said
 // "Start with c" (an internal option id), and one length-experiment message

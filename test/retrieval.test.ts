@@ -1,4 +1,4 @@
-// Fin — pass one of retrieval: the shortlist that costs nothing.
+// Charles — pass one of retrieval: the shortlist that costs nothing.
 //
 // CLAUDE.md calls the `keywords` column "the whole retrieval strategy", and
 // says the scoring happens "in plain code, no model call, before anything

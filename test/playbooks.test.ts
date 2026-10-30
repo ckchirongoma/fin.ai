@@ -1,4 +1,4 @@
-// Fin — the fixed module library: which modules a diagnosis earns, and the
+// Charles — the fixed module library: which modules a diagnosis earns, and the
 // shape of the library itself. CLAUDE.md rule 1: the plan is assembled from
 // this library, never freestyled; rule 11: nothing in it recommends credit.
 

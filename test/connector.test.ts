@@ -1,4 +1,4 @@
-// Fin — the MCP connector's get_plan, and PRIORITY 5.1's guard.
+// Charles — the MCP connector's get_plan, and PRIORITY 5.1's guard.
 //
 // PR #22 (track1) built engine/artifact.ts's checkArtifact() as the single
 // choke point that stops an unfilled "[Name]"/"[Link to Google profile]"
@@ -19,7 +19,7 @@ process.env.SESSION_SECRET = "fake-session-secret";
 process.env.WORKER_SECRET = "fake-worker-secret";
 process.env.WHATSAPP_ACCESS_TOKEN = "fake-wa-token";
 process.env.WHATSAPP_PHONE_NUMBER_ID = "1";
-process.env.PUBLIC_BASE_URL = "https://fin.test";
+process.env.PUBLIC_BASE_URL = "https://charles.test";
 delete process.env.TYPESAFE_API_KEY;
 
 import { installFakeNet, makeFakeDb, type FakeDb, type FakeNet } from "./_fakes.ts";
@@ -79,7 +79,7 @@ after(() => {
 
 const rpc = (token: string, method: string, params: unknown = {}) =>
   mcp.POST(
-    new Request("https://fin.test/api/mcp", {
+    new Request("https://charles.test/api/mcp", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
@@ -100,7 +100,7 @@ test("get_plan never hands the owner's connected AI a step artifact with an unre
   assert.match(raw, /Fill in the parts? in \[brackets\]/i, "the message, marked as the owner's to fill — the same thing the WhatsApp path sends");
 });
 
-test("get_plan fills a placeholder Fin actually knows, same as every other artifact-touching path", async () => {
+test("get_plan fills a placeholder Charles actually knows, same as every other artifact-touching path", async () => {
   db.tables.plan_steps![0]!.artifact = "Thanks for choosing [Your Name]! See you soon.";
 
   const res = await rpc(ownerToken(), "tools/call", { name: "get_plan", arguments: {} });

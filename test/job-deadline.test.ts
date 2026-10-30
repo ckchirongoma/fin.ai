@@ -1,4 +1,4 @@
-// Fin — a job attempt never starts a model call it has no time to finish.
+// Charles — a job attempt never starts a model call it has no time to finish.
 //
 // Live test, round 10 (2026-09-26), a Kenyan plan build: the strategy call
 // spent 66% of its output on hidden reasoning and came back without its

@@ -1,7 +1,7 @@
-// Fin — nothing an owner reads is cut short with "…".
+// Charles — nothing an owner reads is cut short with "…".
 //
 // Founder, 2026-10: a diagnostic button read "Not yet, it's an id…", and the
-// first thing Fin sent was a privacy line before it had said hello. The
+// first thing Charles sent was a privacy line before it had said hello. The
 // audit that followed found the same cut in suggested-reply buttons, link
 // labels, nudges and long button messages that lost their closing question.
 
@@ -115,6 +115,6 @@ test("an answer with words to paste puts the buttons last, under the words they 
 test("a brand-new number that opens with a voice note gets the hello first, not 'I didn't catch that'", async () => {
   await engine.handleInbound({ waMessageId: "wamid.v1", from: "27809979005", timestamp: Date.now(), kind: "audio", text: "", mediaId: "m1", mimeType: "audio/ogg" });
   assert.equal(net.sent.length, 1);
-  assert.match(net.sent[0]!.body, /^Hi, I'm Fin\./);
+  assert.match(net.sent[0]!.body, /^Hi, I'm Charles\./);
   assert.match(net.sent[0]!.body, /forget my money/);
 });

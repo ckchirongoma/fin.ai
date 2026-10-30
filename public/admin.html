@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fin — tracking</title>
+<title>Charles — tracking</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,8 +57,8 @@
 </head>
 <body>
 <div id="login" hidden>
-  <h1>Fin tracking</h1>
-  <p class="muted">Paste the ADMIN_SECRET from Vercel. It stays in this tab only and goes nowhere but Fin's own API.</p>
+  <h1>Charles tracking</h1>
+  <p class="muted">Paste the ADMIN_SECRET from Vercel. It stays in this tab only and goes nowhere but Charles's own API.</p>
   <input id="secret" type="password" autocomplete="off" placeholder="ADMIN_SECRET">
   <button class="btn primary" id="go">Open dashboard</button>
   <div class="err" id="loginErr"></div>
@@ -66,7 +66,7 @@
 
 <div id="app" hidden>
   <header>
-    <h1>Fin tracking</h1>
+    <h1>Charles tracking</h1>
     <nav id="tabs"></nav>
     <select id="days" aria-label="Period">
       <option value="1">Last 24 hours</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option>
@@ -81,9 +81,9 @@
 (() => {
   const TABS = [["overview","Overview"],["funnel","Funnel"],["unmet","Couldn't do"],["incidents","Problems"],["performance","Performance"],["events","Events"],["owner","One person"]];
   let secret = "";
-  try { secret = sessionStorage.getItem("fin_admin") || ""; } catch {}
+  try { secret = sessionStorage.getItem("charles_admin") || ""; } catch {}
   let tab = "overview";
-  try { tab = sessionStorage.getItem("fin_admin_tab") || "overview"; } catch {}
+  try { tab = sessionStorage.getItem("charles_admin_tab") || "overview"; } catch {}
   const $ = (s) => document.querySelector(s);
   const esc = (x) => String(x ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const secs = (ms) => (ms == null ? "—" : ms >= 60000 ? (ms / 60000).toFixed(1) + " min" : (ms / 1000).toFixed(1) + "s");
@@ -104,15 +104,15 @@
     $("#app").hidden = true; $("#login").hidden = false; $("#loginErr").textContent = msg || "";
   }
   function showApp() { $("#login").hidden = true; $("#app").hidden = false; renderTabs(); load(); }
-  $("#go").onclick = () => { secret = $("#secret").value.trim(); try { sessionStorage.setItem("fin_admin", secret); } catch {} showApp(); };
+  $("#go").onclick = () => { secret = $("#secret").value.trim(); try { sessionStorage.setItem("charles_admin", secret); } catch {} showApp(); };
   $("#secret").onkeydown = (e) => { if (e.key === "Enter") $("#go").click(); };
-  $("#logout").onclick = () => { secret = ""; try { sessionStorage.removeItem("fin_admin"); } catch {} showLogin(); };
+  $("#logout").onclick = () => { secret = ""; try { sessionStorage.removeItem("charles_admin"); } catch {} showLogin(); };
   $("#refresh").onclick = () => load();
   $("#days").onchange = () => load();
 
   function renderTabs() {
     $("#tabs").innerHTML = TABS.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${k === tab}">${l}</button>`).join("");
-    $("#tabs").querySelectorAll("button").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; try { sessionStorage.setItem("fin_admin_tab", tab); } catch {} renderTabs(); load(); }));
+    $("#tabs").querySelectorAll("button").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; try { sessionStorage.setItem("charles_admin_tab", tab); } catch {} renderTabs(); load(); }));
   }
 
   document.addEventListener("click", (e) => {
@@ -155,13 +155,13 @@
         ${tile("Messages in", s.messages_in, `${s.questions} questions`)}
         ${tile("Plans built", s.plan_build.built, `median ${secs(s.plan_build.p50)} · failed ${s.plan_build.failed}`)}
         ${tile("Reply time", secs(s.reply.p50), `p95 ${secs(s.reply.p95)} · ${s.reply.turns} turns`)}
-        ${tile("Couldn't do", s.unmet.reduce((a, u) => a + u.count, 0), "people asked, Fin couldn't")}
+        ${tile("Couldn't do", s.unmet.reduce((a, u) => a + u.count, 0), "people asked, Charles couldn't")}
         ${tile("Failures", s.failures.reduce((a, u) => a + u.count, 0), `${s.incidents_open.length} open problems`)}
         ${tile("Model calls", s.models.calls, `failed ${s.models.failed} · $${s.models.cost_usd}`)}
         ${tile("WhatsApp sends", s.whatsapp.sent, `failed ${s.whatsapp.failed}`)}
       </div>
       <section><h2>How far people got</h2>${table(["Point", "People", ""], s.funnel.map((f) => `<tr><td>${esc(f.label)}</td><td class="num">${f.owners}</td><td style="width:45%"><div class="barwrap"><div class="bar" style="width:${(100 * f.owners) / top}%"></div></div></td></tr>`))}</section>
-      <section><h2>What people tried and Fin couldn't do</h2>${table(["What", "Count"], s.unmet.map((u) => `<tr><td>${esc(u.name.replace(/_/g, " "))}</td><td class="num">${u.count}</td></tr>`))}
+      <section><h2>What people tried and Charles couldn't do</h2>${table(["What", "Count"], s.unmet.map((u) => `<tr><td>${esc(u.name.replace(/_/g, " "))}</td><td class="num">${u.count}</td></tr>`))}
         ${s.unmet_examples.filter((x) => x.excerpt).map((x) => `<div style="margin-top:8px"><span class="said">“${esc(x.excerpt)}”</span> <span class="muted">— ${owner(x.owner)}${x.stage ? `, at ${esc(x.stage)}` : ""}</span></div>`).join("")}</section>
       <section><h2>What failed</h2>${table(["What", "Count"], s.failures.map((u) => `<tr><td>${esc(u.name.replace(/_/g, " "))}</td><td class="num">${u.count}</td></tr>`))}</section>`;
     },
@@ -177,7 +177,7 @@
     async unmet() {
       const u = await api("?view=unmet&days=" + days());
       return `<section><h2>Couldn't do — ${u.total}</h2>${table(["What", "Count"], u.by_kind.map((x) => `<tr><td>${esc(x.name.replace(/_/g, " "))}</td><td class="num">${x.count}</td></tr>`))}</section>
-        <section><h2>Every one, newest first</h2>${table(["When", "What", "Person", "Where", "They said / Fin said"], u.recent.map((e) => `<tr><td class="muted" style="white-space:nowrap">${when(e.at)}</td><td>${esc(e.name.replace(/_/g, " "))}${e.internal ? ' <span class="pill">internal</span>' : ""}</td><td>${owner(e.owner)}</td><td class="muted">${esc([e.country, e.channel, e.stage].filter(Boolean).join(" · "))}</td><td>${e.said ? `<span class="said">“${esc(e.said)}”</span>` : ""}${e.reply ? `<div class="muted">Fin: “${esc(e.reply)}”</div>` : ""}</td></tr>`))}</section>`;
+        <section><h2>Every one, newest first</h2>${table(["When", "What", "Person", "Where", "They said / Charles said"], u.recent.map((e) => `<tr><td class="muted" style="white-space:nowrap">${when(e.at)}</td><td>${esc(e.name.replace(/_/g, " "))}${e.internal ? ' <span class="pill">internal</span>' : ""}</td><td>${owner(e.owner)}</td><td class="muted">${esc([e.country, e.channel, e.stage].filter(Boolean).join(" · "))}</td><td>${e.said ? `<span class="said">“${esc(e.said)}”</span>` : ""}${e.reply ? `<div class="muted">Charles: “${esc(e.reply)}”</div>` : ""}</td></tr>`))}</section>`;
     },
 
     async incidents() {

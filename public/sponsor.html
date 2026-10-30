@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cohort console — Fin</title>
-<meta name="description" content="Aggregate results for a Fin cohort, for the bank or programme that sponsors it.">
+<title>Cohort console — Charles</title>
+<meta name="description" content="Aggregate results for a Charles cohort, for the bank or programme that sponsors it.">
 <meta name="theme-color" content="#ffffff">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,7 +57,7 @@
 </style>
 </head>
 <body>
-<header><b>Fin</b><span class="sub" style="margin:0">Cohort console</span></header>
+<header><b>Charles</b><span class="sub" style="margin:0">Cohort console</span></header>
 
 <main class="wrap">
   <noscript><p>This console needs JavaScript. Ask the operator for the report as a file instead.</p></noscript>
@@ -94,7 +94,7 @@
 <script>
 (function () {
   "use strict";
-  var KEY = "fin_sponsor_key";
+  var KEY = "charles_sponsor_key";
   var API = "/api/sponsor";
   function el(id) { return document.getElementById(id); }
   var signIn = el("signIn"), consoleView = el("console"), msg = el("msg"), report = el("report");
@@ -181,7 +181,45 @@
     report.appendChild(ul);
   }
 
+  var DEMO = /(?:^|[?&])demo=1(?:&|$)/.test(location.search);
+  // Invented numbers for a reviewer to see the SHAPE of the report. Every
+  // figure here is made up; no cohort has run. The banner says so.
+  function DEMO_REPORT() {
+    return {
+      generated_at: new Date().toISOString(), window_days: 90,
+      cohort: { onboarded: 240, completed_a_plan: 176, weekly_active: 131, monthly_active: 164, opted_out_of_nudges: 9 },
+      progress: { steps_total: 1584, steps_done: 603, steps_skipped: 88, commitments_open: 212, commitments_done: 391, areas_green_total: 268 },
+      by_country: { ZA: { onboarded: 240, with_plan: 176 } },
+      by_baseline_tier: {
+        low: { businesses: 96, outcomes_reported: 171, better: 94, same: 61, worse: 9, too_early: 7, commitments_done_rate: 0.61, areas_green: 71, areas_green_per_business: 0.74 },
+        mid: { businesses: 88, outcomes_reported: 158, better: 93, same: 52, worse: 6, too_early: 7, commitments_done_rate: 0.66, areas_green: 109, areas_green_per_business: 1.24 },
+        high: { businesses: 44, outcomes_reported: 71, better: 42, same: 25, worse: 2, too_early: 2, commitments_done_rate: 0.7, areas_green: 88, areas_green_per_business: 2.0 },
+        unknown: { businesses: 12, outcomes_reported: 0, better: 0, same: 0, worse: 0, too_early: 0, commitments_done_rate: null, areas_green: 0, areas_green_per_business: 0 }
+      },
+      harm_monitoring: "Weaker households report improvement at 55%, stronger at 59%. No divergence that meets the review threshold. (Invented numbers: this is what the sentence looks like when a pilot has run.)",
+      guardrails: { checks_in_window: 4120, checks_that_could_not_run: 0, note: "Every check that was asked for ran." },
+      omitted_on_purpose: [
+        "No ids, phone numbers, names or anything a person wrote. Aggregates only.",
+        "No gender or age split: Charles does not collect either, and inferring them would be worse than not reporting them."
+      ]
+    };
+  }
+
+  function demoBanner() {
+    var b = node("div", "callout watch");
+    b.appendChild(node("b", null, "Demo data. Every number on this page is invented."));
+    b.appendChild(node("span", null, "No cohort has run. This page shows the shape of the report a sponsoring bank reads once a pilot is live: the do-no-harm check first, then the cohort, progress, and the split by where each person started. Groups under five people are withheld."));
+    return b;
+  }
+
   function load() {
+    if (DEMO) {
+      signIn.hidden = true; consoleView.hidden = false;
+      el("title").textContent = "Where a cohort would stand";
+      render(DEMO_REPORT());
+      report.insertBefore(demoBanner(), report.firstChild);
+      return;
+    }
     var key = sessionStorage.getItem(KEY);
     if (!key) return;
     say("Loading…");

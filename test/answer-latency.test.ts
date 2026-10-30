@@ -1,4 +1,4 @@
-// Fin — where an answer's time goes, and the waits that were not needed.
+// Charles — where an answer's time goes, and the waits that were not needed.
 //
 // Live, round 4: web answers took 12s, 14s, 10s and once 61s; WhatsApp
 // answers 15–20s. Nobody can read production logs, so every answer now
@@ -98,11 +98,11 @@ async function planned(wa: string) {
 
 const routerCalls = () => net.modelCalls.filter((c) => /Classify this message from a person to their money assistant/.test(c.prompt)).length;
 const post = (token: string, question: string) =>
-  ask.POST(new Request("https://fin.example/api/ask", { method: "POST", headers: { "Content-Type": "application/json", cookie: `fin_session=${token}` }, body: JSON.stringify({ question }) }));
+  ask.POST(new Request("https://charles.example/api/ask", { method: "POST", headers: { "Content-Type": "application/json", cookie: `charles_session=${token}` }, body: JSON.stringify({ question }) }));
 
 describe("which messages may skip the router", () => {
   test("a plain progress question, alone or with filler", () => {
-    for (const t of ["How am I doing?", "how am i doing", "Hey Fin, how am I doing so far?", "Am I on track?", "How's it going with my plan?", "where do I stand right now", "How is my money doing?", "my progress?"]) {
+    for (const t of ["How am I doing?", "how am i doing", "Hey Charles, how am I doing so far?", "Am I on track?", "How's it going with my plan?", "where do I stand right now", "How is my money doing?", "my progress?"]) {
       assert.equal(qa.isPlainProgressQuestion(t), true, t);
     }
   });

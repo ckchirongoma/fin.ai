@@ -1,4 +1,4 @@
-// Fin — scoring the Money Map against a fixed rubric.
+// Charles — scoring the Money Map against a fixed rubric.
 //
 // The eight-area map has to be rubric-based so it is consistent across people
 // and reportable to a bank or a programme. A model grading its own output is

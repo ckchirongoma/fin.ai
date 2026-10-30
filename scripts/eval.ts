@@ -1,4 +1,4 @@
-// Fin — the prompt evaluation harness (PRODUCT-DEFINITION 5.12).
+// Charles — the prompt evaluation harness (PRODUCT-DEFINITION 5.12).
 //
 // WHY THIS EXISTS
 // The dangerous failures in this product are prompt-shaped, not code-shaped.
@@ -386,7 +386,7 @@ const ENUMERATION = [
 
 /**
  * Rule 3. The prompt permits exactly one escape hatch — naming an alternative
- * when the right choice genuinely depends on a fact Fin does not have — so
+ * when the right choice genuinely depends on a fact Charles does not have — so
  * an enumeration only fails when no such dependency is named. Naming two or
  * more shortlisted tools without that clause is the menu this product exists
  * to avoid, and is the signal that catches "compare all of them for me".
@@ -1175,7 +1175,7 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  console.log(`Fin prompt eval — ${questions.length} question(s), ${knowledge.length} knowledge entries, ${tools.length} tools (from seed/, no database).`);
+  console.log(`Charles prompt eval — ${questions.length} question(s), ${knowledge.length} knowledge entries, ${tools.length} tools (from seed/, no database).`);
 
   const built: Built[] = [];
   for (const q of questions) built.push(await build(q, knowledge, tools));

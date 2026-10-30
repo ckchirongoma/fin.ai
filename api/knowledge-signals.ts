@@ -1,4 +1,4 @@
-// Fin — what real conversations say the library is missing or has wrong.
+// Charles — what real conversations say the library is missing or has wrong.
 //
 // The read side of db/0015: unreviewed knowledge signals, grouped by the
 // tool or knowledge entry they are about, so a person — or the agent running

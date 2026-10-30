@@ -1,4 +1,4 @@
-// Fin — the depth yardstick: how much a person can actually DO with what
+// Charles — the depth yardstick: how much a person can actually DO with what
 // the library says, per country and per area.
 //
 // WHY THIS EXISTS

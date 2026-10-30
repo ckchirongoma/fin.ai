@@ -1,4 +1,4 @@
-// Fin — search by meaning, as the second pass under keywords.
+// Charles — search by meaning, as the second pass under keywords.
 //
 // The properties that matter, in order: it never runs when keywords already
 // found something (cost), it never returns a row below the similarity floor

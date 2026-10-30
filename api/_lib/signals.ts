@@ -1,4 +1,4 @@
-// Fin — signal capture: the cheap, automatic half of growing the library.
+// Charles — signal capture: the cheap, automatic half of growing the library.
 //
 // Real conversations are the best evidence of where the knowledge base is
 // wrong or thin — "that's not R699 anymore", "Yoco took three days, not one
@@ -30,7 +30,7 @@ type Entity = { type: "tool" | "knowledge_entry"; id: string; name: string };
 /**
  * A person told us the library is wrong (a correction) or how a product
  * really went for them (an outcome report). A correction is a warning, so it
- * reaches the hourly email: Fin may be quoting a stale price to everyone
+ * reaches the hourly email: Charles may be quoting a stale price to everyone
  * else. Recorded whether or not the knowledge_signals insert landed (`stored`);
  * the words are on the turn's turn_received, not repeated here.
  */

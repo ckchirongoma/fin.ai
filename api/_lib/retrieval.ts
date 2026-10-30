@@ -1,4 +1,4 @@
-// Fin — retrieval, pass one: no model call at all.
+// Charles — retrieval, pass one: no model call at all.
 //
 // CLAUDE.md calls the `keywords` column "the whole retrieval strategy": score
 // every knowledge entry and tool in plain code, hand the model only the few
