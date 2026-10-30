@@ -154,6 +154,18 @@
     ps.appendChild(stat(pr.areas_green_total, "money areas sorted"));
     report.appendChild(ps);
 
+    if (d.graph_moments) {
+      var gm = d.graph_moments; var gs = node("div", "stats");
+      report.appendChild(node("h2", null, "What changed in people's money"));
+      report.appendChild(node("p", "sub", "From what people told Charles, once per person: self-reported, never read from a bank account."));
+      gs.appendChild(stat(gm.debts_paid_off, "paid off a debt"));
+      gs.appendChild(stat(gm.savings_started, "started saving"));
+      gs.appendChild(stat(gm.double_cover_found, "found a second funeral policy"));
+      gs.appendChild(stat(gm.stokvels_joined, "joined a stokvel"));
+      report.appendChild(gs);
+      if (gm.new_mashonisa || gm.repayments_went_up) report.appendChild(node("p", "sub", "To watch: " + val(gm.new_mashonisa) + " told Charles about a new mashonisa, and " + val(gm.repayments_went_up) + " saw a repayment go up."));
+    }
+
     report.appendChild(node("h2", null, "By where each person started"));
     report.appendChild(node("p", "sub", "Starting tier is fixed on day one from each person's own Money Map, and never recomputed."));
     var rows = []; var tiers = d.by_baseline_tier || {};
@@ -196,6 +208,7 @@
         high: { businesses: 44, outcomes_reported: 71, better: 42, same: 25, worse: 2, too_early: 2, commitments_done_rate: 0.7, areas_green: 88, areas_green_per_business: 2.0 },
         unknown: { businesses: 12, outcomes_reported: 0, better: 0, same: 0, worse: 0, too_early: 0, commitments_done_rate: null, areas_green: 0, areas_green_per_business: 0 }
       },
+      graph_moments: { debts_paid_off: 41, savings_started: 63, double_cover_found: 17, stokvels_joined: 22, new_mashonisa: 9, repayments_went_up: 14, family_support_went_up: 11 },
       harm_monitoring: "Weaker households report improvement at 55%, stronger at 59%. No divergence that meets the review threshold. (Invented numbers: this is what the sentence looks like when a pilot has run.)",
       guardrails: { checks_in_window: 4120, checks_that_could_not_run: 0, note: "Every check that was asked for ran." },
       omitted_on_purpose: [

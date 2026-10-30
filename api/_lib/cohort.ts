@@ -29,7 +29,7 @@ export type CohortReport = Awaited<ReturnType<typeof buildReport>>;
 export async function buildReport(sinceDays: number) {
   const since = new Date(Date.now() - sinceDays * DAY).toISOString();
 
-  const [{ data: bizRaw }, { data: stepsRaw }, { data: outcomesRaw }, { data: commitmentsRaw }, { data: mapRaw }, { data: safetyRaw }] =
+  const [{ data: bizRaw }, { data: stepsRaw }, { data: outcomesRaw }, { data: commitmentsRaw }, { data: mapRaw }, { data: safetyRaw }, { data: momentsRaw }] =
     await Promise.all([
       db().from("businesses").select("id, country, biz_stage, baseline_tier, created_at, current_plan_id, last_inbound_at, paused"),
       db().from("plan_steps").select("id, plan_id, domain, status"),
@@ -39,6 +39,9 @@ export async function buildReport(sinceDays: number) {
       // Not the operational notes (knowledge_signal, plan_strategy,
       // plan_build_timing): they are not guardrail checks.
       NOT_GUARDRAIL_CHECKS.reduce((q, name) => q.neq("check_name", name), db().from("safety_events").select("check_name, outcome, engine").gte("created_at", since)),
+      // What the household knowledge graph saw happen (graphactions.ts): each
+      // moment once per household per news. db/0039; empty until it runs.
+      db().from("kg_triggers").select("business_id, trigger").gte("fired_at", since),
     ]);
 
   const businesses = (bizRaw as Row[]) ?? [];
@@ -102,6 +105,19 @@ export async function buildReport(sinceDays: number) {
 
   const unavailableChecks = safety.filter((e) => e.outcome === "unavailable").length;
 
+  // Households, not events: how many people the graph saw each moment for.
+  const moments = (momentsRaw as { business_id: string; trigger: string }[]) ?? [];
+  const households = (t: string) => new Set(moments.filter((m) => m.trigger === t).map((m) => m.business_id)).size;
+  const graphMoments = {
+    debts_paid_off: households("debt_paid_off"),
+    savings_started: households("started_saving"),
+    double_cover_found: households("double_cover"),
+    stokvels_joined: households("joined_stokvel"),
+    new_mashonisa: households("new_mashonisa"),
+    repayments_went_up: households("repayment_up"),
+    family_support_went_up: households("support_up"),
+  };
+
   return {
     generated_at: new Date().toISOString(),
     window_days: sinceDays,
@@ -122,6 +138,10 @@ export async function buildReport(sinceDays: number) {
     },
     by_country: byCountry,
     by_baseline_tier: byTier,
+    // From what people told Charles, counted once per household: debts they
+    // said they paid off, saving habits they started, a second funeral
+    // policy found. Self-reported, never verified against a bank account.
+    graph_moments: graphMoments,
     harm_monitoring: harmSignal,
     guardrails: {
       checks_in_window: safety.length,
@@ -142,6 +162,7 @@ export function toCsv(report: CohortReport): string {
   const add = (metric: string, segment: string, value: unknown) => lines.push(`${metric},${segment},${value ?? ""}`);
   for (const [k, v] of Object.entries(report.cohort)) add(k, "all", v);
   for (const [k, v] of Object.entries(report.progress)) add(k, "all", v);
+  for (const [k, v] of Object.entries(report.graph_moments)) add(k, "graph", v);
   for (const [country, v] of Object.entries(report.by_country)) {
     for (const [k, n] of Object.entries(v as Record<string, unknown>)) add(k, country, n);
   }
@@ -181,6 +202,8 @@ export function suppressSmall(report: CohortReport, min = MIN_CELL): Record<stri
     ...report,
     by_baseline_tier: Object.fromEntries(Object.entries(tiers).map(([k, v]) => [k, v.businesses >= min ? v : SUPPRESSED])),
     by_country: Object.fromEntries(Object.entries(countries).map(([k, v]) => [k, v.onboarded >= min ? v : SUPPRESSED])),
+    // A moment that fewer than `min` households had is a person, not a number.
+    graph_moments: Object.fromEntries(Object.entries(report.graph_moments).map(([k, v]) => [k, v === 0 || v >= min ? v : `<${min}`])),
     // The comparison is only safe to state when both ends are big enough.
     harm_monitoring: tierOk("low") && tierOk("high")
       ? report.harm_monitoring

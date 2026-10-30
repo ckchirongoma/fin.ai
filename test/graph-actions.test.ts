@@ -226,3 +226,24 @@ test("'forget my money' takes the action ledger too", async () => {
   await engine.handleInbound(textFrom(OWNER, "YES"));
   assert.equal(db.tables.kg_triggers!.length, 0);
 });
+
+// ── What the bank reads ──────────────────────────────────────────
+
+test("the cohort report counts what the graph saw happen, once per household, and hides groups under five", async () => {
+  const cohort = await import("../api/_lib/cohort.ts");
+  const recent = new Date().toISOString();
+  const ids: string[] = [];
+  for (let i = 0; i < 7; i++) ids.push((await dbmod.createBusiness(`2780993${String(8000 + i)}`, "ZA")).id);
+  for (const id of ids) db.tables.kg_triggers!.push({ business_id: id, trigger: "debt_paid_off", subject: `x@${id}`, fired_at: recent });
+  // The same household twice is one household.
+  db.tables.kg_triggers!.push({ business_id: ids[0], trigger: "debt_paid_off", subject: "other@1", fired_at: recent });
+  for (const id of ids.slice(0, 2)) db.tables.kg_triggers!.push({ business_id: id, trigger: "double_cover", subject: `p@${id}`, fired_at: recent });
+  const report = await cohort.buildReport(90);
+  assert.equal(report.graph_moments.debts_paid_off, 7);
+  assert.equal(report.graph_moments.double_cover_found, 2);
+  const shown = cohort.suppressSmall(report) as { graph_moments: Record<string, unknown> };
+  assert.equal(shown.graph_moments.debts_paid_off, 7);
+  assert.equal(shown.graph_moments.double_cover_found, "<5");
+  assert.equal(shown.graph_moments.savings_started, 0);
+  assert.match(cohort.toCsv(report), /^debts_paid_off,graph,7$/m);
+});
