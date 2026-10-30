@@ -43,6 +43,7 @@ African business library) are gone; `0034` is Charles's library.
 | `0033_charles_schema.sql` | **Charles.** Renames the four plan-flow columns (customer → goal, angle → rule, and their pending-options columns) and documents the money stages and the eight money areas. Run after 0032. |
 | `0034_charles_za_library.sql` | **Charles's library.** 56 knowledge entries and 30 tools for South Africa, whole-row upserts keyed on id, generated from `seed/` by `scripts/seed-to-sql.mjs`. Sources and verdicts in `docs/kb-sources.md`. Run after 0033. Founder path without SQL: the `node scripts/apply-knowledge.mjs …` command at the top of the file. |
 | `0035_charles_templates.sql` | **Charles.** The six WhatsApp templates reworded for a household's money (names `charles_*`); the copy-paste set for Meta is `docs/META-TEMPLATES.md`. Run after 0034. |
+| `0036_statement.sql` | `businesses.statement`: the totals and payees kept from a bank statement, payslip or credit report the person chose to send. Never the file, never an account number. Run after 0035. |
 
 ## Why two of these are load-bearing
 

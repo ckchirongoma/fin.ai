@@ -7,6 +7,8 @@ back and confirms it, picks the one thing to fix first and the one money rule
 they will live by, and gets a 90-day money plan as one document. WhatsApp then
 pushes them through it one step at a time and comes back to ask whether each
 step worked. Their own AI (ChatGPT, Claude) can connect to the same memory.
+If they want, they send a bank statement and Charles reads their money back
+from the page instead, keeping the totals and never the account number.
 
 South Africa first, built so the next market (the Philippines, where the same
 bank has 11 million customers) is a data migration, not a rewrite. Built to

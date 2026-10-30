@@ -423,6 +423,9 @@ export async function callTool(biz: Business, name: string, args: Record<string,
         progress: plan ? progressOf(steps) : null,
         current_step: current ? { id: current.id, title: current.title, part: current.workstream_title, position: positionOf(steps, current), done_when: current.done_when } : null,
         paused_for_hardship: biz.stage === "stabilizing",
+        // The bank statement they chose to send, as the totals and payees kept
+        // (statement.ts): never an account number, never the file.
+        statement: biz.statement ?? null,
         on_whatsapp: WHATSAPP_AT[biz.stage] ?? null,
         // What Charles remembers about the person as a person (db/0032): from
         // them, here or on WhatsApp. The ids are for forget_note.

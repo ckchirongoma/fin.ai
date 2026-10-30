@@ -64,7 +64,7 @@ with checks as (
   union all select 'model_config rows', (select count(*) from public.model_config)::text, '6'
   union all select 'model roles', (select string_agg(role, ',' order by role) from public.model_config), 'help,plan_builder,router,safety,voice,wa_reply'
   union all select 'WhatsApp templates (drafts)', (select count(*) from public.wa_templates where meta_name like 'charles_%' and status='draft')::text, '6'
-  union all select 'money-journey columns on businesses', (select count(*) from information_schema.columns where table_schema='public' and table_name='businesses' and column_name in ('goal','rule','pending_goal_options','pending_rule_options','kept_questions','map_first'))::text, '6'
+  union all select 'money-journey columns on businesses', (select count(*) from information_schema.columns where table_schema='public' and table_name='businesses' and column_name in ('goal','rule','pending_goal_options','pending_rule_options','kept_questions','map_first','statement'))::text, '7'
   union all select 'old Charlie columns left behind', (select count(*) from information_schema.columns where table_schema='public' and table_name='businesses' and column_name in ('customer','angle','pending_customer_options','pending_angle_options'))::text, '0'
   union all select 'claim_job (the queue) exists', (select count(*) from pg_proc where proname='claim_job')::text, '1'
   union all select 'public-read policies on the library', (select count(*) from pg_policies where schemaname='public' and tablename in ('knowledge_entries','tools') and roles::text like '%anon%')::text, '2'
@@ -90,7 +90,7 @@ select item, found, expected, case when found = expected then 'PASS' else 'LOOK'
 | money areas in the library | 8 | income, spending, debt, cushion, credit_record, protection, family_money, goals. |
 | model_config rows / roles | 6 / the six names | Every job has a model row. Code never hardcodes a model. |
 | WhatsApp templates (drafts) | 6 | The six nudges exist as drafts. They go to Meta for approval from `docs/META-TEMPLATES.md`; the status column tracks that by hand. |
-| money-journey columns | 6 | The renames in `0033` happened: goal, rule, and their option columns. |
+| money-journey columns | 7 | The renames in `0033` happened (goal, rule, and their option columns), and `0036` added the statement column. |
 | old Charlie columns left behind | 0 | No duplicate column for the same fact, however many times the script ran. |
 | claim_job exists | 1 | The job queue can hand one message to one worker and never two. |
 | public-read policies on the library | 2 | The two reference tables are readable by the website without a key. |

@@ -1055,6 +1055,7 @@ export async function runPdfStage(biz: Business): Promise<void> {
       cushion: context?.cushion,
       cover: context?.cover,
       records: context?.records,
+      statement: context?.statement,
     },
     stage: bizStage,
     objectiveRead: biz.objective_read || "",

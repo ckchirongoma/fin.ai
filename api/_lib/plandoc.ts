@@ -50,6 +50,8 @@ export interface PlanDocData {
     cushion?: string;
     cover?: string;
     records?: string;
+    /** From the bank statement they chose to send: figures only (statement.ts docLine). */
+    statement?: string;
   };
   stage: string;
   /** What the person actually typed for their aim. The plan's goal is the model's wording of it. */
@@ -155,6 +157,7 @@ export function planDocHTML(d: PlanDocData): string {
     ["Reachable in an emergency", d.ctx.cushion],
     ["Cover", d.ctx.cover],
     ["How it is tracked", d.ctx.records],
+    ["From your bank statement", d.ctx.statement],
   ];
   // Two tables, so Part I can start on the cover: its banner, heading and
   // first three facts travel together; the rest follow with the caption.

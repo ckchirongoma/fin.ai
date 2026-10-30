@@ -48,6 +48,11 @@ distress → hardship, "forget my business" → "forget my money").
 - The plan document prints to PDF in Chromium (`scripts/preview-plan.mjs`,
   `scripts/check-plan-print.ts`).
 - The landing page, the plan viewer, the web chat and the pitch are built.
+- A bank statement (or a payslip, or a credit report) can be sent at any
+  point, by choice: Charles reads it once, says the money back from it,
+  answers the income question from it, names its payees under "who do you
+  owe", lays the month out as three pots, and carries its figures into the
+  plan. `test/statement.test.ts` pins all of it, identifiers included.
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.
@@ -83,7 +88,7 @@ held-out phrasing.
 9. **Free and reversible before anything that costs money**, and a hardship mode: if someone cannot cover food, rent or transport, Charles stops planning, protects cash, names the free help (the NCR consumer line, the National Financial Ombud) and keeps a way back.
 10. **Never invent a price, fee, rule, deadline or grant amount.** Every figure comes from the library with its `verified_on`; past 90 days it is hedged; where sources differ, the row says so.
 11. **Never recommend credit.** No loan, consolidation, buy-now-pay-later, cash advance or overdraft, however cheap. A free, reversible bank product (a savings pocket, an instant payment) may be named; a loan may only be explained, downside first.
-12. **Never ask for or store an ID number, account number, card number, PIN, OTP or password.** Said in the first message; refused by the memory step, the connector and the guardrails.
+12. **Never ask for or store an ID number, account number, card number, PIN, OTP or password.** Said in the first message; refused by the memory step, the connector and the guardrails. A bank statement, payslip or credit report is read only when the person chooses to send one (`api/_lib/statement.ts`): one extraction call told to leave identifiers out, scrubbed again in code, the file never stored, and only the totals and payees kept (`db/0036`). What is said back and the budget are built in code from those figures, never by a model.
 
 ## Retrieval and the output schema
 

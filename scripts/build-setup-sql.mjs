@@ -40,6 +40,7 @@ export const ORDER = [
   "0033_charles_schema.sql",
   "0034_charles_za_library.sql",
   "0035_charles_templates.sql",
+  "0036_statement.sql",
 ];
 
 const banner = (name) => `\n\n-- ============================================================================\n-- ${name}\n-- ============================================================================\n\n`;

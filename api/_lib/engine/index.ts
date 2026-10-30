@@ -39,6 +39,7 @@ import { markRead, sendButtons, sendText } from "../wa.js";
 import { CANT_HEAR, LOW_CONFIDENCE, transcribe, voiceConfigured } from "../transcribe.js";
 import { attachmentKind, CANT_READ_THAT, MAX_ATTACHMENT_BYTES, NOT_YET_FILES, readAttachment, type AttachmentRead } from "../attachments.js";
 import { downloadMedia } from "../wa.js";
+import { budgetMessage, DOC_LABEL, explainBack, HOW_TO_SEND, rand as statementRand, readMoneyDocument, STATEMENT_ASK, summaryLine, type StatementRead } from "../statement.js";
 import { readDiagReply, resolveSelection, saysMoneyTrouble } from "../safety.js";
 import { DIAG, DIAG_COUNT, matchOptions, parseDiagAction, parseMultiReply, recordAnswer, replyTouchesOptions, shapeQuestion } from "../diagnostic.js";
 import { sendList, type ListRow } from "../wa.js";
@@ -502,10 +503,24 @@ async function resolveContent(
   }
 
   if (inbound.kind === "image" || inbound.kind === "document") {
-    // Pictures and files are for after the plan exists: that is when a person
-    // forwards a quote or a grant notice and asks what it means. Before that
-    // they have nowhere to go, so say so and keep the diagnostic moving. A
-    // caption, if there is one, is still just a message.
+    // A bank statement, a payslip or a credit report is read at ANY stage:
+    // the person chose to send it, and it is the one file that makes the
+    // diagnostic and the plan better (statement.ts). One model call says
+    // whether this is one; if it is, the read-back goes out here and the
+    // turn ends. The file itself is never kept.
+    const supported = Boolean(inbound.mediaId && attachmentKind(inbound.mimeType));
+    const media = supported ? await downloadMedia(inbound.mediaId!) : null;
+    if (media && media.bytes.byteLength > 0 && media.bytes.byteLength <= MAX_ATTACHMENT_BYTES) {
+      const stmt = await readMoneyDocument(media.bytes, media.mimeType || inbound.mimeType || "", inbound.text);
+      if (stmt && stmt !== "not_money") {
+        await handleStatement(biz, stmt, inbound);
+        return null;
+      }
+    }
+    // Other pictures and files are for after the plan exists: that is when a
+    // person forwards a quote or a grant notice and asks what it means. Before
+    // that they have nowhere to go, so say so and keep the diagnostic moving.
+    // A caption, if there is one, is still just a message.
     const canRead = biz.stage === "plan_ready" || biz.stage === "step_pushed";
     if (!canRead) {
       // By design, but still something they tried: with a caption, the caption
@@ -524,7 +539,6 @@ async function resolveContent(
       return { text: inbound.text, lowConfidence: false };
     }
 
-    const media = inbound.mediaId && attachmentKind(inbound.mimeType) ? await downloadMedia(inbound.mediaId) : null;
     const read = media ? await readAttachment(media.bytes, media.mimeType || inbound.mimeType || "", inbound.text) : null;
     if (!read) {
       // Why, in the order readAttachment gives up. "not_read" is the model
@@ -595,6 +609,11 @@ const STABILISING_ALLOWED: ReadonlySet<string> = new Set([
   ACT.PAUSE_NUDGES,
   ACT.CONSENT_OK,
   ACT.VOICE_OK,
+  // A statement read-back's buttons move nothing in the plan; a budget from
+  // their own lines is "protect cash", which is what stabilising is for.
+  ACT.STMT_NORMAL,
+  ACT.STMT_ODD,
+  ACT.STMT_BUDGET,
 ]);
 
 /** Returns true when the action was handled, false to fall through to text. */
@@ -884,6 +903,12 @@ async function dispatchAction(biz: Business, actionId: string, label: string): P
       await sendButtons(biz.wa_id, "Fine as it is, then.", [{ id: ACT.NEXT_STEP, title: "Next step" }], biz.id);
       return true;
 
+    case ACT.STMT_NORMAL:
+    case ACT.STMT_ODD:
+    case ACT.STMT_BUDGET:
+      await statementTap(biz, actionId);
+      return true;
+
     case ACT.MENU:
       // While stabilising, no button that moves the growth plan (rule 9):
       // they would only be held, and offering them says the plan is on.
@@ -911,9 +936,118 @@ async function dispatchAction(biz: Business, actionId: string, label: string): P
   }
 }
 
+// ── A bank statement, read once, said back ───────────────────────
+//
+// The person chose to send it (the offer sits under the income question and
+// in the answer to "can you read my statement?"). statement.ts read it with
+// one model call and kept only the totals and payees; everything said here
+// is built in code from that, so no figure is invented and no account number
+// exists to repeat. The file is gone the moment this returns.
+
+async function handleStatement(biz: Business, read: StatementRead, inbound: InboundMessage): Promise<void> {
+  const label = DOC_LABEL[read.doc];
+  await recordMessage(biz.id, "in", `${inbound.text ? `${inbound.text} ` : ""}[${label} sent]`, { kind: inbound.kind, waMessageId: inbound.waMessageId, meta: {} });
+  // The diagnostic's own line for it: every plan prompt and the price
+  // grounding read `answers.statement`, and its first words say what it is.
+  const answers = { ...(biz.answers ?? {}), statement: summaryLine(read) };
+  await updateBusiness(biz.id, { statement: read, answers, pending_action: biz.stage === "diag" ? biz.pending_action : null });
+  const name = biz.identity?.name ?? biz.answers?.person?.split(/[,.]/)[0] ?? null;
+  const text = explainBack(read, name);
+  const canBudget = (read.doc === "bank_statement" || read.doc === "payslip") && read.totals.in !== null && read.totals.in > 0;
+  if (read.doc === "bank_statement" || read.doc === "payslip") {
+    await sendButtons(
+      biz.wa_id,
+      text,
+      [
+        { id: ACT.STMT_NORMAL, title: "Normal month" },
+        { id: ACT.STMT_ODD, title: "Not a normal month" },
+        ...(canBudget ? [{ id: ACT.STMT_BUDGET, title: "Plan my budget" }] : []),
+      ],
+      biz.id,
+    );
+  } else {
+    await sendText(biz.wa_id, text, biz.id);
+    if (biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
+  }
+  track("statement_read", {
+    category: "funnel",
+    props: { doc: read.doc, stage: biz.stage, lines_in: read.money_in.length, lines_out: read.money_out.length, has_totals: read.totals.in !== null && read.totals.out !== null, flags: read.flags.length, unclear: Boolean(read.unclear) },
+  });
+}
+
+/**
+ * What a statement already read says at a diagnostic question. `answer` is
+ * given as the answer (with its source in the words); `say` alone is a line
+ * put above the question.
+ */
+function statementAnswer(biz: Business, key: string | undefined): { say: string; answer?: string } | null {
+  const read = biz.statement;
+  if (!read || !key) return null;
+  if (key === "income" && (read.doc === "bank_statement" || read.doc === "payslip") && read.totals.in !== null && read.totals.in > 0 && read.normal_month !== false) {
+    const figure = statementRand(read.totals.in);
+    return {
+      say: `What comes in: I'll take it from your ${DOC_LABEL[read.doc]}, about ${figure} a month. If that's not a usual month, tell me the usual figure later and I'll use that.`,
+      answer: `About ${figure} a month (from the ${DOC_LABEL[read.doc]} they sent, ${read.period ?? "period not shown"})`,
+    };
+  }
+  if (key === "owes") {
+    const payees = read.money_out.filter((l) => l.kind === "loan" || l.kind === "store_account" || /mashonisa|loan|lender|account|edgars|jet|ackermans|truworths|foschini|capfin|finchoice/i.test(l.label)).map((l) => l.label);
+    if (payees.length) return { say: `Your ${DOC_LABEL[read.doc]} shows payments to ${[...new Set(payees)].slice(0, 5).join(", ")}. Count those in below.` };
+  }
+  return null;
+}
+
+async function statementTap(biz: Business, actionId: string): Promise<void> {
+  const read = biz.statement;
+  if (!read) {
+    await staleTap(biz, actionId);
+    return;
+  }
+  const name = biz.identity?.name ?? biz.answers?.person?.split(/[,.]/)[0] ?? null;
+  if (actionId === ACT.STMT_BUDGET) {
+    const text = budgetMessage(read, name);
+    if (!text) {
+      await sendText(biz.wa_id, `I can only build a budget from a bank statement or a payslip with money in on it. Send one of those and I'll do it from your own lines.`, biz.id);
+      return;
+    }
+    await sendText(biz.wa_id, text, biz.id);
+    track("statement_budget", { category: "behaviour", props: { doc: read.doc, stage: biz.stage } });
+    if (biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
+    return;
+  }
+  const normal = actionId === ACT.STMT_NORMAL;
+  const updated: StatementRead = { ...read, normal_month: normal };
+  const answers = { ...(biz.answers ?? {}), statement: summaryLine(updated) };
+  await updateBusiness(biz.id, { statement: updated, answers });
+  track("statement_month", { category: "behaviour", props: { doc: read.doc, normal, stage: biz.stage } });
+  if (!normal) {
+    await sendText(biz.wa_id, "Noted: not a normal month. Tell me in a line what was different, and I'll keep that in mind when we use the figures.", biz.id);
+    if (biz.stage === "diag") await askDiagQuestion({ ...biz, statement: updated, answers }, biz.diag_step ?? 0);
+    return;
+  }
+  if (biz.stage === "diag") {
+    await askDiagQuestion({ ...biz, statement: updated, answers }, biz.diag_step ?? 0);
+    return;
+  }
+  await sendButtons(
+    biz.wa_id,
+    "Good, then those are the figures we work with. Want the month laid out as a budget from them?",
+    [{ id: ACT.STMT_BUDGET, title: "Plan my budget" }, { id: ACT.NEXT_STEP, title: "Next step" }],
+    biz.id,
+  );
+}
+
 // ── The stage machine ────────────────────────────────────────────
 
 async function runStage(biz: Business, said: string, lowConfidence: boolean, attachment?: AttachmentRead, voice = false): Promise<void> {
+  // "Can you read my bank statement?" is the same short question at every
+  // stage, and the answer is how to send one. Whole message only, so a real
+  // question that mentions a statement still reaches the answer engine.
+  if (!attachment && STATEMENT_ASK.test(said)) {
+    await sendText(biz.wa_id, HOW_TO_SEND, biz.id);
+    track("statement_asked", { category: "behaviour", props: { stage: biz.stage } });
+    return;
+  }
   switch (biz.stage) {
     case "diag":
       return handleDiagText(biz, said, voice ? { lowConfidence } : undefined);
@@ -1140,6 +1274,15 @@ export async function askDiagQuestion(biz: Business, step: number): Promise<void
   }
   await updateBusiness(biz.id, { diag_step: step, stage: "diag" });
   const shape = shapeQuestion(step, biz.country);
+  // A statement already read answers the income question with its own
+  // figure, said out loud so they can correct it; under "who do you owe"
+  // the payees it shows are named so nobody is left off by accident.
+  const fromStatement = statementAnswer(biz, DIAG[step]?.key);
+  if (fromStatement?.answer) {
+    await sendText(biz.wa_id, fromStatement.say, biz.id);
+    return advanceDiagnostic({ ...biz, diag_step: step, stage: "diag" }, fromStatement.answer, "statement");
+  }
+  if (fromStatement?.say) shape.body = `${fromStatement.say}\n\n${shape.body}`;
   if (shape.kind === "text") await sendText(biz.wa_id, shape.body, biz.id);
   else if (shape.kind === "buttons") await sendButtons(biz.wa_id, shape.body, shape.buttons, biz.id);
   else await sendList(biz.wa_id, shape.body, shape.buttonLabel, [{ title: "Pick one", rows: shape.rows }], biz.id);
@@ -1351,7 +1494,7 @@ async function handleDiagText(biz: Business, said: string, voice?: { lowConfiden
   await advanceDiagnostic({ ...biz, pending_action: null }, said, how, heard !== null ? { readback: "replaced" } : {});
 }
 
-type AnswerHow = "tap" | "typed" | "voice";
+type AnswerHow = "tap" | "typed" | "voice" | "statement";
 
 /**
  * diag_answered's facts. For a fixed-choice question, the option labels it

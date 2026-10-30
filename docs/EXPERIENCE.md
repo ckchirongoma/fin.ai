@@ -15,6 +15,13 @@
 > Ombud). Two rules were added for Charles: never recommend credit, and never ask
 > for an ID number, account number, card number, PIN, OTP or password. The
 > design itself is `docs/superpowers/specs/2026-10-30-charles-design.md`.
+>
+> One door Charlie never had: a bank statement, sent by choice
+> (`docs/superpowers/specs/2026-10-30-statement-design.md`). The offer sits
+> under the income question and in the answer to "can you read my
+> statement?". One model call extracts totals and payees with identifiers
+> left out; everything said back, the three-pot budget included, is built in
+> code from those figures; the file is never stored.
 
 
 *The design of everything an owner touches, in the order they touch it, and the

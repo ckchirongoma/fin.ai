@@ -56,6 +56,11 @@ export const ACT = {
   BUILD_NOW: "a.build.now",
   /** Starting the NEXT ninety days once the current plan is finished. */
   REBUILD: "a.plan.rebuild",
+
+  /** Under a statement read-back: "Normal month" / "Not a normal month" / "Plan my budget" (statement.ts). */
+  STMT_NORMAL: "a.stmt.normal",
+  STMT_ODD: "a.stmt.odd",
+  STMT_BUDGET: "a.stmt.budget",
 } as const;
 
 export type ActionId = (typeof ACT)[keyof typeof ACT];

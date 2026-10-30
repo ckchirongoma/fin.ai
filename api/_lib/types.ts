@@ -2,6 +2,8 @@
 
 import type { HydratedWorkstream } from "./playbooks.js";
 import type { FreeType } from "./freetype.js";
+import type { StatementRead } from "./statement.js";
+export type { StatementRead } from "./statement.js";
 export type { HydratedWorkstream } from "./playbooks.js";
 
 /**
@@ -146,6 +148,8 @@ export interface HouseholdContext {
   goal?: string;
   headache?: string;
   one_liner?: string;
+  /** One line from the bank statement they chose to send (statement.ts docLine): the figures, never an identifier. */
+  statement?: string;
 }
 
 /** What the plan builder read out of the diagnostic. Never inferred beyond it. */
@@ -217,6 +221,12 @@ export interface Business {
    * and never read by a prompt as if they were.
    */
   kept_questions?: KeptQuestion[] | null;
+  /**
+   * The bank statement (or payslip, credit report) the person chose to send,
+   * as the totals and payees statement.ts kept: never the file, never an
+   * account number (db/0036). Deleted with the household.
+   */
+  statement?: StatementRead | null;
   deleted_at?: string | null;
   created_at?: string;
 }

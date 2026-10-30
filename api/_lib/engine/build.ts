@@ -10,6 +10,7 @@
 // is built from their choices, not from the diagnostic alone.
 
 import { fenceCheck, JobFencedError } from "../jobctx.js";
+import { docLine } from "../statement.js";
 import { askJSON, describeModelCall, traceModelCalls, type ModelCallTrace } from "../models.js";
 import { rulePrompt, goalPrompt, readbackPrompt } from "../prompts.js";
 import { type Workstream, type HydratedWorkstream } from "../playbooks.js";
@@ -124,7 +125,7 @@ const CONTEXT_TRACE_LABELS = {
 export async function applyContextGuardrails(
   context: HouseholdContext,
   answers: Record<string, string>,
-  biz: Pick<Business, "goal" | "rule" | "identity">,
+  biz: Pick<Business, "goal" | "rule" | "identity" | "statement">,
   ctx: { businessId?: string | null } = {},
 ): Promise<HouseholdContext> {
   const derived = deriveContextDefaults(answers, biz.goal);
@@ -132,6 +133,8 @@ export async function applyContextGuardrails(
     ...context,
     income: derived.income || hedgeUnknown("what comes in each month"),
     owes: derived.owes || hedgeUnknown("who they owe"),
+    // The statement line is code, from the statement they sent: the model never writes it.
+    ...(biz.statement ? { statement: docLine(biz.statement) } : {}),
   };
 
   const checked = await checkTraceability(

@@ -34,7 +34,7 @@ The rules Charles keeps, written into the code and tested:
 7. Free and reversible before anything that costs money.
 8. Hardship mode: if someone cannot cover food, rent or transport, Charles stops planning, protects cash, names the free help (the NCR's consumer line, 0860 627 627; the National Financial Ombud) and pauses with a way back.
 9. It never recommends credit — no loan, no buy-now-pay-later, no cash advance, however cheap. A bank product that costs nothing and is reversible (a savings pocket, an instant payment) may be named where it fits; a loan may only be explained.
-10. It never asks for or stores an ID number, account number, card number, PIN, OTP or password, and says so in its first message. Charles reads no statement and no app; it knows what the person tells it.
+10. It never asks for or stores an ID number, account number, card number, PIN, OTP or password, and says so in its first message. It reads no app and no account. If the person chooses to send a bank statement, a payslip or a credit report, Charles reads it once, says their money back from the page, lays the month out as three pots, and keeps only the totals and who gets paid: never the file, never the account number.
 11. "Forget my money" deletes everything.
 12. Anything the person's own AI suggests changing is confirmed with them on WhatsApp first.
 

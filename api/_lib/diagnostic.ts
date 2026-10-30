@@ -14,6 +14,7 @@
 // they did not say.
 
 import { country } from "./countries.js";
+import { STATEMENT_OFFER } from "./statement.js";
 import {
   BLOCKER_OPTIONS,
   COVER_OPTIONS,
@@ -84,7 +85,7 @@ export const DIAG: DiagQuestion[] = [
   },
   {
     key: "income",
-    q: (cc) => `Roughly, what comes in a month, all together? ${country(cc).incomeExample.replace(/^./, (c) => c.toUpperCase())}. A rough number is fine.`,
+    q: (cc) => `Roughly, what comes in a month, all together? ${country(cc).incomeExample.replace(/^./, (c) => c.toUpperCase())}. A rough number is fine.\n\n${STATEMENT_OFFER}`,
   },
   {
     key: "owes",
