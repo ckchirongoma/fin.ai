@@ -1,7 +1,9 @@
 # Charles — deployment handoff
 
 Written for whoever puts this live. Everything needed is in this file, in the
-order it is needed. Sections 1–4 get a working WhatsApp test number. Section 5
+order it is needed. **An intern or anyone new to the project should follow
+`docs/PRD-INTERN-DEPLOY.md` instead:** the same deployment, step by step, with
+an acceptance test on a real phone and a hand-back list. Sections 1–4 get a working WhatsApp test number. Section 5
 is what is built and what is not.
 
 **Ask the founder before:** spending money, registering the production WhatsApp
@@ -32,7 +34,7 @@ success table, is `docs/SUPABASE-SETUP.md`. In short:
 
 1. Supabase → New project. Note the project URL and the service-role key (section 3). Database → Extensions → enable `vector`.
 2. SQL Editor → New query → paste **all of `db/CHARLES-SETUP.sql`** → Run. It is every migration in order in one file, safe to run twice.
-3. SQL Editor → New query → paste the check query from `docs/SUPABASE-SETUP.md` section 4 → Run. Every row must say `PASS`. Among them: RLS on for all 32 tables, 56 knowledge entries and 30 tools for ZA, six model rows, six template drafts, no Charlie column left behind.
+3. SQL Editor → New query → paste the check query from `docs/SUPABASE-SETUP.md` section 4 → Run. Every row must say `PASS`. Among them: RLS on for all 35 tables, 56 knowledge entries and 30 tools for ZA, six model rows, six template drafts, no Charlie column left behind.
 4. Set the models. The `model_config` rows the script inserts are starting values; replace each `model` slug with one you have chosen on your OpenRouter dashboard (OpenRouter → Models). One `UPDATE` per role; the webhook reads the table on every call, so a change is live at once.
 
 Without SQL, the library can also be loaded from `seed/` through the REST API: the command is at the top of `db/0034_charles_za_library.sql`.
@@ -103,10 +105,13 @@ Meta business verification and a production number are the founder's call and co
 - The connector for the person's own AI, with the plan, the step and the map drawn inside Claude and ChatGPT.
 - The South African library: 56 knowledge entries, 30 tools, sourced and measured (`docs/kb-gap-analysis.md`).
 - Tracking, alert emails, the admin dashboard, the sponsor report.
+- A bank statement, payslip or credit report, read only when the person chooses to send one, said back from the page and laid out as three pots; never the file, never an account number.
+- Cards: six small pages sent as pictures with a link (the month, a debt, the Money Map, the statement, a goal, what Charles knows), built in code from the person's own figures.
+- Two knowledge graphs (`docs/KNOWLEDGE-GRAPH.md`): the library's, computed from the library, and each household's, in `kg_nodes` and `kg_edges`, every line with where it came from.
 
 ## What is deliberately not built
 
-- Reading bank statements or the bank's data. Charles knows what it is told.
+- Reading the bank's own data or any account. Charles knows what it is told, and what a statement the person chose to send shows.
 - A second market's library.
 - A recommendation to take credit, ever.
 - Testimonials, user counts, pilot results. No cohort has run.

@@ -45,6 +45,7 @@ African business library) are gone; `0034` is Charles's library.
 | `0035_charles_templates.sql` | **Charles.** The six WhatsApp templates reworded for a household's money (names `charles_*`); the copy-paste set for Meta is `docs/META-TEMPLATES.md`. Run after 0034. |
 | `0036_statement.sql` | `businesses.statement`: the totals and payees kept from a bank statement, payslip or credit report the person chose to send. Never the file, never an account number. Run after 0035. |
 | `0037_cards.sql` | `cards`: the snapshots behind the card links Charles sends on WhatsApp (the month in three pots, when a debt is gone, the Money Map, the statement, a goal). Hashed token, sixty days, figures only, deleted with the household. Run after 0036. |
+| `0038_knowledge_graph.sql` | `kg_nodes`, `kg_edges`: the household knowledge graph (what a household's money touches, each line with where it came from and when, amounts as they said them, paid-off lines closed with their history). Service role only, deleted with the household. Adds the memory card to `cards.kind`. The library graph needs no table: it is computed from the library (`api/_lib/libgraph.ts`). Run after 0037. |
 
 ## Why two of these are load-bearing
 

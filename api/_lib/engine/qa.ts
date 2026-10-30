@@ -8,6 +8,7 @@
 // what the PERSON said — never from what Charles suggested.
 
 import { askJSON, describeModelCall, traceModelCalls, type ModelCallTrace } from "../models.js";
+import { graphUpdates, recordFacts } from "../graph.js";
 import { answerPrompt, contextUpdatePrompt, forwardPrompt, routerPrompt } from "../prompts.js";
 import { businessKnownFacts, checkMessageDistress, checkReply, saysMoneyTrouble, stabilizingMessage, WRITE_REQUEST } from "../safety.js";
 import { scamWarning, scoreScam, withScamAdvisor } from "../judgement.js";
@@ -1451,6 +1452,19 @@ export function ownStatements(said: string): string {
 }
 
 /**
+ * The sentences of the person's message that are not questions. A money fact
+ * need not be about themselves in the first person ("The mashonisa wants
+ * R300 a week now") but it must be stated, never asked.
+ */
+export function statedSentences(said: string): string {
+  return (said || "")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((x) => x.trim())
+    .filter((x) => x && !QUESTION_SHAPED(x))
+    .join(" ");
+}
+
+/**
  * A note the memory model proposed, kept only when the person said it.
  * Round 27 (KE, live): the plain question "Do I have to register anywhere to
  * keep my customers' phone numbers?" became the note "Worried about whether
@@ -1521,6 +1535,14 @@ export async function updateMemory(
     }
     for (const o of (r.results as { what: string; effect: string }[]) ?? []) {
       if (o?.what) await logOutcome(biz.id, o.what, o.effect ?? "same");
+    }
+    // Who and what their money touches (graph.ts): each proposed fact kept
+    // only when their own words back it, figures included. Only from words
+    // they typed (notesFrom), never a tap or a forward.
+    if (notesFrom && Array.isArray(r.graph_updates) && r.graph_updates.length) {
+      const { kept, refused } = graphUpdates(r.graph_updates, statedSentences(ownerMessage), today, "said");
+      if (kept.length) await recordFacts(biz.id, kept);
+      for (const x of refused) trackUnmet("memory_fact_refused", { severity: "info", props: { reason: x.reason, source: notesFrom } });
     }
     // About the person, not the money facts (owner_notes). At most two a turn,
     // only from words they typed, never anything that looks like a secret,

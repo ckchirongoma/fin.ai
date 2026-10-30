@@ -18,6 +18,7 @@
 // functions, so the two doors never disagree about where the person is.
 
 import { env } from "./env.js";
+import { edgeLine, graphForConnector, graphUpdates, householdGraph, keyOf, recordFacts, REL_KIND } from "./graph.js";
 import { hashSecret, mintToken } from "./crypto.js";
 import {
   addCommitment,
@@ -300,6 +301,21 @@ export const TOOLS: ToolDef[] = [
     inputSchema: obj({}),
   },
   {
+    name: "record_fact",
+    title: "Remember a money fact",
+    description:
+      "Record one thing their money touches, when THEY tell you it: a creditor and what they pay ('owes', 'the mashonisa', 200, 'week'), where money comes from ('earns_from'), who they support ('supports', a role like 'my mother', never a name), cover, a stokvel or burial society ('member_of'), where they save or bank, a bill they pay. Set closed when they say it is paid off or stopped. Figures only as they said them. It shows up on WhatsApp as something their AI passed on, never as something they told Charles. Never an ID, account or card number.",
+    inputSchema: obj({
+      relation: { type: "string", enum: ["owes", "earns_from", "supports", "covered_by", "saves_in", "banks_with", "member_of", "pays"], description: "How it touches their money." },
+      what: { type: "string", description: "The thing, in their words: 'the mashonisa', 'SASSA grant', 'my mother', 'Edgars'." },
+      amount: { type: "number", description: "What is paid or received each time, in rand, only if they said it." },
+      per: { type: "string", enum: ["week", "month"], description: "How often the amount is paid or received." },
+      balance: { type: "number", description: "What is still owed, in rand, only if they said it." },
+      closed: { type: "boolean", description: "They paid it off, cancelled or stopped it." },
+      their_words: { type: "string", description: "What they said, as close to their words as you have it. The fact is kept only if these words back it." },
+    }, ["relation", "what", "their_words"]),
+  },
+  {
     name: "get_card",
     title: "A picture of their money, as a page",
     description:
@@ -408,12 +424,13 @@ export interface ToolResult {
 export async function callTool(biz: Business, name: string, args: Record<string, unknown>): Promise<ToolResult> {
   switch (name) {
     case "get_household_context": {
-      const [plan, commitments, recent, notes, decisions] = await Promise.all([
+      const [plan, commitments, recent, notes, decisions, graph] = await Promise.all([
         planFor(biz.id),
         openCommitments(biz.id),
         recentMessages(biz.id, 8),
         ownerNotes(biz.id, 30),
         recentDecisions(biz.id, 8),
+        householdGraph(biz),
       ]);
       const steps = plan?.steps ?? [];
       const current = firstOpenStep(steps);
@@ -433,6 +450,9 @@ export async function callTool(biz: Business, name: string, args: Record<string,
         progress: plan ? progressOf(steps) : null,
         current_step: current ? { id: current.id, title: current.title, part: current.workstream_title, position: positionOf(steps, current), done_when: current.done_when } : null,
         paused_for_hardship: biz.stage === "stabilizing",
+        // Who and what their money touches (graph.ts), each line with where it
+        // came from: "they said", "setup answer", "their statement", "their AI said".
+        memory_graph: graphForConnector(graph),
         // The bank statement they chose to send, as the totals and payees kept
         // (statement.ts): never an account number, never the file.
         statement: biz.statement ?? null,
@@ -708,6 +728,31 @@ export async function callTool(biz: Business, name: string, args: Record<string,
 
     case "send_plan_pdf":
       return sendPlanPdfFor(biz);
+
+    case "record_fact": {
+      const words = String(args.their_words ?? "").slice(0, 600);
+      const { kept, refused } = graphUpdates(
+        [{ relation: args.relation, object: args.what, amount: args.amount, per: args.per, balance: args.balance, closed: args.closed === true }],
+        words,
+        new Date().toISOString().slice(0, 10),
+        "connector",
+      );
+      if (!kept.length) {
+        const why = refused[0]?.reason ?? "invalid";
+        const say: Record<string, string> = {
+          relation: "relation must be one of owes, earns_from, supports, covered_by, saves_in, banks_with, member_of, pays.",
+          identifier: "That looks like an ID, account, card or reference number. Charles never keeps one.",
+          not_a_role: "For who they support, record the role (my mother, my children), never a person's name.",
+          not_said: "their_words do not back it: record a fact only from what they told you, in their words.",
+          invalid: "Nothing to record.",
+        };
+        return { text: `Not recorded. ${say[why] ?? say.invalid}`, isError: why !== "not_said", code: `refused_${why}` };
+      }
+      await recordFacts(biz.id, kept);
+      const g = await householdGraph(biz);
+      const line = g.edges.find((e) => e.key === keyOf(kept[0]!.label, REL_KIND[kept[0]!.rel]) && e.rel === kept[0]!.rel);
+      return { text: `Recorded: ${line ? edgeLine(line) : kept[0]!.label}. WhatsApp will treat it as something their AI passed on.`, code: "recorded" };
+    }
 
     case "get_card": {
       const kind = String(args.kind ?? "") as "month" | "debt" | "map" | "statement" | "goal";

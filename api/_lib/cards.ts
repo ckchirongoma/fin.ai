@@ -42,8 +42,8 @@ import { figuresFrom } from "./grounding.js";
 import { track } from "./track.js";
 import { DOMAIN_LABELS, type Business, type MapEntry, type PlanRow, type PlanStepRow } from "./types.js";
 
-export type CardKind = "month" | "debt" | "map" | "statement" | "goal";
-export const CARD_KINDS: CardKind[] = ["month", "debt", "map", "statement", "goal"];
+export type CardKind = "month" | "debt" | "map" | "statement" | "goal" | "memory";
+export const CARD_KINDS: CardKind[] = ["month", "debt", "map", "statement", "goal", "memory"];
 
 export const CARD_TITLE: Record<CardKind, string> = {
   month: "Your month in three pots",
@@ -51,6 +51,7 @@ export const CARD_TITLE: Record<CardKind, string> = {
   map: "Your Money Map",
   statement: "What your statement says",
   goal: "Getting to the number",
+  memory: "What Charles knows",
 };
 
 /** How long a link works. The page holds a snapshot; a new link is a new snapshot. */
@@ -117,7 +118,13 @@ export interface GoalCard {
   deadline: string | null;
 }
 
-export type CardData = { month: MonthCard; debt: DebtCard; map: MapCard; statement: StatementCard; goal: GoalCard };
+/** The household knowledge graph (graph.ts), as the memory card draws it. */
+export interface MemoryCard {
+  name: string | null;
+  items: { group: string; label: string; line: string; from: string; closed: boolean }[];
+}
+
+export type CardData = { month: MonthCard; debt: DebtCard; map: MapCard; statement: StatementCard; goal: GoalCard; memory: MemoryCard };
 
 const first = (name: string | null | undefined): string | null => {
   const n = (name ?? "").trim();
@@ -324,6 +331,23 @@ export function demoCard(kind: CardKind): CardData[CardKind] {
       } satisfies StatementCard;
     case "goal":
       return { name, label: "R1,000 by Christmas", target: 1000, perPay: 110, paysPerMonth: 4, deadline: "Christmas" } satisfies GoalCard;
+    case "memory":
+      return {
+        name,
+        items: [
+          { group: "owes", label: "The mashonisa", line: "R200 a week, R800 owed", from: "you said, 30 Oct", closed: false },
+          { group: "owes", label: "Edgars account", line: "R250 a month", from: "your statement", closed: false },
+          { group: "earns_from", label: "SASSA child support grant", line: "R1,060 a month", from: "your statement", closed: false },
+          { group: "earns_from", label: "EFT from an employer", line: "R3,600 a month", from: "your statement", closed: false },
+          { group: "supports", label: "Children", line: "Supports", from: "setup answer", closed: false },
+          { group: "supports", label: "My mother", line: "R300 a month", from: "you said, 2 Nov", closed: false },
+          { group: "covered_by", label: "Old Mutual funeral cover", line: "R120 a month", from: "your statement", closed: false },
+          { group: "member_of", label: "Burial society", line: "Member of", from: "setup answer", closed: false },
+          { group: "banks_with", label: "Capitec", line: "Banks with", from: "your statement", closed: false },
+          { group: "working_towards", label: "R1,000 by Christmas", line: "R1,000 in a place the month cannot reach", from: "you chose it", closed: false },
+          { group: "owes", label: "Cellphone contract", line: "Paid off", from: "you said, 28 Oct", closed: true },
+        ],
+      } satisfies MemoryCard;
   }
 }
 
@@ -377,6 +401,7 @@ input[type=range]{width:100%;accent-color:#0f766e;margin:6px 0}
 .tile .more{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed #dfe3e8;font-size:.78rem;color:#0b5a54}
 .tile.open .more{display:block}
 .tile.open{grid-column:1 / -1}
+[data-i].on rect{fill:#e6f2f0}
 .ring{display:flex;align-items:center;gap:14px}
 .ring svg{flex:none}
 .strip{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:10px}
@@ -496,6 +521,11 @@ const SCRIPT: Record<CardKind, string> = {
     var pct=Math.min(100,(p*1)/t*100);jar.style.height=Math.max(8,pct)+"%";$("n-first").textContent="The first payday puts in "+Math.round(pct)+"% of it.";
   }
   [target,per,freq].forEach(function(i){i.addEventListener("input",render);i.addEventListener("change",render)});render();
+})();`,
+  memory: `${JS_RAND}
+(function(){
+  var det=$("detail");
+  document.querySelectorAll("[data-i]").forEach(function(n){n.addEventListener("click",function(){var it=DATA.items[Number(n.getAttribute("data-i"))];if(!it)return;det.innerHTML='<b>'+esc(it.label)+'</b><br>'+esc(it.line)+'<br><span class="hint" style="display:inline">From '+esc(it.from)+(it.closed?' · paid off or stopped':'')+'</span>';det.style.display="block";document.querySelectorAll("[data-i]").forEach(function(o){o.classList.remove("on")});n.classList.add("on")})});
 })();`,
 };
 
@@ -637,6 +667,65 @@ function goalBody(d: GoalCard): string {
   <div class="card"><h2>Where it goes</h2><p class="hint" style="margin:0">Somewhere the month cannot reach: a named savings pocket in your bank's own app costs nothing and can be undone. Moved on the day money lands, before anything else is bought.</p></div>`;
 }
 
+const GROUP: Record<string, { title: string; colour: string }> = {
+  owes: { title: "Owes", colour: "#b3261e" },
+  earns_from: { title: "Money in", colour: "#0f766e" },
+  supports: { title: "Supports", colour: "#7c3aed" },
+  pays: { title: "Pays", colour: "#3a4149" },
+  covered_by: { title: "Cover", colour: "#1d4ed8" },
+  member_of: { title: "Belongs to", colour: "#b45309" },
+  saves_in: { title: "Saves in", colour: "#15803d" },
+  banks_with: { title: "Banks with", colour: "#14181d" },
+  working_towards: { title: "Working towards", colour: "#0b5a54" },
+  lives_by: { title: "Lives by", colour: "#0b5a54" },
+};
+
+/** The person in the middle, everything their money touches around them, a line to each. */
+function memoryBody(d: MemoryCard): string {
+  const items = d.items.slice(0, 14);
+  // An ellipse taller than it is wide, with neighbours alternating between an
+  // outer and an inner ring, so up to fourteen pills never touch on a phone.
+  const W = 400, H = 470, cx = W / 2, cy = H / 2;
+  const nodes = items
+    .map((it, i) => {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / Math.max(items.length, 1);
+      const ring = items.length > 7 && i % 2 === 1 ? 0.7 : 1;
+      const x = cx + 138 * (ring === 1 ? 1 : 0.88) * Math.cos(a), y = cy + 200 * ring * Math.sin(a);
+      const g = GROUP[it.group] ?? { title: it.group, colour: "#3a4149" };
+      const words = it.label.length > 16 ? `${it.label.slice(0, 15)}…` : it.label;
+      const w = Math.max(60, Math.min(118, words.length * 6.4 + 18));
+      const bx = Math.max(2, Math.min(W - w - 2, x - w / 2));
+      return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${it.closed ? "#cfd5da" : g.colour}" stroke-width="${it.closed ? 1.2 : 2}"${it.closed ? ' stroke-dasharray="4 4"' : ""} opacity=".55"/>
+<g data-i="${i}" style="cursor:pointer" role="button" tabindex="0" aria-label="${esc(it.label)}"><rect x="${bx.toFixed(1)}" y="${(y - 15).toFixed(1)}" width="${w.toFixed(1)}" height="30" rx="15" fill="#fff" stroke="${it.closed ? "#cfd5da" : g.colour}" stroke-width="2"/><text x="${(bx + w / 2).toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="600" fill="${it.closed ? "#9aa3ac" : "#14181d"}"${it.closed ? ' text-decoration="line-through"' : ""}>${esc(words)}</text></g>`;
+    })
+    .join("");
+  const centre = `<circle cx="${cx}" cy="${cy}" r="44" fill="#14181d"/><text x="${cx}" y="${cy + 6}" text-anchor="middle" font-size="17" font-weight="600" fill="#fff">${esc(d.name ?? "You")}</text>`;
+  const groups = [...new Set(items.map((i) => i.group))];
+  const legend = groups.map((g) => `<span><i style="background:${(GROUP[g] ?? { colour: "#3a4149" }).colour}"></i>${esc((GROUP[g] ?? { title: g }).title)}</span>`).join("");
+  const list = groups
+    .map(
+      (g) =>
+        `<div class="card"><h2>${esc((GROUP[g] ?? { title: g }).title)}</h2>${items
+          .filter((i) => i.group === g)
+          .map(
+            (i) =>
+              `<div class="row" style="display:block"><div style="display:flex;gap:10px"><span class="l"${i.closed ? ' style="text-decoration:line-through;color:#9aa3ac"' : ""}>${esc(i.label)}</span><span class="hint" style="margin:0;white-space:nowrap">${esc(i.from)}</span></div><div class="hint" style="margin:2px 0 0">${esc(i.line)}${i.closed ? " · paid off or stopped" : ""}</div></div>`,
+          )
+          .join("")}</div>`,
+    )
+    .join("");
+  return `
+  <h1>What Charles knows about ${d.name ? `${esc(d.name)}'s` : "your"} <em>money.</em></h1>
+  <p class="sub">Everything your money touches, and where each thing came from: something you said, a setup answer, your statement, or your own AI. Tap one.</p>
+  <div class="card" style="padding:10px 8px">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" aria-label="${esc(d.name ?? "You")} in the middle, linked to everything their money touches">${nodes}${centre}</svg>
+    <div class="legend" style="padding:0 8px">${legend}</div>
+    <div id="detail" class="good" style="display:none;margin:8px"></div>
+  </div>
+  ${list}
+  <div class="card"><h2>If something is wrong</h2><p class="hint" style="margin:0">Tell Charles on WhatsApp in your own words ("I paid off Edgars", "it's R300 a week now") and the picture changes. Charles never keeps an ID, account or card number, and "forget my money" deletes all of it.</p></div>`;
+}
+
 /** The page for one card. `png` hides the controls so the picture is the state at load. */
 export function cardHTML<K extends CardKind>(kind: K, data: CardData[K], opts: { png?: boolean; demo?: boolean } = {}): string {
   const body =
@@ -644,6 +733,7 @@ export function cardHTML<K extends CardKind>(kind: K, data: CardData[K], opts: {
     : kind === "debt" ? debtBody(data as DebtCard)
     : kind === "map" ? mapBody(data as MapCard)
     : kind === "statement" ? statementBody(data as StatementCard)
+    : kind === "memory" ? memoryBody(data as MemoryCard)
     : goalBody(data as GoalCard);
   return shell(kind, body, data, opts);
 }
@@ -651,7 +741,11 @@ export function cardHTML<K extends CardKind>(kind: K, data: CardData[K], opts: {
 /** "show me my map", "a picture of my month", "chart of what I owe": which card, if any. Whole message, short. */
 export const CARD_ASK = /^\s*(?:(?:can|could|will)\s+(?:you|u)\s+)?(?:please\s+)?(?:show|draw|send|give|make)\s+(?:me\s+)?(?:a\s+|the\s+|my\s+)?(?:picture|pic|image|chart|graph|page|card|visual|drawing)?\s*(?:of\s+)?(?:my\s+|the\s+)?(month|budget|pots|map|money\s+map|progress|debt|what\s+i\s+owe|mashonisa|loan|statement|goal|savings|target)\b[\s?!.]*$/i;
 
+/** "What do you know about me?", "show me what you know", "my memory". */
+export const MEMORY_ASK = /^\s*(?:(?:so\s+)?what\s+do\s+you\s+(?:know|remember)\s+about\s+(?:me|my\s+money|us)|(?:can\s+you\s+)?(?:show|tell)\s+me\s+what\s+you\s+(?:know|remember)(?:\s+about\s+(?:me|my\s+money))?|(?:show\s+me\s+)?(?:my\s+)?memory(?:\s+(?:map|graph|card))?|what\s+have\s+you\s+got\s+on\s+me)[\s?!.]*$/i;
+
 export function cardKindAsked(said: string): CardKind | null {
+  if (MEMORY_ASK.test(said)) return "memory";
   const m = CARD_ASK.exec(said);
   if (!m) return null;
   const w = m[1]!.toLowerCase().replace(/\s+/g, " ");
@@ -669,4 +763,5 @@ export const CARD_CAPTION: Record<CardKind, string> = {
   map: "Your Money Map. Tap an area to see what sorted would mean:",
   statement: "What your statement says, as a picture. Tap a line for its share:",
   goal: "Getting to the number. Change what you put away each payday and watch the date:",
+  memory: "What I know about your money, and where each thing came from. Tap one for the detail, and tell me here if anything is wrong:",
 };

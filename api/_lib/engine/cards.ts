@@ -10,6 +10,7 @@
 
 import { cardName, CARD_CAPTION, CARD_TITLE, debtCardData, goalCardData, mapCardData, mintCard, monthCardData, statementCardData, cardHTML, type CardKind } from "../cards.js";
 import { planFor } from "../db.js";
+import { householdGraph, memoryCardData } from "../graph.js";
 import { pdfConfigured, renderPng } from "../pdfclient.js";
 import { track } from "../track.js";
 import { sendImage, sendText, uploadMedia } from "../wa.js";
@@ -20,6 +21,7 @@ export const CARD_NEEDS: Record<CardKind, string> = {
   month: "I draw your month from a bank statement. Send one here (a PDF from your banking app, or a photo of the pages) and I'll lay it out in three pots you can play with.",
   statement: "I can draw that once you've sent a statement: a PDF from your banking app, or a photo of the pages.",
   map: "Your Money Map is drawn once your plan is built. We're nearly there.",
+  memory: "I don't know enough about your money to draw it yet. Answer a few questions, or send a bank statement, and I'll show you what I know.",
   debt: "",
   goal: "",
 };
@@ -42,6 +44,11 @@ export async function buildCard(biz: Business, kind: CardKind): Promise<{ data: 
       return { data: debtCardData(biz) };
     case "goal":
       return { data: goalCardData(biz) };
+    case "memory": {
+      const g = await householdGraph(biz);
+      if (!g.edges.length) return { needs: CARD_NEEDS.memory };
+      return { data: memoryCardData(g) };
+    }
   }
 }
 

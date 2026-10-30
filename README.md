@@ -46,7 +46,10 @@ The button asks for the required variables as it imports. For the full set,
 paste **`.env.vercel`** into the Environment Variables box (click the Key
 field, paste the whole file, and Vercel makes one row per variable), fill the
 blanks in the dashboard, deploy. `HANDOFF-DEPLOY.md` section 3 says where
-each value comes from. Nothing secret is ever in the repo.
+each value comes from. Nothing secret is ever in the repo. Someone new to the
+project deploys from **`docs/PRD-INTERN-DEPLOY.md`**: every step across
+Supabase, OpenRouter, Vercel and the Meta test number, with an acceptance
+test on a real phone.
 
 ## What's in here
 
@@ -65,6 +68,8 @@ each value comes from. Nothing secret is ever in the repo.
 | `api/_lib/` | Everything shared: the engine, prompts, retrieval, guardrails, the fixed plan library (`playbooks.ts`), the Money Map rubric (`moneymap.ts`), the diagnostic (`diagnostic.ts`) |
 | `public/` | The landing page, the plan viewer, the web chat, the sponsor and admin consoles |
 | `db/` | Migrations, in order, and `CHARLES-SETUP.sql`, all of them in one paste for a fresh Supabase project (`docs/SUPABASE-SETUP.md` has the paste and the success table). `0001` is the security fix; `0033` renames the columns for the money journey; `0034` is the South African library |
+| `api/_lib/libgraph.ts`, `api/_lib/graph.ts` | The two knowledge graphs: the library's (entries, tools and plan modules, computed in code) and each household's (what their money touches, every line with where it came from). `docs/KNOWLEDGE-GRAPH.md` |
+| `docs/PRD-INTERN-DEPLOY.md` | The deployment, step by step, for someone new to the project |
 | `seed/` | The library as JSON: 56 knowledge entries and 30 tools, every figure sourced in `docs/kb-sources.md`. `db/0034` is generated from it by `scripts/seed-to-sql.mjs` |
 | `test/` | 871 tests, including the whole money journey end to end against in-memory fakes. `npm test` |
 | `eval/`, `scripts/eval.ts` | The prompt evaluation harness |

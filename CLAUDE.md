@@ -61,6 +61,15 @@ distress → hardship, "forget my business" → "forget my money").
   days (`db/0037`), deleted with the household. "Show me my month" draws
   one; a statement, a budget, a progress question and the hand-over send
   one; the connector has `get_card`. `test/cards.test.ts`.
+- Two knowledge graphs (`docs/KNOWLEDGE-GRAPH.md`). The library graph
+  (`api/_lib/libgraph.ts`) links entries, tools and plan modules in code and
+  adds the strongest neighbour to a shortlist without pushing a keyword row
+  out. The household graph (`api/_lib/graph.ts`, `db/0038`) remembers what
+  each household's money touches, each line with where it came from (they
+  said, a setup answer, their statement, their AI) and when; every answer's
+  prompt carries it; the memory step and the connector's `record_fact` add
+  to it only what the person's words back; "what do you know about me?"
+  draws it as the memory card. `test/knowledge-graph.test.ts`.
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.
@@ -116,7 +125,7 @@ small (`message`, `artifact`, `next_tap`, `quick_replies`, `tool_id`,
   `get_current_step`, `complete_step`, `skip_step`, `report_outcome`,
   `request_plan_change`, `send_plan_pdf`, `remember`, `forget_note`,
   `flag_hardship`, `find_knowledge`, `log_decision`, `add_commitment`,
-  `propose_change`, `get_card`. A change to a critical fact never silently updates the
+  `propose_change`, `get_card`, `record_fact`. A change to a critical fact never silently updates the
   plan: WhatsApp asks first.
 
 ## Definition of done for a first pilot-ready version

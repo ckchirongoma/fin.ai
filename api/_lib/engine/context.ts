@@ -6,6 +6,8 @@
 // library.
 
 import { core } from "../prompts.js";
+import { graphSheet, graphTerms, householdGraph } from "../graph.js";
+import { libraryGraph, neighboursFor } from "../libgraph.js";
 import { costLine, shortlist, kSheet, tSheet } from "../retrieval.js";
 import { optionAnswersText } from "../safety.js";
 import { moneyIn } from "../grounding.js";
@@ -142,7 +144,8 @@ export function figuresAskedAbout(said: string, own: Set<number>, recent: { dire
 }
 
 export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Promise<CoreData>): Promise<CoreBlock> {
-  const { knowledge, tools, recent, plan, notes } = await (preloaded ?? loadCoreData(biz));
+  const [{ knowledge, tools, recent, plan, notes }, graph] = await Promise.all([preloaded ?? loadCoreData(biz), householdGraph(biz)]);
+  const terms = graphTerms(graph);
 
   const short = await shortlist(
     knowledge,
@@ -154,12 +157,23 @@ export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Pr
       ...(opts.asked !== undefined ? { figures: figuresAskedAbout(opts.asked, ownFigures(biz, opts.asked).money, recent.slice(-4)) } : {}),
       stage: biz.biz_stage || "stretching",
       domain: opts.domain ?? null,
-      headache: biz.context?.headache || biz.answers?.objective || null,
+      // Their own creditors, grants and cover (graph.ts): a tie-break toward
+      // the rows about THEIR money, never a match on its own.
+      headache: [biz.context?.headache || biz.answers?.objective || "", terms].filter(Boolean).join(" ") || null,
       maxKnowledge: opts.maxKnowledge ?? 4,
       maxTools: opts.maxTools ?? 5,
     },
     { businessId: biz.id, country: biz.country, quote: opts.quote ?? null, semantic: opts.semantic },
   );
+
+  // The library graph (libgraph.ts): the strongest tool linked to the top
+  // entry and the strongest entry linked to the top tool, appended when the
+  // keywords did not already bring them. Never pushes a keyword row out.
+  if (short.topScore > 0 || short.semantic) {
+    const extra = neighboursFor(libraryGraph(knowledge, tools, biz.country), short, { knowledge, tools });
+    short.knowledge = [...short.knowledge, ...extra.knowledge];
+    short.tools = [...short.tools, ...extra.tools];
+  }
 
   const steps = plan?.steps ?? [];
   const toolsSheet = tSheet(short.tools);
@@ -184,6 +198,7 @@ export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Pr
       stabilising: biz.stage === "stabilizing" ? "mode" : opts.stabilisingTurn ? "turn" : null,
       setupAnswers: optionAnswersText(biz.answers),
       ownerNotes: notesSheet(notes ?? []),
+      memoryGraph: graphSheet(graph),
     }),
     toolsSheet,
     knowledgeCosts,

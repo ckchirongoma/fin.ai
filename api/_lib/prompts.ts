@@ -373,6 +373,8 @@ export function core(args: {
   setupAnswers?: string;
   /** What Charles remembers about them as a person (owner_notes): background for fitting advice, never a quote. */
   ownerNotes?: string;
+  /** What Charles knows about their money as a graph (graph.ts graphSheet), each line with its source. */
+  memoryGraph?: string;
 }): string {
   const turns = args.recent.map((m) => `${m.direction === "in" ? "Person" : "Charles"}: ${m.text}`).join("\n");
   const c = country(args.countryCode);
@@ -407,7 +409,7 @@ STAGE: ${args.bizStage}
 MONEY MAP: ${JSON.stringify(args.map)}
 THE 90-DAY GOAL THEY CHOSE: ${JSON.stringify(args.goal)}
 THE RULE THEY LIVE BY: ${JSON.stringify(args.rule)}
-${args.ownerNotes ? `WHAT YOU KNOW ABOUT THEM (from them, on WhatsApp or through their own AI). Fit every answer to it (HOW YOU HELP 1). Never recite it back, and never say they told you something from this list unless it is also in RECENT CONVERSATION:\n${args.ownerNotes}\n` : ""}${args.setupAnswers ? `THEIR SETUP ANSWERS (what they picked from fixed options, exactly as stored; THE PERSON above wins where they differ):\n${args.setupAnswers}\n` : ""}${args.planSummary ? `${args.stabilising === "mode" ? "THEIR 90-DAY PLAN — PAUSED while they steady things (for reference only: never give one of its steps as what to do next):" : "THEIR 90-DAY PLAN, AND WHERE THEY ARE IN IT:"}\n${args.planSummary}` : ""}
+${args.memoryGraph ? `WHAT YOU KNOW ABOUT THEIR MONEY, as a map of who and what (each line ends with where it came from). Use it to be specific: name the creditor, the grant, the day. Say "you told me" only about a line marked "they said" or "setup answer"; a line marked "their statement" is "your statement shows"; a line marked "their AI said" is something their AI passed on. A line marked "Paid off or stopped" is history, never something they still owe:\n${args.memoryGraph}\n` : ""}${args.ownerNotes ? `WHAT YOU KNOW ABOUT THEM (from them, on WhatsApp or through their own AI). Fit every answer to it (HOW YOU HELP 1). Never recite it back, and never say they told you something from this list unless it is also in RECENT CONVERSATION:\n${args.ownerNotes}\n` : ""}${args.setupAnswers ? `THEIR SETUP ANSWERS (what they picked from fixed options, exactly as stored; THE PERSON above wins where they differ):\n${args.setupAnswers}\n` : ""}${args.planSummary ? `${args.stabilising === "mode" ? "THEIR 90-DAY PLAN — PAUSED while they steady things (for reference only: never give one of its steps as what to do next):" : "THEIR 90-DAY PLAN, AND WHERE THEY ARE IN IT:"}\n${args.planSummary}` : ""}
 
 KNOWLEDGE (the only facts you may use):
 ${args.knowledgeSheet}
@@ -548,12 +550,14 @@ Return JSON only, no fences:
  "decisions": [{"what": string, "why": string}] | null,
  "commitments": [{"what": string, "due": string}] | null,
  "results": [{"what": string, "effect": "better"|"same"|"worse"}] | null,
- "owner_notes": [{"about": "person"|"situation"|"preference"|"constraint"|"worry"|"goal"|"other", "note": string}] | null
+ "owner_notes": [{"about": "person"|"situation"|"preference"|"constraint"|"worry"|"goal"|"other", "note": string}] | null,
+ "graph_updates": [{"relation": "owes"|"earns_from"|"supports"|"covered_by"|"saves_in"|"banks_with"|"member_of"|"pays", "object": string, "amount": number|null, "per": "week"|"month"|null, "balance": number|null, "day": number|null, "closed": boolean, "note": string|null}] | null
 }
 
 Rules:
 - Only record what the PERSON said or confirmed. Charles's suggestions are not decisions until they agree ("ok", "I'll do that", "done").
 - "owner_notes" is about the PERSON, not the money facts: something they STATED about their life or how they like to work that should change what advice fits them later — the day they get paid, who they support, how they like to be helped, what worries them. One short line each, in their terms, at most two. A question is never a note. A worry is a note only when they said they are worried, scared or stressed. Write each note without "he", "she", "his" or "her": "Paid on the 25th; sends money home the same day". Never a money fact (what they owe, what comes in: those go in context_updates), never a guess about them, never something already in the current context.
+- "graph_updates" is who and what their money touches, as the PERSON just stated it: a creditor they owe ("the mashonisa", "Edgars"), where money comes from ("SASSA grant", "the salon I work at"), who they support ("my mother": the role, never a person's name), cover, a stokvel or burial society, where they save or bank, a bill they pay. "amount" is what is paid or received each time and "balance" what is still owed, ONLY as figures they typed. "closed": true only when they say it is paid off, cancelled or stopped. Never from Charles's words, never a guess, never a question they asked.
 - A map status moves UP only on evidence from the person. Quote that evidence. Never move a status down unless they say something stopped working.
 - A commitment needs something they said they would do. If they gave no date, set due to three days after ${today} (format YYYY-MM-DD).
 - Never record an ID number, account number, card number, PIN, OTP or password, even if they send one.
@@ -675,6 +679,7 @@ GOOD INFORMATION
 - Credit, tax and grants: say what usually applies to someone like them and who confirms it (${c.registrar} for credit and debt counselling, ${c.tax} for tax, ${c.grants} for grants, ${c.ombud} for a dispute, ${c.dataRegulator} for their personal data). Never state a legal, tax or credit conclusion as certain.
 
 REMEMBER, AND KEEP WHATSAPP IN STEP
+- record_fact: when they tell you something their money touches (a creditor and what they pay, a grant, who they support, a stokvel, a bill), record it in their words, figures only as they said them. memory_graph in get_household_context is what Charles already knows, each line with where it came from; never call a line "something they told Charles" unless it says "they said" or "setup answer".
 - get_card: a small page built from their own figures that they can open on their phone and play with (month, debt, map, statement, goal). Give the link when a picture would help, or send it to their phone when they ask for it there. Never describe a figure on it that is not in the context.
 - "statement" in the context, when present, is the bank statement, payslip or credit report they chose to send on WhatsApp: real totals and payees, read once, with no account number kept. Use its figures as theirs ("your statement shows R4,800 in"), never as something they said. If they want it read, they send it on WhatsApp, not here: you cannot receive files.
 - remember: when they tell you something about themselves that should shape advice later (the day they are paid, who they support, how they like to work, what worries them). One line, in their terms. Not every passing remark, and never an ID, account, card, PIN or password. Use what you remember to fit the advice; do not recite it back.
