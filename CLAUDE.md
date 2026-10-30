@@ -70,6 +70,14 @@ distress → hardship, "forget my business" → "forget my money").
   prompt carries it; the memory step and the connector's `record_fact` add
   to it only what the person's words back; "what do you know about me?"
   draws it as the memory card. `test/knowledge-graph.test.ts`.
+  It triggers actions (`api/_lib/graphactions.ts`, `db/0039`): a debt paid
+  off, a new mashonisa, a repayment up, money to family up, two funeral
+  policies, a new stokvel, a new saving habit, each once, after the reply,
+  never in hardship mode, every figure the graph's own and every rule a
+  button to the grounded answer engine. It is fuzzed
+  (`scripts/graphfuzz.ts`, `test/knowledge-graph-fuzz.test.ts`): random
+  journeys through the pure graph, growing graphs, and random households
+  through the real engine, with every invariant checked after every turn.
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.

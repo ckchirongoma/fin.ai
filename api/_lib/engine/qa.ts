@@ -8,6 +8,7 @@
 // what the PERSON said — never from what Charles suggested.
 
 import { askJSON, describeModelCall, traceModelCalls, type ModelCallTrace } from "../models.js";
+import { actOnGraph } from "./graphact.js";
 import { graphUpdates, recordFacts } from "../graph.js";
 import { answerPrompt, contextUpdatePrompt, forwardPrompt, routerPrompt } from "../prompts.js";
 import { businessKnownFacts, checkMessageDistress, checkReply, saysMoneyTrouble, stabilizingMessage, WRITE_REQUEST } from "../safety.js";
@@ -1542,7 +1543,7 @@ export async function updateMemory(
     // they typed (notesFrom), never a tap or a forward.
     if (notesFrom && Array.isArray(r.graph_updates) && r.graph_updates.length) {
       const { kept, refused } = graphUpdates(r.graph_updates, statedSentences(ownerMessage), today, "said");
-      if (kept.length) await recordFacts(biz.id, kept);
+      if (kept.length && (await recordFacts(biz.id, kept))) await actOnGraph(biz);
       for (const x of refused) trackUnmet("memory_fact_refused", { severity: "info", props: { reason: x.reason, source: notesFrom } });
     }
     // About the person, not the money facts (owner_notes). At most two a turn,

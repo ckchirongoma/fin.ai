@@ -157,6 +157,7 @@ export async function forgetBusiness(id: string): Promise<void> {
     "proposed_changes",
     "owner_notes",
     "cards",
+    "kg_triggers",
     "kg_edges",
     "kg_nodes",
     "jobs",

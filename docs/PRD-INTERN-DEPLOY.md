@@ -123,11 +123,11 @@ The ones that matter most:
 | Check | Expected |
 |---|---|
 | Tables with RLS off | 0 |
-| Tables created | 35 |
+| Tables created | 36 |
 | Knowledge entries (ZA) / tools (ZA) | 56 / 30 |
 | Model config rows | 6 |
 | WhatsApp templates (drafts) | 6 |
-| Knowledge graph tables | 2 |
+| Knowledge graph tables | 3 |
 | Cards table | 1 |
 | Vector extension enabled | 1 |
 

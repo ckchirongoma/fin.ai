@@ -12,6 +12,7 @@
 //  A test asserts that every value of Stage is reachable here.
 
 import { jobCtx, JobFencedError } from "../jobctx.js";
+import { actOnGraph } from "./graphact.js";
 import { flushTracking, setTrackContext, track, trackFailure, trackUnmet, turnIdFor, withTrackContext } from "../track.js";
 import { isInternalNumber } from "../env.js";
 import { ACT, isActionId, typedShortcut } from "../actions.js";
@@ -644,6 +645,14 @@ async function dispatchAction(biz: Business, actionId: string, label: string): P
     return true;
   }
 
+  // A card the knowledge graph offered (graphactions.ts): drawn, at any stage.
+  const kgCard = /^a\.kg\.card:(month|debt|map|statement|goal|memory)$/.exec(actionId);
+  if (kgCard) {
+    track("graph_action_tapped", { category: "behaviour", props: { card: kgCard[1] } });
+    await sendCard(biz, kgCard[1] as "month" | "debt" | "map" | "statement" | "goal" | "memory");
+    return true;
+  }
+
   // A quick reply we generated: the label IS the message the person meant.
   if (actionId.startsWith("a.q.")) {
     const text = actionId.slice(actionId.indexOf(":") + 1) || label;
@@ -974,6 +983,8 @@ async function handleStatement(biz: Business, read: StatementRead, inbound: Inbo
   // The same figures as a picture, with a link to the page. Built from the
   // row as just written, so the card sees the statement.
   await sendCard({ ...biz, statement: read, answers }, "statement");
+  // What the statement shows may earn an action (two funeral policies).
+  await actOnGraph({ ...biz, statement: read, answers });
   if (read.doc === "credit_report" && biz.stage === "diag") await askDiagQuestion(biz, biz.diag_step ?? 0);
   track("statement_read", {
     category: "funnel",

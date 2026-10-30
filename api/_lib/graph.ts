@@ -237,6 +237,15 @@ export function derive(biz: Pick<Business, "answers" | "identity" | "statement" 
 // ── graphUpdates(): what the memory model proposed, checked in code ──
 
 const CLOSING = /\b(?:paid\s+(?:it\s+|them\s+|that\s+)?(?:all\s+)?(?:off|back|up)|finished\s+paying|settled|cleared|cancel+ed|closed|stopped(?:\s+paying)?|no\s+longer|don'?t\s+owe|left\s+the)\b/i;
+/**
+ * A DEBT is only closed by words for paying it off. "I stopped paying
+ * Edgars" closes a stokvel or a policy, but on a debt it means arrears: the
+ * debt is still there and now growing, and calling it paid off would be the
+ * most harmful mistake this graph could make.
+ */
+const PAID_OFF = /\b(?:paid\s+(?:it\s+|them\s+|that\s+|him\s+|her\s+)?(?:all\s+)?(?:off|back|up)|finished\s+paying(?!\s+late)|settled|cleared|don'?t\s+owe|no\s+longer\s+owe|debt\s+(?:is\s+)?(?:gone|done)|it'?s\s+(?:all\s+)?paid)\b/i;
+const STOPPED_PAYING = /\b(?:stopped|stop|can'?t|cannot|couldn'?t|missed|skipped|didn'?t)\s+(?:paying|pay)\b|\bbehind\s+on\b/i;
+const closes = (rel: string, text: string): boolean => (rel === "owes" ? PAID_OFF.test(text) && !STOPPED_PAYING.test(text) : CLOSING.test(text));
 const IDENTIFIER = /\b(?:\d[\s-]?){6,}\b|\b(?:pin|otp|password|cvv|id\s+number|account\s+number|card\s+number)\b/i;
 /** A capitalised word that is not a place, brand or role at the start of a dependant label is probably a person's name. */
 /** "I never borrowed from a mashonisa", "I don't have a funeral policy". */
@@ -245,6 +254,20 @@ const NEGATED = /\b(?:never|not|no|don'?t|do\s+not|didn'?t|did\s+not|haven'?t|ha
 const HYPOTHETICAL = /\b(?:if|maybe|might|thinking\s+(?:of|about)|considering|planning\s+to|want(?:s|ed)?\s+to|would|could|should|wish|hope\s+to|going\s+to\s+(?:try|ask|apply))\b/i;
 /** "My sister owes the mashonisa", "my brother pays Edgars": someone else's money, not theirs. */
 const SOMEONE_ELSE = /\b(?:my|her|his|our)\s+(?:sister|brother|mother|mom|mum|father|dad|friend|cousin|aunt|uncle|neighbou?r|husband|wife|partner|boyfriend|girlfriend|son|daughter|colleague)\s+(?:owes|borrowed|pays|took|has|is\s+paying|gets|earns)\b|\b(?:she|he|they)\s+(?:owes?|borrowed|pays?|took)\b/i;
+
+/**
+ * Every word a role, and nothing else: "my mother", "my two children", "the
+ * kids". "Mama Joyce" starts with a role and ends with a name, so it is a
+ * name (found by the fuzzer).
+ */
+const ROLE_WORDS = new Set(["my", "the", "our", "her", "his", "their", "two", "three", "four", "five", "younger", "older", "little", "big", "elder", "eldest", "youngest", "and",
+  "mother", "mom", "mum", "mama", "father", "dad", "parents", "parent", "gogo", "granny", "grandmother", "grandfather", "grandparents", "sister", "brother", "sisters", "brothers",
+  "son", "sons", "daughter", "daughters", "children", "kids", "child", "baby", "partner", "husband", "wife", "aunt", "uncle", "cousin", "cousins", "nephew", "niece", "family",
+  "extended", "in", "law", "laws", "elders", "siblings", "grandchildren", "grandchild"]);
+const roleOnly = (label: string): boolean => {
+  const ws = label.toLowerCase().replace(/[^a-z\s-]/g, " ").split(/[\s-]+/).filter(Boolean);
+  return ws.length > 0 && ws.every((w) => ROLE_WORDS.has(w)) && ROLE_ONLY.test(label);
+};
 
 const ROLE_ONLY = /^(?:my\s+)?(?:mother|mom|mum|mama|father|dad|parents?|gogo|granny|grandmother|grandfather|sister|brother|sisters|brothers|son|daughter|children|kids|child|partner|husband|wife|aunt|uncle|cousin|nephew|niece|family|extended\s+family|in-?laws?)\b/i;
 
@@ -277,17 +300,29 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
       refused.push({ label, reason: "identifier" });
       continue;
     }
-    if (rel === "supports" && !ROLE_ONLY.test(label)) {
+    if (rel === "supports" && !roleOnly(label)) {
       refused.push({ label, reason: "not_a_role" });
       continue;
     }
     const labelWords = ownWords(label);
     // The clause the fact sits in, by the label's own words: what is negated,
     // supposed or about someone else is not a fact about their money.
-    const clause = clauseFor(said, labelWords, stem);
+    // When the label's own words are not in the message (a model writing "a
+    // loan shark" for their "mashonisa"), the guards read the sentence that
+    // names the thing by another of its names, or the whole message: a fact
+    // with no sentence to check is never let through unchecked (found by the
+    // fuzzer).
+    const aliasRe = classOf(label) ? ALIASES.find(([, k]) => k === classOf(label))?.[0] : undefined;
+    const byAlias = aliasRe ? (said.split(/(?<=[.!?;])\s+|\n+/).find((c) => aliasRe.test(c)) ?? null) : null;
+    const clause = clauseFor(said, labelWords, stem) ?? byAlias ?? (said.trim() ? said : null);
     if (clause) {
-      const closing = r.closed === true && CLOSING.test(clause);
-      if (!closing && NEGATED.test(clause) && !CLOSING.test(clause)) {
+      const closing = r.closed === true && closes(rel, clause);
+      // "I stopped paying Edgars": still owed, and now behind. Kept open, said so.
+      if (rel === "owes" && STOPPED_PAYING.test(clause)) {
+        r.closed = false;
+        r.note = "they said they stopped paying";
+      }
+      if (!closing && NEGATED.test(clause) && !closes(rel, clause)) {
         refused.push({ label, reason: "negated" });
         continue;
       }
@@ -300,8 +335,24 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
         continue;
       }
     }
-    if (!labelWords.some((w) => theirWords.has(w)) && !(keyOf(label, REL_KIND[rel]) !== REL_KIND[rel] && ALIASES.some(([re]) => re.test(label) && re.test(said)))) {
+    // Backed by their words: a thing Charles knows by many names ("the
+    // mashonisa", "a SASSA grant") when they used one of its names; anything
+    // else when they used EVERY word that says which one it is. One shared
+    // word is not enough: "Hollard funeral plan" does not back "Avbob funeral
+    // policy" (found by the fuzzer).
+    const key = keyOf(label, REL_KIND[rel]);
+    const cls = classOf(label);
+    const keyWords = ownWords(key).filter((w) => w.length >= 3);
+    const backed = cls && key === cls ? ALIASES.some(([re, k]) => k === cls && re.test(said)) : keyWords.length > 0 && keyWords.every((w) => theirWords.has(w));
+    if (!backed) {
       refused.push({ label, reason: "not_said" });
+      continue;
+    }
+    // A thing that can only be one kind of relation: a mashonisa is owed,
+    // a grant is money in, a funeral policy or medical aid is cover.
+    const ONLY: Partial<Record<string, Rel[]>> = { mashonisa: ["owes"], "sassa grant": ["earns_from"], "funeral policy": ["covered_by"], "medical aid": ["covered_by"] };
+    if (cls && ONLY[cls] && !ONLY[cls]!.includes(rel)) {
+      refused.push({ label, reason: "wrong_relation" });
       continue;
     }
     const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null);
@@ -309,8 +360,12 @@ export function graphUpdates(raw: unknown, ownerStatements: string, today: strin
     let balance = num(r.balance);
     if (amount !== null && !theirFigures.has(amount)) amount = null;
     if (balance !== null && !theirFigures.has(balance)) balance = null;
-    const per = r.per === "week" || r.per === "month" ? r.per : null;
-    const closed = r.closed === true && CLOSING.test(said);
+    // How often, from their own words when they said it: "every Friday" is a
+    // week whatever the model wrote, "monthly" a month (found by the fuzzer).
+    const text = clause ?? said;
+    const said_per = /\b(?:a|per|every|each)\s+(?:week|friday|monday|tuesday|wednesday|thursday|saturday|sunday)\b|\bweekly\b/i.test(text) ? "week" : /\b(?:a|per|every|each)\s+month\b|\bmonthly\b|\bpay\s*day\b|\bsalary\b/i.test(text) ? "month" : null;
+    const per = said_per ?? (r.per === "week" || r.per === "month" ? r.per : null);
+    const closed = r.closed === true && closes(rel, clause ?? said);
     const day = typeof r.day === "number" && Number.isInteger(r.day) && r.day >= 1 && r.day <= 31 && theirFigures.has(r.day) ? r.day : null;
     const note = typeof r.note === "string" ? scrubText(r.note).slice(0, 100) || null : null;
     kept.push({ rel, label, amount, per: amount !== null ? per : null, balance, day, note, closed, source, on: today });
@@ -350,6 +405,37 @@ interface EdgeRow {
   closed_at: string | null;
 }
 
+/** What an edge row holds besides its keys. */
+export type FoldedEdge = Omit<EdgeRow, "id" | "business_id" | "dst_id" | "rel">;
+
+/**
+ * One fact onto the edge it lands on, as a pure function: the same code the
+ * database write uses and the fuzzer drives a million times. A changed
+ * amount or balance goes to history (the last six); "closed" closes; a closed
+ * line reopens only on a new amount or balance; every source is kept.
+ */
+export function foldFact(was: Pick<EdgeRow, "amount" | "per" | "balance" | "day" | "note" | "status" | "source" | "sources" | "history" | "first_seen" | "last_seen" | "closed_at"> | null, f: Fact, now: string): { row: FoldedEdge; changed: boolean } {
+  const moved = Boolean(was && (((f.amount ?? null) !== null && f.amount !== was.amount) || ((f.balance ?? null) !== null && f.balance !== was.balance)));
+  const history = [...(was?.history ?? [])];
+  if (was && moved) history.push({ amount: was.amount, per: was.per, balance: was.balance, on: String(was.last_seen).slice(0, 10), source: was.source });
+  const status: "active" | "closed" = f.closed ? "closed" : was?.status === "closed" && f.amount == null && f.balance == null ? "closed" : "active";
+  const row: FoldedEdge = {
+    amount: f.amount ?? was?.amount ?? null,
+    per: f.amount != null ? (f.per ?? null) : (was?.per ?? null),
+    balance: f.balance ?? was?.balance ?? null,
+    day: f.day ?? was?.day ?? null,
+    note: f.note ?? was?.note ?? null,
+    status,
+    source: f.source,
+    sources: [...new Set([...(was?.sources ?? []), f.source])],
+    history: history.slice(-6),
+    first_seen: was?.first_seen ?? now,
+    last_seen: now,
+    closed_at: f.closed ? (was?.status === "closed" ? (was.closed_at ?? now) : now) : status === "closed" ? (was?.closed_at ?? null) : null,
+  };
+  return { row, changed: !was || moved || status !== was.status };
+}
+
 /** Writes facts learned from conversation or the connector. Never throws. Returns how many changed something. */
 export async function recordFacts(businessId: string, facts: Fact[]): Promise<number> {
   let changed = 0;
@@ -377,34 +463,23 @@ export async function recordFacts(businessId: string, facts: Fact[]): Promise<nu
       const id = nodeId(f);
       if (!id) continue;
       const was = (rows.find((r) => r.dst_id === id && r.rel === f.rel) as unknown as EdgeRow | undefined) ?? existing.find((e) => e.dst_id === id && e.rel === f.rel) ?? null;
-      const moved = was && ((f.amount ?? null) !== null && f.amount !== was.amount || (f.balance ?? null) !== null && f.balance !== was.balance);
-      const history = [...(was?.history ?? [])];
-      if (was && moved) history.push({ amount: was.amount, per: was.per, balance: was.balance, on: String(was.last_seen).slice(0, 10), source: was.source });
-      const row = {
-        business_id: businessId,
-        dst_id: id,
-        rel: f.rel,
-        amount: f.amount ?? was?.amount ?? null,
-        per: f.amount != null ? (f.per ?? null) : (was?.per ?? null),
-        balance: f.balance ?? was?.balance ?? null,
-        day: f.day ?? was?.day ?? null,
-        note: f.note ?? was?.note ?? null,
-        status: f.closed ? "closed" : was?.status === "closed" && f.amount == null && f.balance == null ? "closed" : "active",
-        source: f.source,
-        sources: [...new Set([...(was?.sources ?? []), f.source])],
-        history: history.slice(-6),
-        first_seen: was?.first_seen ?? new Date().toISOString(),
-        last_seen: new Date().toISOString(),
-        closed_at: f.closed ? new Date().toISOString() : (was?.closed_at ?? null),
-      };
+      const { row: folded, changed: did } = foldFact(was, f, now);
+      const row = { business_id: businessId, dst_id: id, rel: f.rel, ...folded };
+      if (did) changed++;
       const at = rows.findIndex((r) => r.dst_id === id && r.rel === f.rel);
       if (at >= 0) rows[at] = row;
       else rows.push(row);
-      if (!was || moved || Boolean(f.closed) !== (was.status === "closed")) changed++;
     }
     if (rows.length) {
       const { error } = await db().from("kg_edges").upsert(rows, { onConflict: "business_id,dst_id,rel" });
       if (error) throw error;
+    }
+    // Only a write that added a line can push the graph past its cap, so only
+    // that write pays for the size check.
+    const added = rows.filter((r) => !existing.some((e) => e.dst_id === r.dst_id && e.rel === r.rel)).length;
+    if (added) {
+      const { count } = await db().from("kg_edges").select("id", { count: "exact", head: true }).eq("business_id", businessId);
+      if ((count ?? 0) > MAX_EDGES) await prune(businessId);
     }
     if (changed) track("memory_fact_recorded", { category: "behaviour", props: { facts: facts.length, changed, sources: [...new Set(facts.map((f) => f.source))] } });
   } catch (err) {
@@ -412,6 +487,28 @@ export async function recordFacts(businessId: string, facts: Fact[]): Promise<nu
     track("memory_fact_failed", { category: "failure", props: { facts: facts.length } });
   }
   return changed;
+}
+
+/**
+ * A graph that grows for years stays bounded: at most MAX_EDGES lines per
+ * household. What goes first is history (closed lines), oldest first, then
+ * the least recently seen open lines. What a person said last week is never
+ * what goes.
+ */
+export const MAX_EDGES = 250;
+
+async function prune(businessId: string): Promise<void> {
+  const { data } = await db().from("kg_edges").select("id, dst_id, status, last_seen").eq("business_id", businessId);
+  const all = ((data as { id: string; dst_id: string; status: string; last_seen: string }[]) ?? []).sort(
+    (a, b) => Number(a.status !== "closed") - Number(b.status !== "closed") || String(a.last_seen).localeCompare(String(b.last_seen)),
+  );
+  const drop = all.slice(0, Math.max(0, all.length - MAX_EDGES));
+  if (!drop.length) return;
+  await db().from("kg_edges").delete().eq("business_id", businessId).in("id", drop.map((d) => d.id));
+  const left = new Set(all.slice(drop.length).map((e) => e.dst_id));
+  const orphans = [...new Set(drop.map((d) => d.dst_id))].filter((id) => !left.has(id));
+  if (orphans.length) await db().from("kg_nodes").delete().eq("business_id", businessId).in("id", orphans);
+  track("memory_graph_pruned", { category: "behaviour", props: { dropped: drop.length, kept: all.length - drop.length } });
 }
 
 async function storedEdges(businessId: string): Promise<Edge[]> {

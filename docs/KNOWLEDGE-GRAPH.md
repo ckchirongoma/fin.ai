@@ -118,6 +118,69 @@ budget and six weeks of one person's messages.
   money lands and goes (`moneyDays()`: "the 3rd (SASSA child support grant),
   the 25th (wages)"), so a payday nudge names the right day and what lands.
 
+## The graph triggers actions
+
+When the household graph changes in a way that matters, Charles acts on it,
+once, after its reply (`api/_lib/graphactions.ts`, `engine/graphact.ts`):
+
+| Trigger | When | What Charles sends |
+|---|---|---|
+| `debt_paid_off` | A debt they said is paid off | "Edgars is paid off. That's R250 a month back in your hands", send it to a savings pocket on payday; buttons: set up a pocket, see my goal |
+| `new_mashonisa` | A mashonisa, newly told | Buttons: what can they do (the grounded answer engine), when is it gone (the debt card) |
+| `repayment_up` | A repayment went up | "R300 to R400 a week"; buttons: when is it gone, can they raise it |
+| `support_up` | Money to family up by a fifth or more | "R600 to R700 a month"; help agreeing a fixed amount |
+| `double_cover` | Two funeral policies | Both named, with how Charles knows; check what each pays before cancelling anything |
+| `joined_stokvel` | A stokvel, newly told | The checks that show whether a stokvel is safe |
+| `started_saving` | Saving, newly told | What it adds up to over 90 days at that rate; see my goal |
+
+Every figure in an action is the graph's own, or 13 weeks / 3 months of it.
+Every rule about the world is a button to the grounded answer engine, never
+text in the action. Nothing points at credit. Once per news (the ledger in
+`kg_triggers`, db/0039), at most one a turn, none within six hours of the
+last, none in hardship mode, none before the plan.
+
+A debt is only closed by words for paying it off. "I stopped paying Edgars"
+keeps the debt open with a note, because on a debt it means arrears, and
+calling it paid off would be the most harmful mistake the graph could make.
+
+## Growth
+
+A household's graph is capped at 250 lines (`MAX_EDGES`). When a write that
+added a line takes it over, the oldest history goes first (closed lines),
+then the least recently seen open ones, and their orphaned nodes with them.
+The prompt block stays at 18 lines and 1,800 characters however big it gets.
+
+## Fuzzed
+
+`scripts/graphfuzz.ts` generates the most random a WhatsApp line gets
+(truthful facts, negations, hypotheticals, other people's debts, payoffs,
+"stopped paying", questions, ID and card numbers, PINs, emoji, isiZulu and
+Afrikaans, every number format, empty and ten-thousand-character messages,
+control characters) and what a confused or hostile model proposes (invented
+labels and amounts, wrong relations, strings for numbers, negative and
+non-finite numbers, nested objects, huge arrays). After every turn it checks:
+every kept figure was typed; nothing identifier-shaped is kept; no name for
+a dependant; nothing negated, supposed or someone else's; no debt closed by
+"stopped paying"; the period matches the words; every word that says which
+thing it is was typed; keys deterministic and clean; merge independent of
+order with one edge per thing; history at most six; the prompt block within
+its caps, every line with its source; the "you told me" evidence never
+holding a statement or AI line; every action figure the graph's own, never
+pointing at credit, with valid buttons.
+
+| Run | Journeys | Turns | Broken |
+|---|---|---|---|
+| Every test run (`test/knowledge-graph-fuzz.test.ts`) | 3,000, plus 200 growing to 300 turns, plus 80 households through the real engine | about 96,000 | 0 |
+| `scripts/fuzz-graph.ts 50000 3` | 50,000 | 600,000 | 0 |
+| `scripts/fuzz-graph.ts 1000000 4` | 1,000,000 | 12,000,000 | see the commit that adds this table |
+
+What the fuzzer found and fixed on the way: one shared generic word backing
+a different thing ("Hollard funeral plan" backed "Avbob funeral policy"); the
+period taken from the model when the person's words said otherwise ("every
+Friday" stored as a month); a model's synonym ("a loan shark" for their
+"mashonisa") slipping past the negation, hypothetical and someone-else
+checks; a role followed by a name ("Mama Joyce") kept as a role.
+
 ### Checking it in Supabase
 
 After a test journey, in the SQL Editor:
