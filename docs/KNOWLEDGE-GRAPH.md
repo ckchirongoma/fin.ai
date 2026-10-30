@@ -194,6 +194,7 @@ refuses `maybeSingle` on more than one row.
 | Run | Households | Steps | Broken |
 |---|---|---|---|
 | Every test run (`test/household-fuzz.test.ts`) | 150 | 12,000 | 0 |
+| `scripts/fuzz-households.ts 100000 7 80` | 100,000 | 8,000,000 (173 µs a step, largest household 6) | 0 |
 
 Each fix was checked by putting the bug back: the fuzzer finds the two-at-
 once code, a fellow member answering a request that was not theirs, and a
