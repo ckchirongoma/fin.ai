@@ -18,6 +18,7 @@
 // functions, so the two doors never disagree about where the person is.
 
 import { env } from "./env.js";
+import { householdSheet, householdView } from "./household.js";
 import { edgeLine, graphForConnector, graphUpdates, householdGraph, keyOf, recordFacts, REL_KIND } from "./graph.js";
 import { hashSecret, mintToken } from "./crypto.js";
 import {
@@ -424,13 +425,14 @@ export interface ToolResult {
 export async function callTool(biz: Business, name: string, args: Record<string, unknown>): Promise<ToolResult> {
   switch (name) {
     case "get_household_context": {
-      const [plan, commitments, recent, notes, decisions, graph] = await Promise.all([
+      const [plan, commitments, recent, notes, decisions, graph, house] = await Promise.all([
         planFor(biz.id),
         openCommitments(biz.id),
         recentMessages(biz.id, 8),
         ownerNotes(biz.id, 30),
         recentDecisions(biz.id, 8),
         householdGraph(biz),
+        householdView(biz),
       ]);
       const steps = plan?.steps ?? [];
       const current = firstOpenStep(steps);
@@ -453,6 +455,9 @@ export async function callTool(biz: Business, name: string, args: Record<string,
         // Who and what their money touches (graph.ts), each line with where it
         // came from: "they said", "setup answer", "their statement", "their AI said".
         memory_graph: graphForConnector(graph),
+        // Other people in their household who agreed to share (household.ts):
+        // first names only, each line with who. Never "they told you" these.
+        household: house ? { members: house.members.map((m) => (m.you ? "you" : (m.name ?? "someone"))), shared: householdSheet(house).split("\n").filter(Boolean) } : null,
         // The bank statement they chose to send, as the totals and payees kept
         // (statement.ts): never an account number, never the file.
         statement: biz.statement ?? null,

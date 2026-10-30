@@ -134,6 +134,16 @@ export async function forgetBusiness(id: string): Promise<void> {
   const { data } = await client.from("businesses").select("wa_id, country").eq("id", id).maybeSingle();
   const row = data as { wa_id: string; country: string } | null;
 
+  // Out of any household first, quietly (household.ts): ownership passes on,
+  // an emptied household goes, and the invites they made or used go too.
+  try {
+    const { leaveHousehold } = await import("./household.js");
+    await leaveHousehold(id);
+    await client.from("household_invites").delete().eq("used_by", id);
+  } catch (err) {
+    console.warn("forgetBusiness: household", err);
+  }
+
   // Children first, deepest first: plan_steps hangs off plans, not off the
   // business, so it has to go before the plans it belongs to.
   const { data: plans } = await client.from("plans").select("id").eq("business_id", id);

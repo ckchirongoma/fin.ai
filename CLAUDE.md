@@ -78,6 +78,15 @@ distress → hardship, "forget my business" → "forget my money").
   (`scripts/graphfuzz.ts`, `test/knowledge-graph-fuzz.test.ts`): random
   journeys through the pure graph, growing graphs, and random households
   through the real engine, with every invariant checked after every turn.
+- Households (`api/_lib/household.ts`, `engine/household.ts`, `db/0040`):
+  two to six WhatsApp numbers share one household. "Invite someone to my
+  household" makes a single-use, hashed, 48-hour code; the person who joins
+  sees what is shared and taps Join; the inviter taps Let them in. Each keeps
+  their own conversation, plan and memory; the others' shared lines (who
+  they support, bills, cover, stokvel, savings, goal) reach every answer
+  with their first name, never "you told me". Debts and income stay private
+  until a person says "share my debts with my household". Anyone can
+  "leave household" and nobody is told. `test/household.test.ts`.
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
   project with the migrations run, a Meta test number, and a stranger
   completing the flow on it. `HANDOFF-DEPLOY.md` is the list.

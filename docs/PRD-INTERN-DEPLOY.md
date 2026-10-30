@@ -123,7 +123,7 @@ The ones that matter most:
 | Check | Expected |
 |---|---|
 | Tables with RLS off | 0 |
-| Tables created | 36 |
+| Tables created | 39 |
 | Knowledge entries (ZA) / tools (ZA) | 56 / 30 |
 | Model config rows | 6 |
 | WhatsApp templates (drafts) | 6 |
@@ -328,6 +328,16 @@ statement.**
 | `Show me what I owe` | A picture of the debt page with a link; the link opens and the numbers change when you edit them |
 | `I paid off Edgars last week` | A normal reply |
 | `What do you know about me?` | A picture with you in the middle and everything your money touches around you, each with where it came from. Edgars shows as paid off. |
+
+### 9.5b A household (needs a second phone, added as a test recipient)
+
+| Do | Expect |
+|---|---|
+| From your phone: `invite someone to my household` | A six-character code, and a message to forward |
+| From the second phone: the forwarded `join <code>` | "<your name> invited you to share a household", with Join and No thanks, then Charles's hello |
+| Second phone: tap **Join** | Your phone gets "wants to join your household. Let them in?" |
+| Your phone: tap **Let them in** | Both phones confirm. `who is in my household` lists both first names, never a number |
+| Second phone: `leave household` | It confirms; **your phone gets nothing** (leaving is silent on purpose) |
 
 ### 9.6 The web
 

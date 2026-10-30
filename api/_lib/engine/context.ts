@@ -6,9 +6,10 @@
 // library.
 
 import { core } from "../prompts.js";
+import { householdSheet, householdView } from "../household.js";
 import { graphSheet, graphTerms, householdGraph, saidSheet } from "../graph.js";
 import { libraryGraph, neighboursFor } from "../libgraph.js";
-import { costLine, shortlist, kSheet, tSheet } from "../retrieval.js";
+import { keywordScore, costLine, shortlist, kSheet, tSheet } from "../retrieval.js";
 import { optionAnswersText } from "../safety.js";
 import { moneyIn } from "../grounding.js";
 import { DISPUTED, ownFigures, pricedRows, type PricedRow } from "../pricestamp.js";
@@ -146,7 +147,7 @@ export function figuresAskedAbout(said: string, own: Set<number>, recent: { dire
 }
 
 export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Promise<CoreData>): Promise<CoreBlock> {
-  const [{ knowledge, tools, recent, plan, notes }, graph] = await Promise.all([preloaded ?? loadCoreData(biz), householdGraph(biz)]);
+  const [{ knowledge, tools, recent, plan, notes }, graph, house] = await Promise.all([preloaded ?? loadCoreData(biz), householdGraph(biz), householdView(biz)]);
   const terms = graphTerms(graph);
 
   const short = await shortlist(
@@ -172,7 +173,16 @@ export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Pr
   // entry and the strongest entry linked to the top tool, appended when the
   // keywords did not already bring them. Never pushes a keyword row out.
   if (short.topScore > 0 || short.semantic) {
-    const extra = neighboursFor(libraryGraph(knowledge, tools, biz.country), short, { knowledge, tools });
+    // Only from rows the question's own words matched: a row on the
+    // shortlist for its area or its price alone would pull in a neighbour
+    // about something else (found by the Charlie port: "a customer hasn't
+    // paid me" led with an unmatched tool and pulled in an unrelated entry).
+    const q = { text: opts.query, stage: biz.biz_stage || "stretching", domain: opts.domain ?? null } as Parameters<typeof keywordScore>[1];
+    const matched = { knowledge: short.knowledge.filter((r) => keywordScore(r, q) > 0), tools: short.tools.filter((r) => keywordScore(r, q) > 0) };
+    const extra = neighboursFor(libraryGraph(knowledge, tools, biz.country), matched, { knowledge, tools });
+    const have = { k: new Set(short.knowledge.map((r) => r.id)), t: new Set(short.tools.map((r) => r.id)) };
+    extra.knowledge = extra.knowledge.filter((r) => !have.k.has(r.id));
+    extra.tools = extra.tools.filter((r) => !have.t.has(r.id));
     short.knowledge = [...short.knowledge, ...extra.knowledge];
     short.tools = [...short.tools, ...extra.tools];
   }
@@ -201,6 +211,7 @@ export async function buildCore(biz: Business, opts: CoreOptions, preloaded?: Pr
       setupAnswers: optionAnswersText(biz.answers),
       ownerNotes: notesSheet(notes ?? []),
       memoryGraph: graphSheet(graph),
+      householdLines: householdSheet(house),
     }),
     memorySaid: saidSheet(graph),
     toolsSheet,

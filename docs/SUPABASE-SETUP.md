@@ -55,7 +55,7 @@ checks, each with the value it found and the value it should be, and a
 ```sql
 with checks as (
   select 'tables with RLS off' as item, (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and not relrowsecurity)::text as found, '0' as expected
-  union all select 'tables created', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r')::text, '36'
+  union all select 'tables created', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r')::text, '39'
   union all select 'knowledge entries (ZA)', (select count(*) from public.knowledge_entries where country='ZA')::text, '56'
   union all select 'tools (ZA)', (select count(*) from public.tools where country='ZA')::text, '30'
   union all select 'knowledge entries older than 90 days', (select count(*) from public.knowledge_entries where verified_on is null or verified_on < current_date - 90)::text, '0'
@@ -68,11 +68,12 @@ with checks as (
   union all select 'old Charlie columns left behind', (select count(*) from information_schema.columns where table_schema='public' and table_name='businesses' and column_name in ('customer','angle','pending_customer_options','pending_angle_options'))::text, '0'
   union all select 'claim_job (the queue) exists', (select count(*) from pg_proc where proname='claim_job')::text, '1'
   union all select 'public-read policies on the library', (select count(*) from pg_policies where schemaname='public' and tablename in ('knowledge_entries','tools') and roles::text like '%anon%')::text, '2'
-  union all select 'direct-access policies on person tables', (select count(*) from pg_policies where schemaname='public' and tablename in ('businesses','plans','plan_steps','business_map','decisions','owner_notes','messages','cards','kg_nodes','kg_edges','kg_triggers'))::text, '0'
+  union all select 'direct-access policies on person tables', (select count(*) from pg_policies where schemaname='public' and tablename in ('businesses','plans','plan_steps','business_map','decisions','owner_notes','messages','cards','kg_nodes','kg_edges','kg_triggers','households','household_members','household_invites'))::text, '0'
   union all select 'tools the plan library points at', (select count(*) from public.tools where id in ('ncr_complaint','gotyme_goalsave','notes_money_log','sheets_budget','transunion_free_report','experian_free_report','xds_free_report','saps_case','sassa_office','ufiling_uif','sars_efiling','tfsa_account','nhfc_first_home_finance','municipal_indigent_register','nasasa_stokvel','ncr_debt_counsellor','nfo_complaint','cdc_register','safps_protective_registration','fsca_check','bank_fraud_report','sassa_srd_online','debicheck','payshap','gotyme_everyday'))::text, '25'
   union all select 'tools still marked needs_verification', (select count(*) from public.tools where needs_verification)::text, '0'
   union all select 'cards table (the WhatsApp card links)', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname='cards')::text, '1'
   union all select 'knowledge graph tables', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname in ('kg_nodes','kg_edges','kg_triggers'))::text, '3'
+  union all select 'household tables', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname in ('households','household_members','household_invites'))::text, '3'
   union all select 'memory card allowed', (select count(*) from pg_constraint where conname='cards_kind_check' and pg_get_constraintdef(oid) like '%memory%')::text, '1'
   union all select 'tracking and queue tables', (select count(*) from pg_class where relnamespace='public'::regnamespace and relkind='r' and relname in ('events','incidents','alert_state','event_daily','owner_notes','knowledge_signals','jobs','safety_events'))::text, '8'
   union all select 'search-by-meaning functions', (select count(*) from pg_proc where proname in ('match_knowledge','match_tools'))::text, '2'
@@ -86,7 +87,7 @@ select item, found, expected, case when found = expected then 'PASS' else 'LOOK'
 | Check | Expected | What it proves |
 |---|---|---|
 | tables with RLS off | 0 | Row-level security is on everywhere. Nobody with the public key can read a person's money. |
-| tables created | 36 | Every migration ran. |
+| tables created | 39 | Every migration ran. |
 | knowledge entries (ZA) | 56 | The whole South African money library landed. |
 | tools (ZA) | 30 | All thirty free tools landed, and none of Charlie's business tools came along. |
 | knowledge / tools older than 90 days | 0 / 0 | Nothing in the library is already stale. Past 90 days Charles hedges a figure automatically, so this number rising over time is normal; 0 today is the bar. |
@@ -101,6 +102,7 @@ select item, found, expected, case when found = expected then 'PASS' else 'LOOK'
 | tools the plan library points at | 25 | Every tool a plan step can name exists, so no step points at nothing. |
 | tools still marked needs_verification | 0 | Every walkthrough was checked against the live site. |
 | knowledge graph tables | 3 | Charles has somewhere to remember what each household's money touches, with where each fact came from, and to act on it once. |
+| household tables | 3 | Several WhatsApp numbers can share one household, with consent on both sides. |
 | memory card allowed | 1 | The "what Charles knows" card can be made. |
 | cards table | 1 | The small pages Charles links on WhatsApp have somewhere to keep their snapshots. |
 | tracking and queue tables | 8 | The operator's console, incidents and alerts have somewhere to write. |

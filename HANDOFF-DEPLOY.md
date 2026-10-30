@@ -34,7 +34,7 @@ success table, is `docs/SUPABASE-SETUP.md`. In short:
 
 1. Supabase → New project. Note the project URL and the service-role key (section 3). Database → Extensions → enable `vector`.
 2. SQL Editor → New query → paste **all of `db/CHARLES-SETUP.sql`** → Run. It is every migration in order in one file, safe to run twice.
-3. SQL Editor → New query → paste the check query from `docs/SUPABASE-SETUP.md` section 4 → Run. Every row must say `PASS`. Among them: RLS on for all 36 tables, 56 knowledge entries and 30 tools for ZA, six model rows, six template drafts, no Charlie column left behind.
+3. SQL Editor → New query → paste the check query from `docs/SUPABASE-SETUP.md` section 4 → Run. Every row must say `PASS`. Among them: RLS on for all 39 tables, 56 knowledge entries and 30 tools for ZA, six model rows, six template drafts, no Charlie column left behind.
 4. Set the models. The `model_config` rows the script inserts are starting values; replace each `model` slug with one you have chosen on your OpenRouter dashboard (OpenRouter → Models). One `UPDATE` per role; the webhook reads the table on every call, so a change is live at once.
 
 Without SQL, the library can also be loaded from `seed/` through the REST API: the command is at the top of `db/0034_charles_za_library.sql`.

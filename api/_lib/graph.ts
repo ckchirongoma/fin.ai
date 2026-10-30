@@ -140,7 +140,11 @@ export function classOf(label: string): string | null {
 export function keyOf(label: string, kind: NodeKind): string {
   const cls = classOf(label);
   if (cls) {
-    const extra = words(label).filter((w) => !FILLER.has(w) && !CLASS_WORDS[cls]!.has(w) && !/^\d+$/.test(w));
+    // A leading number is a count ("2 children"); anywhere else it says which
+    // one ("Stokvel 2", "Shop 24"), so two of them stay two (found by the
+    // Charlie port of this file).
+    const ws = words(label).filter((w) => !FILLER.has(w));
+    const extra = ws.filter((w, i) => !CLASS_WORDS[cls]!.has(w) && !(i === 0 && /^\d+$/.test(w)));
     if (!extra.length) return cls;
   }
   const k = words(label).filter((w, i, all) => !(i === 0 && FILLER.has(w)) && !(i === all.length - 1 && (w === "account" || w === "acc"))).join(" ").replace(/^(?:(?:a|an|the|my|our)\s+)+/, "").trim();
@@ -625,7 +629,7 @@ export function edgeLine(e: Edge): string {
 
 /** Most useful first: what is still true before history, debts before bills, big before small. */
 function ranked(g: HouseholdGraph): Edge[] {
-  return [...g.edges].sort((a, b) => Number(a.closed) - Number(b.closed) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? b.balance ?? 0) - (a.amount ?? a.balance ?? 0) || a.key.localeCompare(b.key));
+  return [...g.edges].sort((a, b) => Number(Boolean(a.closed)) - Number(Boolean(b.closed)) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? b.balance ?? 0) - (a.amount ?? a.balance ?? 0) || a.key.localeCompare(b.key));
 }
 
 /**
@@ -690,7 +694,7 @@ export function graphForConnector(g: HouseholdGraph): { relation: Rel; what: str
 /** The memory card's data (cards.ts kind "memory"): short lines, first name only, sources in plain words. */
 export function memoryCardData(g: HouseholdGraph): { name: string | null; items: { group: string; label: string; line: string; from: string; closed: boolean }[] } {
   const FROM_YOU: Record<Source, string> = { said: "you said", answer: "setup answer", statement: "your statement", plan: "you chose it", connector: "your AI" };
-  const sorted = [...g.edges].sort((a, b) => Number(a.closed) - Number(b.closed) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? 0) - (a.amount ?? 0));
+  const sorted = [...g.edges].sort((a, b) => Number(Boolean(a.closed)) - Number(Boolean(b.closed)) || ORDER.indexOf(a.rel) - ORDER.indexOf(b.rel) || (b.amount ?? 0) - (a.amount ?? 0));
   return {
     name: g.name,
     items: sorted.slice(0, 14).map((e) => {

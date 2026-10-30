@@ -12,6 +12,8 @@
 //  A test asserts that every value of Stage is reachable here.
 
 import { jobCtx, JobFencedError } from "../jobctx.js";
+import { householdCommand, householdTap, offerJoin } from "./household.js";
+import { JOIN_ASK } from "../household.js";
 import { actOnGraph } from "./graphact.js";
 import { flushTracking, setTrackContext, track, trackFailure, trackUnmet, turnIdFor, withTrackContext } from "../track.js";
 import { isInternalNumber } from "../env.js";
@@ -410,6 +412,19 @@ async function dispatchInbound(inbound: InboundMessage, turn: InboundTurn): Prom
   // Their first message is a hello, not an answer to a question nobody asked.
   // Question one's own text carries the introduction and the consent line
   // (diagnostic.ts CONSENT_LINE), in that order.
+  // ── A household code: "join K7P9QX", from a new number or a known one ──
+  // A new number gets the offer with the consent line, then the usual hello
+  // and question one, so a typed reply always has a question to answer.
+  if (!actionId && inbound.kind === "text") {
+    const offered = await offerJoin(biz, said, isNew);
+    if (offered) return;
+    if (isNew && JOIN_ASK.test(said)) {
+      turn.handledAs = "a first message with a household code";
+      await askDiagQuestion(biz, 0);
+      return;
+    }
+  }
+
   if (isNew) {
     turn.handledAs = "a first message (a hello, before any questions)";
     await askDiagQuestion(biz, 0);
@@ -643,6 +658,13 @@ async function dispatchAction(biz: Business, actionId: string, label: string): P
     const option = DIAG[diag.step]?.options?.[diag.option];
     await advanceDiagnostic(biz, option ?? label, "tap");
     return true;
+  }
+
+  // The household's two-sided consent (household.ts).
+  if (actionId.startsWith("a.hh.")) {
+    const handled = await householdTap(biz, actionId);
+    // A new number already had its hello and question one with the offer.
+    if (handled) return true;
   }
 
   // A card the knowledge graph offered (graphactions.ts): drawn, at any stage.
@@ -1064,6 +1086,11 @@ async function runStage(biz: Business, said: string, lowConfidence: boolean, att
   if (!attachment && STATEMENT_ASK.test(said)) {
     await sendText(biz.wa_id, HOW_TO_SEND, biz.id);
     track("statement_asked", { category: "behaviour", props: { stage: biz.stage } });
+    return;
+  }
+  // Households: invite, who is in it, leave, share or stop sharing debts.
+  if (!attachment && (await householdCommand(biz, said))) {
+    track("household_command", { category: "behaviour", props: { stage: biz.stage } });
     return;
   }
   // "Show me my month", "a picture of what I owe", "my map": a card, drawn

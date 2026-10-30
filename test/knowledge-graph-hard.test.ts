@@ -304,3 +304,22 @@ test("a check-in knows the days money lands and goes, from the graph, in plain c
   assert.match(p, /Money goes out around: the 1st \(Edgars account\)/);
   assert.match(p, /never to state something they did not say/);
 });
+
+// ── Ported back from the Charlie build ───────────────────────────
+
+test("a number in a name keeps two things apart; a leading count does not", () => {
+  assert.equal(graph.keyOf("Stokvel 2", "group"), "stokvel 2");
+  assert.notEqual(graph.keyOf("Stokvel 2", "group"), graph.keyOf("Stokvel 3", "group"));
+  assert.equal(graph.keyOf("2 children", "dependant"), "children");
+});
+
+test("derived lines with no 'closed' at all still sort: what is true before history, every time", () => {
+  const open = (label: string, amount: number) => ({ rel: "owes" as const, label, key: label.toLowerCase(), kind: "creditor" as const, amount, per: "month" as const, source: "answer" as const, sources: ["answer" as const], history: [], on: "2026-11-01" });
+  const edges = [{ ...open("Paid one", 999), closed: true }, open("Alpha", 100), open("Beta", 300), { ...open("Paid two", 50), closed: true }, open("Gamma", 200)] as never as import("../api/_lib/graph.ts").Edge[];
+  for (let i = 0; i < 20; i++) {
+    const shuffled = [...edges].sort(() => Math.random() - 0.5);
+    const lines = graph.graphSheet({ name: null, edges: shuffled }).split("\n");
+    assert.deepEqual(lines.map((l) => /Paid off/.test(l)), [false, false, false, true, true], lines.join(" | "));
+    assert.match(lines[0]!, /Beta/, "the biggest still-true debt first");
+  }
+});

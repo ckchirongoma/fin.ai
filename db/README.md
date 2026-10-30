@@ -47,6 +47,7 @@ African business library) are gone; `0034` is Charles's library.
 | `0037_cards.sql` | `cards`: the snapshots behind the card links Charles sends on WhatsApp (the month in three pots, when a debt is gone, the Money Map, the statement, a goal). Hashed token, sixty days, figures only, deleted with the household. Run after 0036. |
 | `0038_knowledge_graph.sql` | `kg_nodes`, `kg_edges`: the household knowledge graph (what a household's money touches, each line with where it came from and when, amounts as they said them, paid-off lines closed with their history). Service role only, deleted with the household. Adds the memory card to `cards.kind`. The library graph needs no table: it is computed from the library (`api/_lib/libgraph.ts`). Run after 0037. |
 | `0039_graph_actions.sql` | `kg_triggers`: the ledger of the actions the household graph triggers (a debt paid off, a new mashonisa, a repayment up, two funeral policies…), so each is sent once. Run after 0038. |
+| `0040_households.sql` | `households`, `household_members`, `household_invites`: two to six WhatsApp numbers sharing one household, with consent on both sides, debts and income private unless shared, leaving silent, codes hashed and single-use. Run after 0039. |
 
 ## Why two of these are load-bearing
 

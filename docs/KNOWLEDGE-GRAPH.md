@@ -143,6 +143,28 @@ A debt is only closed by words for paying it off. "I stopped paying Edgars"
 keeps the debt open with a note, because on a debt it means arrears, and
 calling it paid off would be the most harmful mistake the graph could make.
 
+## Households: several numbers, one picture
+
+A household links two to six WhatsApp numbers (`api/_lib/household.ts`,
+`db/0040`). Each person keeps their own graph; the household view adds the
+OTHER members' shared lines to every answer's prompt, each starting with who
+("- Sipho: Pays rent: R3,000 a month (Sipho said, 2 Nov)"), with the rule
+that Charles never says "you told me" about them and never suggests anyone
+check up on anyone. Those lines are never evidence for a "you told me" in
+the reply checker.
+
+| Shared by default | Private until the person shares it |
+|---|---|
+| who they support, bills they pay, cover, stokvel or burial society, savings, the goal | debts (`owes`) and income (`earns_from`) |
+
+Both sides agree before anything is shared (the joiner taps Join, the
+inviter taps Let them in); codes are six characters, single use, 48 hours,
+stored as a hash; members see each other by first name, never by number;
+anyone can leave at any time and nobody is told, because someone leaving a
+controlling relationship must never have Charles announce it. "Forget my
+money" takes the person out first; if they started the household, the
+longest-standing member takes it over, and an emptied household goes.
+
 ## Growth
 
 A household's graph is capped at 250 lines (`MAX_EDGES`). When a write that
