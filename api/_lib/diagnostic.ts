@@ -41,7 +41,7 @@ export interface DiagQuestion {
  * Charles never asks for an ID, account, card, PIN or password, and says so.
  */
 export const CONSENT_LINE =
-  "I'll keep what you tell me about your money so I can help you properly. I never ask for your ID number, account number, card, PIN or password — nobody at a bank should either. Nobody else sees this, and you can send \"forget my money\" any time and it's gone. One more thing: I teach and I plan with you; I'm not a financial adviser and I never sell you anything.";
+  "I'll keep what you tell me about your money, and our conversations, so I can help you properly and get better at helping. I never ask for your ID number, account number, card, PIN or password — nobody at a bank should either. Send \"forget my money\" any time and all of it is gone. One more thing: I teach and I plan with you; I'm not a financial adviser and I never sell you anything.";
 
 export const DIAG: DiagQuestion[] = [
   {

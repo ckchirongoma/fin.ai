@@ -9,6 +9,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "./env.js";
 import { forgetBuffered, setTrackContext, currentTrackContext, track, trackFailure } from "./track.js";
+import { capture, forgetIntel } from "./intel.js";
 import type {
   Business,
   HouseholdContext,
@@ -137,6 +138,7 @@ export async function forgetBusiness(id: string): Promise<void> {
   // Out of any household first, quietly (household.ts): ownership passes on,
   // an emptied household goes, and the invites they made or used go too.
   try {
+    await forgetIntel(id);
     const { leaveHousehold } = await import("./household.js");
     await leaveHousehold(id);
     await client.from("household_invites").delete().eq("used_by", id);
@@ -229,6 +231,14 @@ export async function recordMessage(
   text: string,
   extra: { kind?: string; waMessageId?: string; meta?: Record<string, unknown> } = {},
 ): Promise<void> {
+  // Chase Intelligence: every message, in and out, word for word — except a
+  // web sign-in code, which is a credential and is kept as its kind only.
+  capture(direction === "in" ? "ask" : "say", {
+    name: `message_${direction}:${extra.kind ?? "text"}`,
+    businessId,
+    content: extra.kind === "login_code" ? undefined : { text, kind: extra.kind ?? "text" },
+    meta: { kind: extra.kind ?? "text", chars: text.length, ...(extra.meta ? { send: extra.meta } : {}) },
+  });
   if (!businessId) return;
   try {
     // A person's message is recorded once, however many times its job runs:
@@ -359,7 +369,10 @@ export async function enqueue(job: {
     .select("id")
     .single();
   if (error) throw error;
-  return (data as { id: number }).id;
+  const id = (data as { id: number }).id;
+  // The link from this task to the job it queued: readTrace follows it.
+  capture("job", { name: "job_enqueued", businessId: job.businessId ?? undefined, content: { payload: job.payload ?? {} }, meta: { job_id: id, kind: job.kind, run_after_s: job.runAfterSeconds ?? 0, max_attempts: job.maxAttempts ?? 3 } });
+  return id;
 }
 
 /** Atomic: two workers waking at once can never claim the same row. */
@@ -1583,6 +1596,13 @@ export async function recordSafetyEvent(e: {
     // A distress block is recorded once, as distress_detected, where it happens.
     track("guardrail_blocked", { category: "security", severity: "warn", businessId: e.businessId ?? undefined, alert: "digest", props: { check: e.check, engine: e.engine, flags: e.flags ?? [] }, fingerprint: `guardrail_blocked:${e.check}` });
   }
+  capture("check", {
+    name: `check:${e.check}`,
+    businessId: e.businessId ?? undefined,
+    ok: e.outcome === "pass",
+    content: { detail: e.detail ?? null, flags: e.flags ?? [], score: e.score ?? null },
+    meta: { check: e.check, engine: e.engine, outcome: e.outcome },
+  });
   // Marked before the insert: if the insert fails, a second note written by
   // the fallback would fail the same way, and the error is logged below.
   if (e.check === "knowledge_signal") {

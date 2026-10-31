@@ -17,6 +17,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db, recordModelUsage } from "./db.js";
 import { track, trackFailure } from "./track.js";
+import { capture } from "./intel.js";
 import { env } from "./env.js";
 import { DeadlineError, jobMsLeft, onLastAttempt, retriesOnDeadline } from "./jobctx.js";
 
@@ -357,11 +358,44 @@ class ModelError extends Error {
   }
 }
 
-/** One request to one model. No retry logic here — that lives in askJSON/askText. */
+/**
+ * One request to one model, recorded whole for Chase Intelligence (intel.ts):
+ * everything the model was shown, everything it said, how long it took, or
+ * how it failed. Recording never changes the call or its result.
+ */
 export async function callOpenRouter(
   model: string,
   messages: { role: string; content: unknown }[],
   opts: CallOptions = { maxTokens: 900 },
+): Promise<CallResult> {
+  const started = Date.now();
+  const facts = { model, role: opts.role ?? null, max_tokens: opts.maxTokens, temperature: opts.temperature ?? null, json_mode: Boolean(opts.jsonMode), stream: Boolean(opts.stream), timeout_ms: opts.timeoutMs ?? null };
+  try {
+    const r = await callOpenRouterOnce(model, messages, opts);
+    capture("model", {
+      name: `model_call:${opts.role ?? "unknown"}`,
+      ok: !r.truncated,
+      ms: Date.now() - started,
+      content: { messages, reasoning: opts.reasoning ?? null, response: r.text },
+      meta: { ...facts, served_by: r.model, provider: r.provider ?? null, usage: r.usage, truncated: r.truncated, streamed: Boolean(r.streamed), first_token_ms: r.firstTokenMs ?? null },
+    });
+    return r;
+  } catch (err) {
+    capture("model", {
+      name: `model_call:${opts.role ?? "unknown"}`,
+      ok: false,
+      ms: Date.now() - started,
+      content: { messages, reasoning: opts.reasoning ?? null, response: null },
+      meta: { ...facts, error: err instanceof Error ? err.message.slice(0, 500) : String(err).slice(0, 500), error_kind: err instanceof ModelError ? err.kind : err instanceof Error ? err.name : null, status: err instanceof ModelError ? err.status : null },
+    });
+    throw err;
+  }
+}
+
+async function callOpenRouterOnce(
+  model: string,
+  messages: { role: string; content: unknown }[],
+  opts: CallOptions,
 ): Promise<CallResult> {
   if (!env.OPENROUTER_API_KEY) throw new ModelError("OPENROUTER_API_KEY is not set", 401, "auth");
 

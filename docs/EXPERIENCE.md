@@ -72,9 +72,11 @@ Charlie had even said hello — the founder found that backwards.)
 
 1. Hello and what to expect: *"Hi, I'm Charlie…"*, how many questions, how
    long, what they get at the end.
-2. Consent, one line, plain: *"I'll keep what you tell me about your business
-   so I can help you properly. Nobody else sees it, and you can send 'forget
-   my business' any time and it's gone."* Not a terms link. The promise is
+2. Consent, one line, plain: *"I'll keep what you tell me about your money, and
+   our conversations, so I can help you properly and get better at helping.
+   Send 'forget my money' any time and all of it is gone."* (Since 2026-10-31
+   conversations are recorded for Chase Intelligence, docs/INTEL-CONTRACT.md,
+   so the old "nobody else sees it" was no longer true and went.) Not a terms link. The promise is
    real: `forgetBusiness()` hard-deletes across every table (db/0007 makes the
    cascades structural), keeps only a count with nothing identifying in it,
    and the same number can start again a minute later.

@@ -17,3 +17,6 @@ supabase/.temp/
 
 # eval.ts dry runs write here; results are not source.
 eval/results-*.json
+
+# Chase Intelligence exports: never committed (docs/INTEL-CONTRACT.md).
+intel-export/

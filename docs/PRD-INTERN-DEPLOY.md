@@ -123,7 +123,7 @@ The ones that matter most:
 | Check | Expected |
 |---|---|
 | Tables with RLS off | 0 |
-| Tables created | 39 |
+| Tables created | 40 |
 | Knowledge entries (ZA) / tools (ZA) | 56 / 30 |
 | Model config rows | 6 |
 | WhatsApp templates (drafts) | 6 |

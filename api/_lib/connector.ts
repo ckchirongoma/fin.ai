@@ -60,6 +60,7 @@ import { DOMAIN_LABELS, DOMAINS } from "./types.js";
 import type { Business, PlanRow, PlanStepRow, Stage } from "./types.js";
 import { matchEntity } from "./signals.js";
 import { track, trackFailure, trackUnmet } from "./track.js";
+import { capture } from "./intel.js";
 
 /**
  * An error, safe for trackFailure: a database error becomes its code and
@@ -422,7 +423,20 @@ export interface ToolResult {
   code?: string;
 }
 
+/** Every call the person's own AI makes, recorded for Chase Intelligence (intel.ts): what it asked, what it got. */
 export async function callTool(biz: Business, name: string, args: Record<string, unknown>): Promise<ToolResult> {
+  const started = Date.now();
+  try {
+    const r = await callToolOnce(biz, name, args);
+    capture("tool", { name, actor: "their_ai", businessId: biz.id, ok: !(r as { isError?: boolean }).isError, ms: Date.now() - started, content: { args, result: r }, meta: { tool: name } });
+    return r;
+  } catch (err) {
+    capture("tool", { name, actor: "their_ai", businessId: biz.id, ok: false, ms: Date.now() - started, content: { args, result: null }, meta: { tool: name, error: err instanceof Error ? err.message.slice(0, 500) : String(err).slice(0, 500) } });
+    throw err;
+  }
+}
+
+async function callToolOnce(biz: Business, name: string, args: Record<string, unknown>): Promise<ToolResult> {
   switch (name) {
     case "get_household_context": {
       const [plan, commitments, recent, notes, decisions, graph, house] = await Promise.all([

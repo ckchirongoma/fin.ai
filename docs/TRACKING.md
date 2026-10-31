@@ -25,6 +25,13 @@ This is the reference for that system: the tables, the three calls, the
 emails, the dashboard, and the **event catalogue**. Every event name used in
 the code is listed here. Add a new one here when you add it to the code.
 
+## Kept for good: Chase Intelligence
+
+Every event `track()` records is also handed to `api/_lib/intel.ts`, which
+keeps it in full in `intel_events` with the rest of the task it belongs to
+(the model calls, the checks, the sends). `events` still prunes on its timer;
+`intel_events` does not. See `docs/INTEL-CONTRACT.md`.
+
 ## How it fits together
 
 | Piece | Where | What it does |

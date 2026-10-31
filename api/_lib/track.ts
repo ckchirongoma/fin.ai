@@ -28,7 +28,7 @@
 //     business, channel, stage and turn id without anyone passing them.
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { waitUntil } from "@vercel/functions";
 import { db } from "./db.js";
 
@@ -47,6 +47,8 @@ export interface TrackContext {
   jobId?: number | null;
   /** What the person said this turn (scrubbed on write): the default excerpt for an unmet request. */
   said?: string | null;
+  /** One id for everything a request did when it is not a WhatsApp turn or a job (intel.ts). */
+  traceId?: string | null;
   /** Shared by everything under one tracked() request: why it failed, for request_failed. */
   request?: { failure?: string };
 }
@@ -299,8 +301,53 @@ const RANK: Record<Severity, number> = { info: 0, warn: 1, error: 2, critical: 3
 const lastSecurity = new Map<string, number>();
 const SECURITY_EVERY_MS = 60_000;
 
+// ── Listeners and flushers (Chase Intelligence, intel.ts) ────────
+// Every event is also handed to whoever listens (intel.ts records it in
+// full, for good), and flushTracking() waits for their writes too. Neither
+// can throw into track() or hold it up.
+
+type TrackListener = (name: string, opts: TrackOptions, ctx: TrackContext) => void;
+type Flusher = { flush: () => Promise<unknown> | void; pending: () => boolean };
+
+// Held on globalThis, reached through a hoisted function: a listener can
+// register while this module is still loading (db.ts → intel.ts → here is an
+// import cycle), when a module-level const would not exist yet.
+function registry(): { listeners: TrackListener[]; flushers: Flusher[] } {
+  const g = globalThis as { __chaseTrackRegistry?: { listeners: TrackListener[]; flushers: Flusher[] } };
+  return (g.__chaseTrackRegistry ??= { listeners: [], flushers: [] });
+}
+
+export function onTrack(fn: TrackListener): void {
+  registry().listeners.push(fn);
+}
+
+export function registerFlusher(f: Flusher): void {
+  registry().flushers.push(f);
+}
+
+/** For a listener's own writes: flushTracking() waits for them like its own. */
+export function holdForFlush(p: Promise<unknown>): void {
+  inflight.add(p);
+  void p.finally(() => inflight.delete(p));
+}
+
+const pendingElsewhere = (): boolean => registry().flushers.some((f) => {
+  try {
+    return f.pending();
+  } catch {
+    return false;
+  }
+});
+
 /** Something happened. Never throws, never waits. */
 export function track(name: string, opts: TrackOptions = {}): void {
+  for (const l of registry().listeners) {
+    try {
+      l(name, opts, ctxStore.getStore() ?? {});
+    } catch {
+      // A listener is never the reason an event, or a turn, fails.
+    }
+  }
   if (off()) return;
   try {
     const ctx = ctxStore.getStore() ?? {};
@@ -379,6 +426,14 @@ export function trackUnmet(name: string, opts: TrackOptions = {}): void {
 /** Wait for every buffered event to be written (end of a job, a request, a cron). Bounded. */
 export async function flushTracking(timeoutMs = 4000): Promise<void> {
   void writeBatch();
+  for (const f of registry().flushers) {
+    try {
+      const p = f.flush();
+      if (p) holdForFlush(p);
+    } catch {
+      // never
+    }
+  }
   if (!inflight.size) return;
   let done = false;
   const all = (async () => {
@@ -523,7 +578,7 @@ export function tracked(fn: string, channel: Channel, handler: (req: Request) =>
     const quiet = req.method === "OPTIONS" || fn === "health" || /[?&](tick|watch|async)=1\b/.test(req.url);
     // One object, shared by reference with every context nested inside.
     const request: { failure?: string } = {};
-    return withTrackContext({ channel, request }, async () => {
+    return withTrackContext({ channel, request, traceId: `r_${randomUUID().replace(/-/g, "").slice(0, 16)}` }, async () => {
       let status = 0;
       try {
         const res = await handler(req);
@@ -560,7 +615,7 @@ export function tracked(fn: string, channel: Channel, handler: (req: Request) =>
         }
         // Written after the response, not before it: Meta wants its 200
         // fast, and a person's page should not wait on our bookkeeping.
-        if (buffer.length || inflight.size) waitUntil(flushTracking(2500));
+        if (buffer.length || inflight.size || pendingElsewhere()) waitUntil(flushTracking(2500));
       }
     });
   };

@@ -14,6 +14,7 @@ import { env } from "./env.js";
 import { recordMessage, stillOwnJob } from "./db.js";
 import { jobCtx, JobFencedError } from "./jobctx.js";
 import { currentTrackContext, scrubExcerpt, track, trackFailure, trackUnmet } from "./track.js";
+import { capture } from "./intel.js";
 
 /** Meta answers a send in well under a second; this only catches a hung connection. */
 const SEND_TIMEOUT_MS = 20_000;
@@ -264,7 +265,25 @@ async function post(payload: Record<string, unknown>): Promise<SendResult> {
 const sendMeta = (r: SendResult, meta?: Record<string, unknown>): Record<string, unknown> | undefined =>
   r.ok ? meta : { ...(meta ?? {}), send_failed: true, ...(r.code ? { error_code: r.code } : {}), ...(r.windowClosed ? { window_closed: true } : {}) };
 
+/** Every WhatsApp delivery, recorded for Chase Intelligence (intel.ts): what was sent and how it went. */
 async function postRaw(payload: Record<string, unknown>): Promise<SendResult> {
+  const started = Date.now();
+  let r: SendResult | undefined;
+  try {
+    r = await postRawOnce(payload);
+    return r;
+  } finally {
+    capture("send", {
+      name: `wa_send:${String(payload.type ?? "message")}`,
+      ok: r ? r.ok && !r.skipped : false,
+      ms: Date.now() - started,
+      content: { ...payload, to: undefined },
+      meta: { type: payload.type ?? null, skipped: Boolean(r?.skipped), error: r?.error ? String(r.error).slice(0, 300) : r ? null : "threw", code: r?.code ?? null },
+    });
+  }
+}
+
+async function postRawOnce(payload: Record<string, unknown>): Promise<SendResult> {
   // Fencing (see jobctx.ts): an attempt whose job was reclaimed and re-run
   // must not send — the person would get two different answers to one question.
   const job = jobCtx.getStore();

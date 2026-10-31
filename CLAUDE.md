@@ -89,6 +89,16 @@ distress → hardship, "forget my business" → "forget my money").
   "leave household" and nobody is told. `test/household.test.ts`; fuzzed
   by `scripts/householdfuzz.ts` (`test/household-fuzz.test.ts`), with every
   invariant checked after every step.
+- Chase Intelligence (`api/_lib/intel.ts`, `db/0041`, `docs/INTEL-CONTRACT.md`):
+  every task recorded whole under one trace id, for Chase's own model: every
+  message in and out, every model call (everything it was shown, everything
+  it said), every guardrail check, every WhatsApp delivery, every call from
+  the person's own AI, every job and every product event. Secrets and
+  identifiers removed before the write (`intelredact.ts`); never throws or
+  waits; `INTEL_CAPTURE` = full | meta | off; "forget my money" deletes it;
+  `scripts/intel-export.ts` exports old and new, `scripts/intel-trace.ts`
+  reads one task back. The first message now says conversations are kept.
+  `test/intel.test.ts`; Phase 0 and owner actions in `docs/INTEL-PHASE0.md`.
 - Supabase changes for the founder come as one paste-ready prompt with a
   success-criteria table (`docs/SUPABASE-PROMPT.md`, BEHAVIOR-MATRIX rule 21).
 - **Not done, and cannot be from inside a repository:** a fresh Supabase
